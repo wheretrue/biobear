@@ -16,8 +16,8 @@ class VCFReader:
         return pl.read_ipc(contents)
 
 class VCFIndexedReader:
-    def __init__(self, path: Path, index: Path):
-        self._vcf_reader = _VCFIndexedReader(str(path), str(index))
+    def __init__(self, path: Path):
+        self._vcf_reader = _VCFIndexedReader(str(path))
 
     def read(self) -> pl.DataFrame:
         return self.to_polars()

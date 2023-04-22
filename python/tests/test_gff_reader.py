@@ -2,14 +2,16 @@
 
 from pathlib import Path
 
-from biobear import FastqReader
+from biobear import GFFReader
 
 DATA = Path(__file__).parent / "data"
 
 
-def test_fastq_reader():
+def test_gff_reader():
 
-    fastq_reader = FastqReader(DATA / "test.fastq")
-    df = fastq_reader.to_polars()
+    reader = GFFReader(DATA / "test.gff")
+    df = reader.to_polars()
+
+    print(df)
 
     assert len(df) == 2

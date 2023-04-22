@@ -33,7 +33,7 @@ impl GFFBatch {
             Field::new("feature", DataType::Utf8, false),
             Field::new("start", DataType::Int64, false),
             Field::new("end", DataType::Int64, false),
-            Field::new("score", DataType::Int64, true),
+            Field::new("score", DataType::Float32, true),
             Field::new("strand", DataType::Utf8, false),
             Field::new("phase", DataType::Utf8, true),
             Field::new("attributes", DataType::Utf8, true),
