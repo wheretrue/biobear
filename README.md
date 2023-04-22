@@ -12,12 +12,32 @@ pip install biobear
 
 ## Usage
 
+Read a FASTQ file:
+
+```python
+import biobear as bb
+
+df = bb.FastqReader("test.fq").read()
+print(df.head())
+# ┌─────────┬───────────────────────┬───────────────────────────────────┬───────────────────────────────────┐
+# │ name    ┆ description           ┆ sequence                          ┆ quality                           │
+# │ ---     ┆ ---                   ┆ ---                               ┆ ---                               │
+# │ str     ┆ str                   ┆ str                               ┆ str                               │
+# ╞═════════╪═══════════════════════╪═══════════════════════════════════╪═══════════════════════════════════╡
+# │ SEQ_ID  ┆ This is a description ┆ GATTTGGGGTTCAAAGCAGTATCGATCAAATA… ┆ !''*((((***+))%%%++)(%%%%).1***-… │
+# │ SEQ_ID2 ┆ null                  ┆ GATTTGGGGTTCAAAGCAGTATCGATCAAATA… ┆ !''*((((***+))%%%++)(%%%%).1***-… │
+# └─────────┴───────────────────────┴───────────────────────────────────┴───────────────────────────────────┘
+```
+
+Query an indexed VCF file.
+
+
 ```python
 import biobear as bb
 
 # Will error if test.vcf.gz.tbi is not present
 df = bb.VCFIndexedReader("test.vcf.gz").query("1")
-print(df)
+print(df.head())
 # ┌────────────┬──────────┬───────┬───────────┬───┬───────────────┬────────┬───────────────────────────────────┬────────────────┐
 # │ chromosome ┆ position ┆ id    ┆ reference ┆ … ┆ quality_score ┆ filter ┆ info                              ┆ format         │
 # │ ---        ┆ ---      ┆ ---   ┆ ---       ┆   ┆ ---           ┆ ---    ┆ ---                               ┆ ---            │
