@@ -9,8 +9,6 @@ on:
   push:
     tags:
       - 'v*'
-    tags-ignore:
-      - '*dev*'
 
 permissions:
   contents: read
