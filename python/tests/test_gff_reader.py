@@ -12,6 +12,4 @@ def test_gff_reader():
     reader = GFFReader(DATA / "test.gff")
     df = reader.to_polars()
 
-    print(df)
-
     assert len(df) == 2
