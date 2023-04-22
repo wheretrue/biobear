@@ -15,8 +15,8 @@ pip install biobear
 ```python
 import biobear as bb
 
-# Will error if test.vcf.tbi is not present
-df = bb.VCFIndexedReader("test.vcf").query("1")
+# Will error if test.vcf.gz.tbi is not present
+df = bb.VCFIndexedReader("test.vcf.gz").query("1")
 print(df)
 # ┌────────────┬──────────┬───────┬───────────┬───┬───────────────┬────────┬───────────────────────────────────┬────────────────┐
 # │ chromosome ┆ position ┆ id    ┆ reference ┆ … ┆ quality_score ┆ filter ┆ info                              ┆ format         │
@@ -52,7 +52,7 @@ This reader takes a VCF file and an index file. It supports `.read()` (as other 
 ```python
 import biobear as bb
 
-reader = bb.VCFIndexedReader("test.vcf")
+reader = bb.VCFIndexedReader("test.vcf.gz")
 result = reader.query("1:1000-2000")
 
 print(result)
