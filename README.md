@@ -15,7 +15,7 @@ pip install biobear
 ```python
 import biobear as bb
 df = bb.FastaReader("swissprot.fa").read()
-df.head()
+print(df)
 ```
 
 ## Available Readers
