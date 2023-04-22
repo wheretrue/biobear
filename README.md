@@ -54,4 +54,4 @@ reader.query("chr1", 1, 1000).head()
 
 ## Limitations
 
-Currently, the library reads the entire file (or query result) into memory. If you are working with large files or queries, this may not be ideal.
+Currently, the library reads the entire file (or query result) into memory. This probably isn't a problem unless you're working with very large sequence files or query results.
