@@ -1,0 +1,16 @@
+[package]
+edition = "2021"
+name = "biobear"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib"]
+name = "biobear"
+
+[dependencies]
+arrow = "37.0.0"
+pyo3 = "0.18.1"
+
+[dependencies.noodles]
+features = ["fasta", "fastq", "gff", "core", "sam", "bam", "vcf", "bed", "bgzf", "bcf"]
+version = "0.34.0"
