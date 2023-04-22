@@ -76,7 +76,7 @@ impl FastaBatch {
     }
 }
 
-#[pyclass]
+#[pyclass(name = "_FastaReader")]
 pub struct FastaReader {
     reader: Reader<BufReader<std::fs::File>>,
 }
