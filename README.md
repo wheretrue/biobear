@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/biobear.svg)](https://badge.fury.io/py/biobear)
 
-biobear is a low-dependency -- just polars -- python library for reading and search bioinformatic file formats using Rust as the backend. It can be used to query indexed VCF and BAM files, and to read FASTA, FASTQ, GFF, BAM, and VCF files.
+biobear is a Python library designed for reading and searching bioinformatic file formats, using Rust as its backend. It has minimal dependencies and only requires Polars. Biobear can be used to query indexed VCF and BAM files, as well as read FASTA, FASTQ, GFF, BAM, and VCF files.
 
 ## Installation
 
