@@ -52,7 +52,7 @@ This reader takes a VCF file and an index file. It supports `.read()` (as other 
 ```python
 import biobear as bb
 
-reader = bb.VCFIndexedReader("test.vcf", "test.vcf.tbi")
+reader = bb.VCFIndexedReader("test.vcf")
 result = reader.query("1:1000-2000")
 
 print(result)
