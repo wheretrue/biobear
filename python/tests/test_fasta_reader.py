@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import polars as pl
-from biobear.fasta_reader import FastaReader
+from biobear import FastaReader
 
 
 def test_fasta_reader(tmp_path: Path):

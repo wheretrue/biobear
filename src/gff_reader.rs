@@ -118,7 +118,7 @@ impl GFFBatch {
     }
 }
 
-#[pyclass]
+#[pyclass(name = "_GFFReader")]
 pub struct GFFReader {
     reader: noodles::gff::Reader<BufReader<File>>,
 }

@@ -144,7 +144,7 @@ impl BamBatch {
     }
 }
 
-#[pyclass]
+#[pyclass(name = "_BamReader")]
 pub struct BamReader {
     reader: bam::Reader<bgzf::Reader<BufReader<File>>>,
     header: sam::Header,
@@ -181,7 +181,7 @@ impl BamReader {
     pub fn __exit__(&mut self, _exc_type: PyObject, _exc_value: PyObject, _traceback: PyObject) {}
 }
 
-#[pyclass]
+#[pyclass(name = "_BamIndexedReader")]
 pub struct BamIndexedReader {
     reader: bam::IndexedReader<bgzf::Reader<BufReader<File>>>,
     header: sam::Header,

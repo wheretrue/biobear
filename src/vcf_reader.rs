@@ -128,7 +128,7 @@ impl VcfBatch {
     }
 }
 
-#[pyclass]
+#[pyclass(name = "_VCFReader")]
 pub struct VCFReader {
     reader: vcf::Reader<BufReader<File>>,
     header: vcf::Header,
@@ -164,7 +164,7 @@ impl VCFReader {
     pub fn __exit__(&mut self, _exc_type: PyObject, _exc_value: PyObject, _traceback: PyObject) {}
 }
 
-#[pyclass]
+#[pyclass(name = "_VCFIndexedReader")]
 pub struct VCFIndexedReader {
     reader: vcf::IndexedReader<File>,
     header: vcf::Header,

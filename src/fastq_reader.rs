@@ -91,7 +91,7 @@ impl FastqBatch {
     }
 }
 
-#[pyclass]
+#[pyclass(name = "_FastqReader")]
 pub struct FastqReader {
     reader: Reader<BufReader<std::fs::File>>,
 }
