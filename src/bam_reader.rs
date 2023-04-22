@@ -1,7 +1,11 @@
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
+use noodles::core::Position;
+use noodles::core::Region;
+
 use std::fs::File;
+use std::io::BufReader;
 use std::sync::Arc;
 
 use arrow::ipc::writer::FileWriter;
@@ -142,9 +146,8 @@ impl BamBatch {
 
 #[pyclass]
 pub struct BamReader {
-    reader: bam::Reader<bgzf::Reader<File>>,
+    reader: bam::Reader<bgzf::Reader<BufReader<File>>>,
     header: sam::Header,
-    reference_sequence: sam::header::ReferenceSequences,
 }
 
 #[pymethods]
@@ -152,16 +155,11 @@ impl BamReader {
     #[new]
     fn new(path: &str) -> Self {
         let file = File::open(path).unwrap();
-        let mut reader = bam::Reader::new(file);
-        let header = reader.read_header().unwrap().parse().unwrap();
+        let buf_reader = BufReader::new(file);
+        let mut reader = bam::Reader::new(buf_reader);
+        let header = reader.read_header().unwrap();
 
-        let reference_sequence = reader.read_reference_sequences().unwrap();
-
-        Self {
-            reader,
-            header,
-            reference_sequence,
-        }
+        Self { reader, header }
     }
 
     fn read(&mut self) -> PyObject {
@@ -173,6 +171,75 @@ impl BamReader {
         }
 
         let ipc = batch.to_ipc();
+        Python::with_gil(|py| PyBytes::new(py, &ipc).into())
+    }
+
+    pub fn __enter__(slf: Py<Self>) -> Py<Self> {
+        slf
+    }
+
+    pub fn __exit__(&mut self, _exc_type: PyObject, _exc_value: PyObject, _traceback: PyObject) {}
+}
+
+#[pyclass]
+pub struct BamIndexedReader {
+    reader: bam::IndexedReader<bgzf::Reader<BufReader<File>>>,
+    header: sam::Header,
+}
+
+#[pymethods]
+impl BamIndexedReader {
+    #[new]
+    fn new(path: &str, index_path: Option<&str>) -> Self {
+        let file = File::open(path).unwrap();
+        let buf_reader = BufReader::new(file);
+
+        let infered_path = match index_path {
+            Some(path) => path.to_string(),
+            None => format!("{}.bai", path),
+        };
+
+        let index = bam::bai::read(infered_path).unwrap();
+
+        let mut reader = bam::indexed_reader::Builder::default()
+            .set_index(index)
+            .build_from_reader(buf_reader)
+            .unwrap();
+
+        let header = reader.read_header().unwrap();
+
+        Self { reader, header }
+    }
+
+    fn read(&mut self) -> PyObject {
+        let mut batch = BamBatch::new();
+
+        for record in self.reader.records(&self.header) {
+            let record = record.unwrap();
+            batch.add(record, &self.header);
+        }
+
+        let ipc = batch.to_ipc();
+        Python::with_gil(|py| PyBytes::new(py, &ipc).into())
+    }
+
+    fn query(&mut self, chromosome: &str, start: usize, end: usize) -> PyObject {
+        let mut batch = BamBatch::new();
+
+        let start = Position::try_from(start).unwrap();
+        let end = Position::try_from(end).unwrap();
+        let query = self
+            .reader
+            .query(&self.header, &Region::new(chromosome, start..=end))
+            .unwrap();
+
+        for record in query {
+            let record = record.unwrap();
+            batch.add(record, &self.header);
+        }
+
+        let ipc = batch.to_ipc();
+
         Python::with_gil(|py| PyBytes::new(py, &ipc).into())
     }
 

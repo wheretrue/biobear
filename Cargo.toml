@@ -13,4 +13,4 @@ pyo3 = "0.18.1"
 
 [dependencies.noodles]
 features = ["fasta", "fastq", "gff", "core", "sam", "bam", "vcf", "bed", "bgzf", "bcf"]
-version = "0.34.0"
+version = "0.35.0"
