@@ -73,3 +73,9 @@ print(result)
 ## Limitations
 
 Currently, the library reads the entire file (or query result) into memory. This probably isn't a problem unless you're working with very large sequence files or query results.
+
+## Future Plans
+
+Eventually, I'd like to move over the rest of the code from https://github.com/tshauck/brrrr/ and eventually incorporate better parsing of VCF's (as demonstrated in https://github.com/natir/vcf2parquet and https://www.wheretrue.dev/docs/wtt01/api-reference/table-functions#read_vcf_file_records).
+
+Please open an issue if there's something you'd like to see added!
