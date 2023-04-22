@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from .biobear import _VcfReader, _VcfIndexReader
+from .biobear import _VCFReader, _VCFIndexedReader
 
 import polars as pl
 
-class VcfReader:
+class VCFReader:
     def __init__(self, path: Path):
-        self._vcf_reader = _VcfReader(str(path))
+        self._vcf_reader = _VCFReader(str(path))
 
     def read(self) -> pl.DataFrame:
         return self.to_polars()
@@ -15,9 +15,9 @@ class VcfReader:
         contents = self._vcf_reader.read()
         return pl.read_ipc(contents)
 
-class BamIndexReader:
+class VCFIndexedReader:
     def __init__(self, path: Path, index: Path):
-        self._vcf_reader = _VcfIndexReader(str(path), str(index))
+        self._vcf_reader = _VCFIndexedReader(str(path), str(index))
 
     def read(self) -> pl.DataFrame:
         return self.to_polars()

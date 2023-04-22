@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from .biobear import _BamReader, _BamIndexReader
+from .biobear import _BamReader, _BamIndexedReader
 
 import polars as pl
 
@@ -15,9 +15,9 @@ class BamReader:
         contents = self._bam_reader.read()
         return pl.read_ipc(contents)
 
-class BamIndexReader:
+class BamIndexedReader:
     def __init__(self, path: Path, index: Path):
-        self._bam_reader = _BamIndexReader(str(path), str(index))
+        self._bam_reader = _BamIndexedReader(str(path), str(index))
 
     def read(self) -> pl.DataFrame:
         return self.to_polars()
