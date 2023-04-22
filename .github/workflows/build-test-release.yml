@@ -37,6 +37,11 @@ jobs:
           args: --release --out dist --find-interpreter
           sccache: 'true'
           manylinux: auto
+      - name: Test wheels
+        run: |
+          pip install pytest
+          pip install dist/*.whl
+          pytest
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
