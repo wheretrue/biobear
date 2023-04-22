@@ -24,22 +24,25 @@ There are a slew of readers available, though feel free to open up an Issue or a
 
 -   `FastaReader`
 -   `FastqReader`
--   `VcfReader`
--   `VcfIndexedReader`
+-   `VCFReader`
+-   `VCFIndexedReader`
 -   `BamReader`
 -   `BamIndexedReader`
--   `GffReader`
+-   `GFFReader`
 
 Generally these all work the same way, in that calling `.read()` on the reader will return a Polars DataFrame. Some do have additional methods, which are documented below.
 
-### `VcfIndexedReader`
+### `VCFIndexedReader`
 
 This reader takes a VCF file and an index file. It supports `.read()` (as other readers do), but also `.query()`.
 
 ```python
 import biobear as bb
-reader = bb.VcfIndexedReader("test.vcf", "test.vcf.tbi")
-reader.query("1:1000-2000").head()
+
+reader = bb.VCFIndexedReader("test.vcf", "test.vcf.tbi")
+result = reader.query("1:1000-2000")
+
+print(result)
 ```
 
 ### `BamIndexedReader`
@@ -49,7 +52,9 @@ This reader takes a BAM file and an index file. It supports `.read()` (as other 
 ```python
 import biobear as bb
 reader = bb.BamIndexedReader("test.bam", "test.bam.bai")
-reader.query("chr1", 1, 1000).head()
+result = reader.query("chr1", 1, 1000)
+
+print(result)
 ```
 
 ## Limitations
