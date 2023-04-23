@@ -67,11 +67,12 @@ Generally these all work the same way, in that calling `.read()` on the reader w
 
 ### `VCFIndexedReader`
 
-This reader takes a indexed BGZF VCF file. It supports `.read()`, but also `.query()`.
+This reader takes an indexed BGZF VCF file. It supports `.read()`, but also `.query()`.
 
 ```python
 import biobear as bb
 
+# Will error if test.vcf.gz.tbi is not present
 reader = bb.VCFIndexedReader("test.vcf.gz")
 result = reader.query("1:1000-2000")
 
