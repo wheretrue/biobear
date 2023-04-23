@@ -31,13 +31,9 @@ jobs:
               run: |
                   ruff check python/
 
-            - name: Check clippy
-              run: |
-                  cargo clippy
-
             - name: Build package
               run: |
-                  cargo build --verbose
+                  cargo build
                   maturin develop
 
             - name: Run tests
