@@ -67,7 +67,7 @@ Generally these all work the same way, in that calling `.read()` on the reader w
 
 ### `VCFIndexedReader`
 
-This reader takes a VCF file and an index file. It supports `.read()` (as other readers do), but also `.query()`.
+This reader takes a indexed BGZF VCF file. It supports `.read()`, but also `.query()`.
 
 ```python
 import biobear as bb
@@ -80,7 +80,7 @@ print(result)
 
 ### `BamIndexedReader`
 
-This reader takes a BAM file and an index file. It supports `.read()` (as other readers do), but also `.query()`.
+This reader takes a BAM file and an index file. It supports `.read()`, but also `.query()`.
 
 ```python
 import biobear as bb
