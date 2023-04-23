@@ -195,12 +195,12 @@ impl BamIndexedReader {
 
         let buf_reader = BufReader::new(file);
 
-        let infered_path = match index_path {
+        let inferred_path = match index_path {
             Some(path) => path.to_string(),
             None => format!("{}.bai", path),
         };
 
-        let index = bam::bai::read(infered_path)?;
+        let index = bam::bai::read(inferred_path)?;
 
         let mut reader = match bam::indexed_reader::Builder::default()
             .set_index(index)
@@ -245,9 +245,19 @@ impl BamIndexedReader {
 
         let start = Position::try_from(start)?;
         let end = Position::try_from(end)?;
-        let query = self
+        let query_result = self
             .reader
-            .query(&self.header, &Region::new(chromosome, start..=end))?;
+            .query(&self.header, &Region::new(chromosome, start..=end));
+
+        let query = match query_result {
+            Ok(query) => query,
+            Err(_) => {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Failed to query region: {}:{}-{}",
+                    chromosome, start, end
+                )))
+            }
+        };
 
         for record in query {
             let record = record?;

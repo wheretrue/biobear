@@ -25,6 +25,9 @@ def test_bam_indexed_reader():
 
     assert len(df) == 1
 
+    with pytest.raises(ValueError):
+        reader.query("1", 12203700, 12205426)
+
 def test_bam_indexed_reader_no_file():
     with pytest.raises(FileNotFoundError):
         BamIndexedReader("test.bam", "test.bam.bai")
