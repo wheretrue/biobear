@@ -23,7 +23,7 @@ jobs:
                   python-version: '3.9'
 
             # setup a virtual environment
-            - name: Setup Python
+            - name: Setup Python and Run Tests
               run: |
                   python -m pip install --upgrade pip
                   pip install virtualenv
@@ -32,11 +32,5 @@ jobs:
                   pip install -r requirements-dev.txt
                   cargo build
                   maturin develop
-
-            - name: Check Ruff
-              run: |
                   ruff check python/
-
-            - name: Run tests
-              run: |
                   pytest
