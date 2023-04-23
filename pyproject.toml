@@ -3,13 +3,18 @@ build-backend = "maturin"
 requires = ["maturin>=0.14,<0.15"]
 
 [project]
+authors = [
+  {name = "WHERE TRUE devs", email = "thauck+biobear@wheretrue.com"},
+]
 classifiers = [
   "Programming Language :: Rust",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = ["polars>=0.17.0"]
+license = {file = "LICENSE"}
 name = "biobear"
+readme = "README.md"
 requires-python = ">=3.7"
 
 [tool.maturin]
