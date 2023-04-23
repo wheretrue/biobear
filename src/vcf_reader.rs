@@ -137,24 +137,24 @@ pub struct VCFReader {
 #[pymethods]
 impl VCFReader {
     #[new]
-    fn new(path: &str) -> Self {
-        let file = File::open(path).unwrap();
+    fn new(path: &str) -> PyResult<Self> {
+        let file = File::open(path)?;
         let mut reader = vcf::Reader::new(BufReader::new(file));
-        let header = reader.read_header().unwrap();
+        let header = reader.read_header()?;
 
-        Self { reader, header }
+        Ok(Self { reader, header })
     }
 
-    fn read(&mut self) -> PyObject {
+    fn read(&mut self) -> PyResult<PyObject> {
         let mut batch = VcfBatch::new();
 
         for record in self.reader.records(&self.header) {
-            let record = record.unwrap();
+            let record = record?;
             batch.add(&record);
         }
 
         let ipc = batch.to_ipc();
-        Python::with_gil(|py| PyBytes::new(py, &ipc).into())
+        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {
@@ -173,41 +173,89 @@ pub struct VCFIndexedReader {
 #[pymethods]
 impl VCFIndexedReader {
     #[new]
-    fn new(path: &str) -> Self {
-        let mut reader = vcf::indexed_reader::Builder::default()
-            .build_from_path(path)
-            .unwrap();
+    fn new(path: &str) -> PyResult<Self> {
+        let reader = vcf::indexed_reader::Builder::default().build_from_path(path);
+        let mut reader = match reader {
+            Ok(reader) => reader,
+            Err(e) => {
+                return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                    "Error reading VCF file: {}",
+                    e
+                )))
+            }
+        };
 
-        let header = reader.read_header().unwrap();
+        let header = match reader.read_header() {
+            Ok(header) => header,
+            Err(e) => {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Error reading VCF header: {}",
+                    e
+                )))
+            }
+        };
 
-        Self { reader, header }
+        Ok(Self { reader, header })
     }
 
-    fn read(&mut self) -> PyObject {
+    fn read(&mut self) -> PyResult<PyObject> {
         let mut batch = VcfBatch::new();
 
         for record in self.reader.records(&self.header) {
-            let record = record.unwrap();
+            let record = match record {
+                Ok(record) => record,
+                Err(e) => {
+                    return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Error reading VCF record: {}",
+                        e
+                    )))
+                }
+            };
             batch.add(&record);
         }
 
         let ipc = batch.to_ipc();
-        Python::with_gil(|py| PyBytes::new(py, &ipc).into())
+        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
     }
 
-    fn query(&mut self, region: &str) -> PyObject {
+    fn query(&mut self, region: &str) -> PyResult<PyObject> {
         let mut batch = VcfBatch::new();
 
-        let region = region.parse().unwrap();
-        let mut iter = self.reader.query(&self.header, &region).unwrap();
+        let region = match region.parse() {
+            Ok(region) => region,
+            Err(e) => {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Error parsing region: {}",
+                    e
+                )))
+            }
+        };
+
+        let mut iter = match self.reader.query(&self.header, &region) {
+            Ok(iter) => iter,
+            Err(e) => {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Error querying VCF file: {}",
+                    e
+                )))
+            }
+        };
 
         while let Some(record) = iter.next() {
-            let record = record.unwrap();
+            let record = match record {
+                Ok(record) => record,
+                Err(e) => {
+                    return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Error reading VCF record: {}",
+                        e
+                    )))
+                }
+            };
             batch.add(&record);
         }
 
         let ipc = batch.to_ipc();
-        Python::with_gil(|py| PyBytes::new(py, &ipc).into())
+        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {

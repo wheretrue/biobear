@@ -84,25 +84,25 @@ pub struct FastaReader {
 #[pymethods]
 impl FastaReader {
     #[new]
-    fn new(fasta_path: &str) -> Self {
-        let file = std::fs::File::open(fasta_path).unwrap();
+    fn new(fasta_path: &str) -> PyResult<Self> {
+        let file = std::fs::File::open(fasta_path)?;
         let buf_reader = BufReader::new(file);
 
         let reader = Reader::new(buf_reader);
 
-        Self { reader }
+        Ok(Self { reader })
     }
 
-    pub fn read(&mut self) -> PyObject {
+    pub fn read(&mut self) -> PyResult<PyObject> {
         let mut batch = FastaBatch::new();
 
         for result in self.reader.records() {
-            let record = result.unwrap();
+            let record = result?;
             batch.add(record);
         }
 
         let ipc = batch.to_ipc();
-        Python::with_gil(|py| PyBytes::new(py, &ipc).into())
+        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {

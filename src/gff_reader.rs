@@ -126,24 +126,32 @@ pub struct GFFReader {
 #[pymethods]
 impl GFFReader {
     #[new]
-    fn new(path: &str) -> Self {
-        let file = File::open(path).unwrap();
+    fn new(path: &str) -> PyResult<Self> {
+        let file = File::open(path)?;
         let reader = noodles::gff::Reader::new(BufReader::new(file));
 
-        Self { reader }
+        Ok(Self { reader })
     }
 
-    fn read(&mut self) -> PyObject {
+    fn read(&mut self) -> PyResult<PyObject> {
         let mut batch = GFFBatch::new();
         for record in self.reader.records() {
-            let record = record.unwrap();
+            let record = match record {
+                Ok(record) => record,
+                Err(e) => {
+                    return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                        "Error reading record: {}",
+                        e
+                    )))
+                }
+            };
             batch.add(record);
         }
 
         let ipc = batch.to_ipc();
-        Python::with_gil(|py| {
+        Ok(Python::with_gil(|py| {
             let pybytes = PyBytes::new(py, &ipc);
             pybytes.into()
-        })
+        }))
     }
 }

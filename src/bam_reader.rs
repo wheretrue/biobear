@@ -153,25 +153,25 @@ pub struct BamReader {
 #[pymethods]
 impl BamReader {
     #[new]
-    fn new(path: &str) -> Self {
-        let file = File::open(path).unwrap();
+    fn new(path: &str) -> PyResult<Self> {
+        let file = File::open(path)?;
         let buf_reader = BufReader::new(file);
         let mut reader = bam::Reader::new(buf_reader);
         let header = reader.read_header().unwrap();
 
-        Self { reader, header }
+        Ok(Self { reader, header })
     }
 
-    fn read(&mut self) -> PyObject {
+    fn read(&mut self) -> PyResult<PyObject> {
         let mut batch = BamBatch::new();
 
         for record in self.reader.records(&self.header) {
-            let record = record.unwrap();
+            let record = record?;
             batch.add(record, &self.header);
         }
 
         let ipc = batch.to_ipc();
-        Python::with_gil(|py| PyBytes::new(py, &ipc).into())
+        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {
@@ -190,8 +190,9 @@ pub struct BamIndexedReader {
 #[pymethods]
 impl BamIndexedReader {
     #[new]
-    fn new(path: &str, index_path: Option<&str>) -> Self {
-        let file = File::open(path).unwrap();
+    fn new(path: &str, index_path: Option<&str>) -> PyResult<Self> {
+        let file = File::open(path)?;
+
         let buf_reader = BufReader::new(file);
 
         let infered_path = match index_path {
@@ -199,48 +200,63 @@ impl BamIndexedReader {
             None => format!("{}.bai", path),
         };
 
-        let index = bam::bai::read(infered_path).unwrap();
+        let index = bam::bai::read(infered_path)?;
 
-        let mut reader = bam::indexed_reader::Builder::default()
+        let mut reader = match bam::indexed_reader::Builder::default()
             .set_index(index)
             .build_from_reader(buf_reader)
-            .unwrap();
+        {
+            Ok(reader) => reader,
+            Err(_) => {
+                return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                    "Failed to open file: {}",
+                    path
+                )))
+            }
+        };
 
-        let header = reader.read_header().unwrap();
+        let header = match reader.read_header() {
+            Ok(header) => header,
+            Err(_) => {
+                return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                    "Failed to read header: {}",
+                    path
+                )))
+            }
+        };
 
-        Self { reader, header }
+        Ok(Self { reader, header })
     }
 
-    fn read(&mut self) -> PyObject {
+    fn read(&mut self) -> PyResult<PyObject> {
         let mut batch = BamBatch::new();
 
         for record in self.reader.records(&self.header) {
-            let record = record.unwrap();
+            let record = record?;
             batch.add(record, &self.header);
         }
 
         let ipc = batch.to_ipc();
-        Python::with_gil(|py| PyBytes::new(py, &ipc).into())
+        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
     }
 
-    fn query(&mut self, chromosome: &str, start: usize, end: usize) -> PyObject {
+    fn query(&mut self, chromosome: &str, start: usize, end: usize) -> PyResult<PyObject> {
         let mut batch = BamBatch::new();
 
-        let start = Position::try_from(start).unwrap();
-        let end = Position::try_from(end).unwrap();
+        let start = Position::try_from(start)?;
+        let end = Position::try_from(end)?;
         let query = self
             .reader
-            .query(&self.header, &Region::new(chromosome, start..=end))
-            .unwrap();
+            .query(&self.header, &Region::new(chromosome, start..=end))?;
 
         for record in query {
-            let record = record.unwrap();
+            let record = record?;
             batch.add(record, &self.header);
         }
 
         let ipc = batch.to_ipc();
 
-        Python::with_gil(|py| PyBytes::new(py, &ipc).into())
+        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {

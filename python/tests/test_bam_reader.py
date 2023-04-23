@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from biobear import BamReader, BamIndexedReader
 
 DATA = Path(__file__).parent / "data"
@@ -13,8 +15,16 @@ def test_bam_reader():
 
     assert len(df) == 61
 
-def test_sam_indexed_reader():
+def test_bam_reader_no_file():
+    with pytest.raises(FileNotFoundError):
+        BamReader("test.bam")
+
+def test_bam_indexed_reader():
     reader = BamIndexedReader(DATA / "bedcov.bam", DATA / "bedcov.bam.bai")
     df = reader.query("chr1", 12203700, 12205426)
 
     assert len(df) == 1
+
+def test_bam_indexed_reader_no_file():
+    with pytest.raises(FileNotFoundError):
+        BamIndexedReader("test.bam", "test.bam.bai")
