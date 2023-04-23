@@ -99,23 +99,23 @@ pub struct FastqReader {
 #[pymethods]
 impl FastqReader {
     #[new]
-    fn new(path: &str) -> Self {
-        let file = std::fs::File::open(path).unwrap();
+    fn new(path: &str) -> PyResult<Self> {
+        let file = std::fs::File::open(path)?;
         let reader = Reader::new(BufReader::new(file));
 
-        Self { reader }
+        Ok(Self { reader })
     }
 
-    pub fn read(&mut self) -> PyObject {
+    pub fn read(&mut self) -> PyResult<PyObject> {
         let mut batch = FastqBatch::new();
 
         for record in self.reader.records() {
-            let record = record.unwrap();
+            let record = record?;
             batch.add(record);
         }
 
         let ipc = batch.to_ipc();
-        Python::with_gil(|py| PyBytes::new(py, &ipc).into())
+        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {

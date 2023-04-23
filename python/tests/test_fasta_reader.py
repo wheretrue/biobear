@@ -1,13 +1,12 @@
 # Test the fasta reader can be converted to a polars dataframe
 
 from pathlib import Path
+import pytest
 
-import polars as pl
 from biobear import FastaReader
 
 
 def test_fasta_reader(tmp_path: Path):
-
     tmp_path = tmp_path / "test.fasta"
 
     with open(tmp_path, "w") as f:
@@ -18,3 +17,7 @@ def test_fasta_reader(tmp_path: Path):
     df = fasta_reader.to_polars()
 
     assert len(df) == 2
+
+def test_fasta_reader_no_file():
+    with pytest.raises(FileNotFoundError):
+        FastaReader("test.fasta")
