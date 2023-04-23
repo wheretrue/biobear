@@ -90,9 +90,3 @@ result = reader.query("chr1", 1, 1000)
 
 print(result)
 ```
-
-## Future Plans
-
-Eventually, I'd like to move over the rest of the code from https://github.com/tshauck/brrrr/ and eventually incorporate better parsing of VCFs as demonstrated in https://github.com/natir/vcf2parquet and [wtt02#read_vcf_file_records](https://www.wheretrue.dev/docs/wtt01/api-reference/table-functions#read_vcf_file_records).
-
-Please open an issue if there's something you'd like to see added!
