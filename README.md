@@ -1,6 +1,6 @@
 # biobear (v0.2.0)
 
-biobear is a Python library designed for reading and searching bioinformatic file formats, using Rust as its backend.
+biobear is a Python library designed for reading and searching bioinformatic file formats, using Rust as its backend and producing Polars DataFrames as its output.
 
 The python package has minimal dependencies and only requires Polars. Biobear can be used to read various bioinformatic file formats, including FASTA, FASTQ, VCF, BAM, and GFF. It can also query some indexed file formats, including VCF and BAM.
 
