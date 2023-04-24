@@ -6,6 +6,7 @@ The python package has minimal dependencies and only requires Polars. Biobear ca
 
 - [Installation](#installation)
 - [Usage](#usage)
+- [Similar Packages](#similar-packages)
 - [API Documentation](#api-documentation)
   - [vcf\_reader](#vcf_reader)
     - [VCFReader](#vcfreader)
@@ -101,6 +102,15 @@ print(df.head())
 # │ 1          ┆ 3106154  ┆       ┆ CAAA      ┆ … ┆ 342.0         ┆ PASS   ┆ AN=4;AC=2                         ┆ GT:GQ:DP       │
 # └────────────┴──────────┴───────┴───────────┴───┴───────────────┴────────┴───────────────────────────────────┴────────────────┘
 ```
+
+## Similar Packages
+
+Similar packages and/or inspiration for this package:
+
+- https://github.com/abdenlab/saimin/
+- https://github.com/tshauck/brrrr/
+- https://github.com/natir/vcf2parquet/
+- https://github.com/zaeleus/noodles/
 
 ## API Documentation
 
