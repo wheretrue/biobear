@@ -2,7 +2,6 @@ use pyo3::prelude::*;
 
 use arrow::array::*;
 use arrow::datatypes::*;
-use arrow::ipc::writer::FileWriter;
 use arrow::record_batch::RecordBatch;
 use pyo3::types::PyBytes;
 
@@ -10,6 +9,8 @@ use std::io::BufReader;
 use std::sync::Arc;
 
 use noodles::fastq::Reader;
+
+use crate::batch::BearRecordBatch;
 
 struct FastqBatch {
     names: GenericStringBuilder<i32>,
@@ -58,7 +59,9 @@ impl FastqBatch {
         let quality = std::str::from_utf8(record_quality).unwrap();
         self.qualities.append_value(quality);
     }
+}
 
+impl BearRecordBatch for FastqBatch {
     fn to_batch(&mut self) -> RecordBatch {
         let names = self.names.finish();
         let descriptions = self.descriptions.finish();
@@ -75,19 +78,6 @@ impl FastqBatch {
             ],
         )
         .unwrap()
-    }
-
-    fn to_ipc(&mut self) -> Vec<u8> {
-        let batch = self.to_batch();
-
-        let mut ipc = Vec::new();
-        {
-            let mut writer = FileWriter::try_new(&mut ipc, &self.schema).unwrap();
-            writer.write(&batch).unwrap();
-
-            writer.finish().unwrap();
-        }
-        ipc
     }
 }
 
@@ -114,8 +104,9 @@ impl FastqReader {
             batch.add(record);
         }
 
-        let ipc = batch.to_ipc();
-        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
+        Ok(Python::with_gil(|py| {
+            PyBytes::new(py, &batch.serialize()).into()
+        }))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {
@@ -148,8 +139,9 @@ impl FastqGzippedReader {
             batch.add(record);
         }
 
-        let ipc = batch.to_ipc();
-        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
+        Ok(Python::with_gil(|py| {
+            PyBytes::new(py, &batch.serialize()).into()
+        }))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {
