@@ -25,11 +25,13 @@ jobs:
                   pip install biobear
 
             # Create an example fasta file and try to read it
-            - name: Create example fasta file
-              shell: bash
+            - name: Create example fasta file using python
+              shell: python
               run: |
-                  echo ">test" > test.fasta
-                  echo "ATCG" >> test.fasta
+                f = open("test.fasta", "w")
+                f.write(">test\n")
+                f.write("ATGC\n")
+                f.close()
 
             - name: Read example fasta file
               run: |
