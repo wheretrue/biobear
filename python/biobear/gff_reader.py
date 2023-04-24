@@ -1,16 +1,25 @@
-from pathlib import Path
+"""GFF File Reader."""
 
-from .biobear import _GFFReader
+from pathlib import Path
 
 import polars as pl
 
+from .biobear import _GFFReader
+
+
 class GFFReader:
+    """A GFF File Reader."""
+
     def __init__(self, path: Path):
+        """Initialize the GFFReader.
+
+        Args:
+            path: The path to the GFF file.
+        """
+
         self._gff_reader = _GFFReader(str(path))
 
     def read(self) -> pl.DataFrame:
-        return self.to_polars()
-
-    def to_polars(self) -> pl.DataFrame:
+        """Read the GFF file and return a polars DataFrame."""
         contents = self._gff_reader.read()
         return pl.read_ipc(contents)

@@ -11,9 +11,10 @@ DATA = Path(__file__).parent / "data"
 
 def test_gff_reader():
     reader = GFFReader(DATA / "test.gff")
-    df = reader.to_polars()
+    df = reader.read()
 
     assert len(df) == 2
+
 
 def test_gff_reader_no_file():
     with pytest.raises(FileNotFoundError):

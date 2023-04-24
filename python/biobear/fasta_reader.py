@@ -1,9 +1,11 @@
+"""FASTA file reader."""
 from pathlib import Path
 
 from .biobear import _FastaReader, _FastaGzippedReader
 from biobear.compression import Compression
 
 import polars as pl
+
 
 class FastaReader:
     def __init__(self, path: Path, compression: Compression = Compression.INFERRED):
@@ -26,8 +28,6 @@ class FastaReader:
             self._fasta_reader = _FastaReader(str(path))
 
     def read(self) -> pl.DataFrame:
-        return self.to_polars()
-
-    def to_polars(self) -> pl.DataFrame:
+        """Read the fasta file and return a polars DataFrame."""
         contents = self._fasta_reader.read()
         return pl.read_ipc(contents)
