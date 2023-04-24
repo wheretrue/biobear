@@ -2,4 +2,4 @@ import biobear
 
 df = biobear.FastaReader("python/tests/data/test.fasta").read()
 
-print(df)
+assert df.shape == (2, 3)
