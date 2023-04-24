@@ -4,6 +4,7 @@ from .biobear import _VCFReader, _VCFIndexedReader
 
 import polars as pl
 
+
 class VCFReader:
     def __init__(self, path: Path):
         self._vcf_reader = _VCFReader(str(path))
@@ -14,6 +15,7 @@ class VCFReader:
     def to_polars(self) -> pl.DataFrame:
         contents = self._vcf_reader.read()
         return pl.read_ipc(contents)
+
 
 class VCFIndexedReader:
     def __init__(self, path: Path):

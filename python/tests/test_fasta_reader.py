@@ -15,6 +15,7 @@ def test_fasta_reader():
 
     assert len(df) == 2
 
+
 def test_fasta_gzipped_reader():
     # Test that the gzip compression is inferred
     fasta_reader = FastaReader(DATA / "test.fasta.gz")
@@ -27,6 +28,7 @@ def test_fasta_gzipped_reader():
     df = fasta_reader.to_polars()
 
     assert len(df) == 2
+
 
 def test_fasta_reader_no_file():
     with pytest.raises(FileNotFoundError):
