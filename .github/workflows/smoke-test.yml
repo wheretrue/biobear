@@ -17,7 +17,6 @@ jobs:
                 os: [ubuntu-latest, macos-latest, windows-latest]
                 python-version: [3.9]
         steps:
-            # setup python
             - uses: actions/setup-python@v2
               with:
                   python-version: ${{ matrix.python-version }}
@@ -37,5 +36,6 @@ jobs:
                 wget -O test.fasta https://raw.githubusercontent.com/wheretrue/biobear/main/python/tests/data/test.fasta
 
             - name: Read example fasta file
+              shell: bash
               run: |
                 python -c "from biobear import FastaReader; print(FastaReader('test.fasta').read())"
