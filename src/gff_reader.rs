@@ -3,13 +3,14 @@ use std::io::BufReader;
 use std::sync::Arc;
 use std::vec;
 
-use arrow::ipc::writer::FileWriter;
 use arrow::record_batch::RecordBatch;
 use pyo3::prelude::*;
 
 use arrow::array::*;
 use arrow::datatypes::*;
 use pyo3::types::PyBytes;
+
+use crate::batch::BearRecordBatch;
 
 struct GFFBatch {
     seqnames: GenericStringBuilder<i32>,
@@ -75,7 +76,9 @@ impl GFFBatch {
             self.attributes.append_value(&attr_str);
         }
     }
+}
 
+impl BearRecordBatch for GFFBatch {
     fn to_batch(&mut self) -> RecordBatch {
         let seqnames = self.seqnames.finish();
         let sources = self.sources.finish();
@@ -102,19 +105,6 @@ impl GFFBatch {
             ],
         )
         .unwrap()
-    }
-
-    fn to_ipc(&mut self) -> Vec<u8> {
-        let batch = self.to_batch();
-
-        let mut ipc = Vec::new();
-        {
-            let mut writer = FileWriter::try_new(&mut ipc, &self.schema).unwrap();
-            writer.write(&batch).unwrap();
-
-            writer.finish().unwrap();
-        }
-        ipc
     }
 }
 
@@ -148,9 +138,8 @@ impl GFFReader {
             batch.add(record);
         }
 
-        let ipc = batch.to_ipc();
         Ok(Python::with_gil(|py| {
-            let pybytes = PyBytes::new(py, &ipc);
+            let pybytes = PyBytes::new(py, &batch.serialize());
             pybytes.into()
         }))
     }

@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
 
 mod bam_reader;
+mod batch;
 mod fasta_reader;
 mod fastq_reader;
 mod gff_reader;

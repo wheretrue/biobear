@@ -2,7 +2,6 @@ use pyo3::prelude::*;
 
 use arrow::array::*;
 use arrow::datatypes::*;
-use arrow::ipc::writer::FileWriter;
 use arrow::record_batch::RecordBatch;
 use pyo3::types::PyBytes;
 
@@ -10,6 +9,8 @@ use std::io::BufReader;
 use std::sync::Arc;
 
 use noodles::fasta::Reader;
+
+use crate::batch::BearRecordBatch;
 
 struct FastaBatch {
     names: GenericStringBuilder<i32>,
@@ -47,7 +48,9 @@ impl FastaBatch {
         let sequence = std::str::from_utf8(record_sequence).unwrap();
         self.sequences.append_value(sequence);
     }
+}
 
+impl BearRecordBatch for FastaBatch {
     fn to_batch(&mut self) -> RecordBatch {
         let names = self.names.finish();
         let descriptions = self.descriptions.finish();
@@ -58,21 +61,6 @@ impl FastaBatch {
             vec![Arc::new(names), Arc::new(descriptions), Arc::new(sequences)],
         )
         .unwrap()
-    }
-
-    fn to_ipc(&mut self) -> Vec<u8> {
-        let batch = self.to_batch();
-
-        let mut ipc = Vec::new();
-        {
-            let cursor = std::io::Cursor::new(&mut ipc);
-            let mut writer = FileWriter::try_new(cursor, &self.schema).unwrap();
-
-            writer.write(&batch).unwrap();
-            writer.finish().unwrap();
-        }
-
-        ipc
     }
 }
 
@@ -101,8 +89,8 @@ impl FastaReader {
             batch.add(record);
         }
 
-        let ipc = batch.to_ipc();
-        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
+        let buffer = batch.serialize();
+        Ok(Python::with_gil(|py| PyBytes::new(py, &buffer).into()))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {
@@ -138,8 +126,8 @@ impl FastaGzippedReader {
             batch.add(record);
         }
 
-        let ipc = batch.to_ipc();
-        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
+        let buffer = batch.serialize();
+        Ok(Python::with_gil(|py| PyBytes::new(py, &buffer).into()))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {

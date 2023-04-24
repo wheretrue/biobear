@@ -8,12 +8,13 @@ use std::fs::File;
 use std::io::BufReader;
 use std::sync::Arc;
 
-use arrow::ipc::writer::FileWriter;
 use arrow::record_batch::RecordBatch;
 use noodles::{bam, bgzf, sam};
 
 use arrow::array::*;
 use arrow::datatypes::*;
+
+use crate::batch::BearRecordBatch;
 
 struct BamBatch {
     names: GenericStringBuilder<i32>,
@@ -99,7 +100,9 @@ impl BamBatch {
         self.quality_scores
             .append_value(quality_scores.to_string().as_str());
     }
+}
 
+impl BearRecordBatch for BamBatch {
     fn to_batch(&mut self) -> RecordBatch {
         let names = self.names.finish();
         let flags = self.flags.finish();
@@ -129,19 +132,6 @@ impl BamBatch {
         )
         .unwrap()
     }
-
-    fn to_ipc(&mut self) -> Vec<u8> {
-        let batch = self.to_batch();
-
-        let mut ipc = Vec::new();
-        {
-            let mut writer = FileWriter::try_new(&mut ipc, &self.schema).unwrap();
-            writer.write(&batch).unwrap();
-
-            writer.finish().unwrap();
-        }
-        ipc
-    }
 }
 
 #[pyclass(name = "_BamReader")]
@@ -170,8 +160,9 @@ impl BamReader {
             batch.add(record, &self.header);
         }
 
-        let ipc = batch.to_ipc();
-        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
+        Ok(Python::with_gil(|py| {
+            PyBytes::new(py, &batch.serialize()).into()
+        }))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {
@@ -236,8 +227,9 @@ impl BamIndexedReader {
             batch.add(record, &self.header);
         }
 
-        let ipc = batch.to_ipc();
-        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
+        Ok(Python::with_gil(|py| {
+            PyBytes::new(py, &batch.serialize()).into()
+        }))
     }
 
     fn query(&mut self, chromosome: &str, start: usize, end: usize) -> PyResult<PyObject> {
@@ -264,9 +256,9 @@ impl BamIndexedReader {
             batch.add(record, &self.header);
         }
 
-        let ipc = batch.to_ipc();
-
-        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
+        Ok(Python::with_gil(|py| {
+            PyBytes::new(py, &batch.serialize()).into()
+        }))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {

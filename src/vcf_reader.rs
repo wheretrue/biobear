@@ -5,12 +5,13 @@ use std::fs::File;
 use std::io::BufReader;
 use std::sync::Arc;
 
-use arrow::ipc::writer::FileWriter;
 use arrow::record_batch::RecordBatch;
 use noodles::vcf;
 
 use arrow::array::*;
 use arrow::datatypes::*;
+
+use crate::batch::BearRecordBatch;
 
 struct VcfBatch {
     chromosomes: GenericStringBuilder<i32>,
@@ -85,7 +86,9 @@ impl VcfBatch {
         let format: String = format!("{}", record.format());
         self.formats.append_value(format);
     }
+}
 
+impl BearRecordBatch for VcfBatch {
     fn to_batch(&mut self) -> RecordBatch {
         let chromosomes = self.chromosomes.finish();
         let positions = self.positions.finish();
@@ -112,19 +115,6 @@ impl VcfBatch {
             ],
         )
         .unwrap()
-    }
-
-    fn to_ipc(&mut self) -> Vec<u8> {
-        let batch = self.to_batch();
-
-        let mut ipc = Vec::new();
-        {
-            let mut writer = FileWriter::try_new(&mut ipc, &self.schema).unwrap();
-            writer.write(&batch).unwrap();
-
-            writer.finish().unwrap();
-        }
-        ipc
     }
 }
 
@@ -153,8 +143,9 @@ impl VCFReader {
             batch.add(&record);
         }
 
-        let ipc = batch.to_ipc();
-        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
+        Ok(Python::with_gil(|py| {
+            PyBytes::new(py, &batch.serialize()).into()
+        }))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {
@@ -214,8 +205,9 @@ impl VCFIndexedReader {
             batch.add(&record);
         }
 
-        let ipc = batch.to_ipc();
-        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
+        Ok(Python::with_gil(|py| {
+            PyBytes::new(py, &batch.serialize()).into()
+        }))
     }
 
     fn query(&mut self, region: &str) -> PyResult<PyObject> {
@@ -254,8 +246,9 @@ impl VCFIndexedReader {
             batch.add(&record);
         }
 
-        let ipc = batch.to_ipc();
-        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
+        Ok(Python::with_gil(|py| {
+            PyBytes::new(py, &batch.serialize()).into()
+        }))
     }
 
     pub fn __enter__(slf: Py<Self>) -> Py<Self> {
