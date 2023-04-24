@@ -1,5 +1,7 @@
 # Create a smoketest that just installs the biobear python package and reads an example file
 
+name: Smoke Test
+
 on:
     workflow_dispatch:
 
@@ -10,7 +12,7 @@ jobs:
         strategy:
             matrix:
                 os: [ubuntu-latest, macos-latest, windows-latest]
-                python-version: [3.6, 3.7, 3.8, 3.9]
+                python-version: [3.7, 3.8, 3.9, 3.10, 3.11]
         steps:
             # setup python
             - uses: actions/setup-python@v2
@@ -24,6 +26,7 @@ jobs:
 
             # Create an example fasta file and try to read it
             - name: Create example fasta file
+              shell: bash
               run: |
                   echo ">test" > test.fasta
                   echo "ATCG" >> test.fasta
