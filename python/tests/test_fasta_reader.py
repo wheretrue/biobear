@@ -4,16 +4,26 @@ from pathlib import Path
 import pytest
 
 from biobear import FastaReader
+from biobear.compression import Compression
+
+DATA = Path(__file__).parent / "data"
 
 
-def test_fasta_reader(tmp_path: Path):
-    tmp_path = tmp_path / "test.fasta"
+def test_fasta_reader():
+    fasta_reader = FastaReader(DATA / "test.fasta")
+    df = fasta_reader.to_polars()
 
-    with open(tmp_path, "w") as f:
-        f.write(">test 1\nACGT\n>test 2\nACGT\n")
+    assert len(df) == 2
 
-    fasta_reader = FastaReader(tmp_path)
+def test_fasta_gzipped_reader():
+    # Test that the gzip compression is inferred
+    fasta_reader = FastaReader(DATA / "test.fasta.gz")
+    df = fasta_reader.to_polars()
 
+    assert len(df) == 2
+
+    # Test that the gzip compression is explicitly set
+    fasta_reader = FastaReader(DATA / "test.fasta.gz", Compression.GZIP)
     df = fasta_reader.to_polars()
 
     assert len(df) == 2

@@ -124,3 +124,37 @@ impl FastqReader {
 
     pub fn __exit__(&mut self, _exc_type: PyObject, _exc_value: PyObject, _traceback: PyObject) {}
 }
+
+#[pyclass(name = "_FastqGzippedReader")]
+pub struct FastqGzippedReader {
+    reader: Reader<BufReader<flate2::read::GzDecoder<std::fs::File>>>,
+}
+
+#[pymethods]
+impl FastqGzippedReader {
+    #[new]
+    fn new(path: &str) -> PyResult<Self> {
+        let file = std::fs::File::open(path)?;
+        let reader = Reader::new(BufReader::new(flate2::read::GzDecoder::new(file)));
+
+        Ok(Self { reader })
+    }
+
+    pub fn read(&mut self) -> PyResult<PyObject> {
+        let mut batch = FastqBatch::new();
+
+        for record in self.reader.records() {
+            let record = record?;
+            batch.add(record);
+        }
+
+        let ipc = batch.to_ipc();
+        Ok(Python::with_gil(|py| PyBytes::new(py, &ipc).into()))
+    }
+
+    pub fn __enter__(slf: Py<Self>) -> Py<Self> {
+        slf
+    }
+
+    pub fn __exit__(&mut self, _exc_type: PyObject, _exc_value: PyObject, _traceback: PyObject) {}
+}
