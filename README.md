@@ -111,6 +111,7 @@ Similar packages and/or inspiration for this package:
 - https://github.com/tshauck/brrrr/
 - https://github.com/natir/vcf2parquet/
 - https://github.com/zaeleus/noodles/
+- https://github.com/eto-ai/lance
 
 ## API Documentation
 
