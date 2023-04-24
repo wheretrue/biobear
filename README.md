@@ -29,6 +29,8 @@ The python package has minimal dependencies and only requires Polars. Biobear ca
 pip install biobear
 ```
 
+Prefer python 3.10 or higher, though python 3.7+ should work.
+
 ## Usage
 
 Read a FASTQ file:
