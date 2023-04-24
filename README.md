@@ -103,7 +103,6 @@ print(df.head())
 ## API Documentation
 
 These docs are auto-generated, please file an issue if something is amiss.
-
 <a id="vcf_reader"></a>
 
 ### vcf\_reader
@@ -142,16 +141,6 @@ Initialize the VCFReader.
 
 ```python
 def read() -> pl.DataFrame
-```
-
-Read the VCF file and return a polars DataFrame.
-
-<a id="vcf_reader.VCFReader.to_polars"></a>
-
-##### to\_polars
-
-```python
-def to_polars() -> pl.DataFrame
 ```
 
 Read the VCF file and return a polars DataFrame.

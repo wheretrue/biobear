@@ -24,10 +24,6 @@ class VCFReader:
 
     def read(self) -> pl.DataFrame:
         """Read the VCF file and return a polars DataFrame."""
-        return self.to_polars()
-
-    def to_polars(self) -> pl.DataFrame:
-        """Read the VCF file and return a polars DataFrame."""
         contents = self._vcf_reader.read()
         return pl.read_ipc(contents)
 
