@@ -5,6 +5,7 @@ from biobear.compression import Compression
 
 import polars as pl
 
+
 class FastaReader:
     def __init__(self, path: Path, compression: Compression = Compression.INFERRED):
         """Read a fasta file.
@@ -26,8 +27,6 @@ class FastaReader:
             self._fasta_reader = _FastaReader(str(path))
 
     def read(self) -> pl.DataFrame:
-        return self.to_polars()
-
-    def to_polars(self) -> pl.DataFrame:
+        """Read the fasta file and return a polars DataFrame."""
         contents = self._fasta_reader.read()
         return pl.read_ipc(contents)

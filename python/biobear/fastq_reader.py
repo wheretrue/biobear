@@ -5,11 +5,10 @@ from biobear.compression import Compression
 
 import polars as pl
 
+
 class FastqReader:
     def __init__(
-        self,
-        path: os.PathLike,
-        compression: Compression = Compression.INFERRED
+        self, path: os.PathLike, compression: Compression = Compression.INFERRED
     ):
         """Read a fastq file.
 
@@ -30,8 +29,6 @@ class FastqReader:
             self._fastq_reader = _FastqReader(str(path))
 
     def read(self) -> pl.DataFrame:
-        return self.to_polars()
-
-    def to_polars(self) -> pl.DataFrame:
+        """Read the fastq file and return a polars DataFrame."""
         contents = self._fastq_reader.read()
         return pl.read_ipc(contents)
