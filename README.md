@@ -48,7 +48,37 @@ print(df.head())
 # └─────────┴───────────────────────┴───────────────────────────────────┴───────────────────────────────────┘
 ```
 
-Query an indexed VCF file.
+Read a gzipped FASTQ file:
+
+```python
+import biobear as bb
+from biobear.compression import Compression
+
+df = bb.FastqReader("./python/tests/data/test.fastq.gz", compression=Compression.GZIP).read()
+print(df.head())
+# ┌─────────┬─────────────┬───────────────────────────────────┬───────────────────────────────────┐
+# │ name    ┆ description ┆ sequence                          ┆ quality                           │
+# │ ---     ┆ ---         ┆ ---                               ┆ ---                               │
+# │ str     ┆ str         ┆ str                               ┆ str                               │
+# ╞═════════╪═════════════╪═══════════════════════════════════╪═══════════════════════════════════╡
+# │ SEQ_ID  ┆ null        ┆ GATTTGGGGTTCAAAGCAGTATCGATCAAATA… ┆ !''*((((***+))%%%++)(%%%%).1***-… │
+# │ SEQ_ID2 ┆ null        ┆ GATTTGGGGTTCAAAGCAGTATCGATCAAATA… ┆ !''*((((***+))%%%++)(%%%%).1***-… │
+# └─────────┴─────────────┴───────────────────────────────────┴───────────────────────────────────┘
+
+# The compression type is also inferred from the extension of the file
+df = bb.FastqReader("test.fq.gz").read()
+print(df.head())
+# ┌─────────┬─────────────┬───────────────────────────────────┬───────────────────────────────────┐
+# │ name    ┆ description ┆ sequence                          ┆ quality                           │
+# │ ---     ┆ ---         ┆ ---                               ┆ ---                               │
+# │ str     ┆ str         ┆ str                               ┆ str                               │
+# ╞═════════╪═════════════╪═══════════════════════════════════╪═══════════════════════════════════╡
+# │ SEQ_ID  ┆ null        ┆ GATTTGGGGTTCAAAGCAGTATCGATCAAATA… ┆ !''*((((***+))%%%++)(%%%%).1***-… │
+# │ SEQ_ID2 ┆ null        ┆ GATTTGGGGTTCAAAGCAGTATCGATCAAATA… ┆ !''*((((***+))%%%++)(%%%%).1***-… │
+# └─────────┴─────────────┴───────────────────────────────────┴───────────────────────────────────┘
+```
+
+Query an indexed VCF file:
 
 
 ```python
