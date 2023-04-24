@@ -1,3 +1,4 @@
+"""FASTA file reader."""
 from pathlib import Path
 
 from .biobear import _FastaReader, _FastaGzippedReader

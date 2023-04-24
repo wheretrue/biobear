@@ -1,3 +1,5 @@
+"""Main biobear package."""
+
 from biobear.fasta_reader import FastaReader
 from biobear.fastq_reader import FastqReader
 from biobear.vcf_reader import VCFReader, VCFIndexedReader

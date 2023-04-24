@@ -1,3 +1,5 @@
+"""VCF File Readers."""
+
 from pathlib import Path
 
 from .biobear import _VCFReader, _VCFIndexedReader

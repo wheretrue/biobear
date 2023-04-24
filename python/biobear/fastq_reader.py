@@ -1,3 +1,4 @@
+"""FASTQ reader."""
 import os
 
 from .biobear import _FastqReader, _FastqGzippedReader

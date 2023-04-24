@@ -1,3 +1,5 @@
+"""Compression configuration."""
+
 from pathlib import Path
 import os
 from enum import Enum

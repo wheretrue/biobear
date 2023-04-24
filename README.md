@@ -4,6 +4,25 @@ biobear is a Python library designed for reading and searching bioinformatic fil
 
 The python package has minimal dependencies and only requires Polars. Biobear can be used to read various bioinformatic file formats, including FASTA, FASTQ, VCF, BAM, and GFF. It can also query some indexed file formats, including VCF and BAM.
 
+- [Installation](#installation)
+- [Usage](#usage)
+- [API Documentation](#api-documentation)
+  - [vcf\_reader](#vcf_reader)
+    - [VCFReader](#vcfreader)
+    - [VCFIndexedReader](#vcfindexedreader)
+  - [fasta\_reader](#fasta_reader)
+    - [FastaReader](#fastareader)
+  - [compression](#compression)
+    - [Compression](#compression-1)
+  - [\_\_init\_\_](#__init__-3)
+  - [bam\_reader](#bam_reader)
+    - [BamReader](#bamreader)
+    - [BamIndexedReader](#bamindexedreader)
+  - [fastq\_reader](#fastq_reader)
+    - [FastqReader](#fastqreader)
+  - [gff\_reader](#gff_reader)
+    - [GFFReader](#gffreader)
+
 ## Installation
 
 ```bash
@@ -51,42 +70,353 @@ print(df.head())
 # └────────────┴──────────┴───────┴───────────┴───┴───────────────┴────────┴───────────────────────────────────┴────────────────┘
 ```
 
-## Available Readers
+## API Documentation
 
-There are a slew of readers available, though feel free to open up an Issue or a PR if you'd like one added.
+These docs are auto-generated, please file an issue if something is amiss.
 
--   `FastaReader`
--   `FastqReader`
--   `VCFReader`
--   `VCFIndexedReader`
--   `BamReader`
--   `BamIndexedReader`
--   `GFFReader`
+<a id="vcf_reader"></a>
 
-Generally these all work the same way, in that calling `.read()` on the reader will return a Polars DataFrame. Some do have additional methods, which are documented below.
+### vcf\_reader
 
-### `VCFIndexedReader`
+VCF File Readers.
 
-This reader takes an indexed BGZF VCF file. It supports `.read()`, but also `.query()`.
+<a id="vcf_reader.VCFReader"></a>
+
+#### VCFReader
 
 ```python
-import biobear as bb
-
-# Will error if test.vcf.gz.tbi is not present
-reader = bb.VCFIndexedReader("test.vcf.gz")
-result = reader.query("1:1000-2000")
-
-print(result)
+class VCFReader()
 ```
 
-### `BamIndexedReader`
+A VCF File Reader.
 
-This reader takes a BAM file and an index file. It supports `.read()`, but also `.query()`.
+This class is used to read a VCF file and convert it to a polars DataFrame.
+
+<a id="vcf_reader.VCFReader.__init__"></a>
+
+##### \_\_init\_\_
 
 ```python
-import biobear as bb
-reader = bb.BamIndexedReader("test.bam", "test.bam.bai")
-result = reader.query("chr1", 1, 1000)
-
-print(result)
+def __init__(path: Path)
 ```
+
+Initialize the VCFReader.
+
+**Arguments**:
+
+- `path` _Path_ - Path to the VCF file.
+
+<a id="vcf_reader.VCFReader.read"></a>
+
+##### read
+
+```python
+def read() -> pl.DataFrame
+```
+
+Read the VCF file and return a polars DataFrame.
+
+<a id="vcf_reader.VCFReader.to_polars"></a>
+
+##### to\_polars
+
+```python
+def to_polars() -> pl.DataFrame
+```
+
+Read the VCF file and return a polars DataFrame.
+
+<a id="vcf_reader.VCFIndexedReader"></a>
+
+#### VCFIndexedReader
+
+```python
+class VCFIndexedReader()
+```
+
+An Indexed VCF File Reader.
+
+This class is used to read or query an indexed VCF file and convert it to a
+polars DataFrame.
+
+<a id="vcf_reader.VCFIndexedReader.__init__"></a>
+
+##### \_\_init\_\_
+
+```python
+def __init__(path: Path)
+```
+
+Initialize the VCFIndexedReader.
+
+<a id="vcf_reader.VCFIndexedReader.read"></a>
+
+##### read
+
+```python
+def read() -> pl.DataFrame
+```
+
+Read the VCF file and return a polars DataFrame.
+
+<a id="vcf_reader.VCFIndexedReader.query"></a>
+
+##### query
+
+```python
+def query(region: str) -> pl.DataFrame
+```
+
+Query the VCF file and return a polars DataFrame.
+
+**Arguments**:
+
+- `region` _str_ - The region to query.
+
+<a id="fasta_reader"></a>
+
+### fasta\_reader
+
+FASTA file reader.
+
+<a id="fasta_reader.FastaReader"></a>
+
+#### FastaReader
+
+```python
+class FastaReader()
+```
+
+<a id="fasta_reader.FastaReader.__init__"></a>
+
+##### \_\_init\_\_
+
+```python
+def __init__(path: Path, compression: Compression = Compression.INFERRED)
+```
+
+Read a fasta file.
+
+**Arguments**:
+
+- `path` _Path_ - Path to the fasta file.
+
+  Kwargs:
+- `compression` _Compression_ - Compression type of the file. Defaults to
+  Compression.INFERRED.
+
+<a id="fasta_reader.FastaReader.read"></a>
+
+##### read
+
+```python
+def read() -> pl.DataFrame
+```
+
+Read the fasta file and return a polars DataFrame.
+
+<a id="compression"></a>
+
+### compression
+
+Compression configuration.
+
+<a id="compression.Compression"></a>
+
+#### Compression
+
+```python
+class Compression(Enum)
+```
+
+Compression types for files.
+
+<a id="compression.Compression.from_file"></a>
+
+##### from\_file
+
+```python
+def from_file(path: os.PathLike) -> "Compression"
+```
+
+Infer the compression type from the file extension.
+
+<a id="__init__"></a>
+
+### \_\_init\_\_
+
+Main biobear package.
+
+<a id="bam_reader"></a>
+
+### bam\_reader
+
+BAM File Readers.
+
+<a id="bam_reader.BamReader"></a>
+
+#### BamReader
+
+```python
+class BamReader()
+```
+
+A BAM File Reader.
+
+<a id="bam_reader.BamReader.__init__"></a>
+
+##### \_\_init\_\_
+
+```python
+def __init__(path: Path)
+```
+
+Initialize the BamReader.
+
+**Arguments**:
+
+- `path` _Path_ - Path to the BAM file.
+
+<a id="bam_reader.BamReader.read"></a>
+
+##### read
+
+```python
+def read() -> pl.DataFrame
+```
+
+Read the BAM file and return a polars DataFrame.
+
+<a id="bam_reader.BamIndexedReader"></a>
+
+#### BamIndexedReader
+
+```python
+class BamIndexedReader()
+```
+
+An Indexed BAM File Reader.
+
+<a id="bam_reader.BamIndexedReader.__init__"></a>
+
+##### \_\_init\_\_
+
+```python
+def __init__(path: Path, index: Path)
+```
+
+Initialize the BamIndexedReader.
+
+**Arguments**:
+
+- `path` _Path_ - Path to the BAM file.
+- `index` _Path_ - Path to the BAM index file.
+
+<a id="bam_reader.BamIndexedReader.read"></a>
+
+##### read
+
+```python
+def read() -> pl.DataFrame
+```
+
+Read the BAM file and return a polars DataFrame.
+
+<a id="bam_reader.BamIndexedReader.query"></a>
+
+##### query
+
+```python
+def query(chrom: str, start: int, end: int) -> pl.DataFrame
+```
+
+Query the BAM file and return a polars DataFrame.
+
+**Arguments**:
+
+- `chrom` _str_ - The chromosome to query.
+- `start` _int_ - The start position to query.
+- `end` _int_ - The end position to query.
+
+<a id="fastq_reader"></a>
+
+### fastq\_reader
+
+FASTQ reader.
+
+<a id="fastq_reader.FastqReader"></a>
+
+#### FastqReader
+
+```python
+class FastqReader()
+```
+
+<a id="fastq_reader.FastqReader.__init__"></a>
+
+##### \_\_init\_\_
+
+```python
+def __init__(path: os.PathLike,
+             compression: Compression = Compression.INFERRED)
+```
+
+Read a fastq file.
+
+**Arguments**:
+
+- `path` _Path_ - Path to the fastq file.
+
+  Kwargs:
+- `compression` _Compression_ - Compression type of the file. Defaults to
+  Compression.INFERRED.
+
+<a id="fastq_reader.FastqReader.read"></a>
+
+##### read
+
+```python
+def read() -> pl.DataFrame
+```
+
+Read the fastq file and return a polars DataFrame.
+
+<a id="gff_reader"></a>
+
+### gff\_reader
+
+GFF File Reader.
+
+<a id="gff_reader.GFFReader"></a>
+
+#### GFFReader
+
+```python
+class GFFReader()
+```
+
+A GFF File Reader.
+
+<a id="gff_reader.GFFReader.__init__"></a>
+
+##### \_\_init\_\_
+
+```python
+def __init__(path: Path)
+```
+
+Initialize the GFFReader.
+
+**Arguments**:
+
+- `path` - The path to the GFF file.
+
+<a id="gff_reader.GFFReader.read"></a>
+
+##### read
+
+```python
+def read() -> pl.DataFrame
+```
+
+Read the GFF file and return a polars DataFrame.

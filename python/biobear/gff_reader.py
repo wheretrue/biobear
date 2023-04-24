@@ -1,3 +1,5 @@
+"""GFF File Reader."""
+
 from pathlib import Path
 
 import polars as pl
@@ -9,7 +11,12 @@ class GFFReader:
     """A GFF File Reader."""
 
     def __init__(self, path: Path):
-        """Initialize the GFFReader."""
+        """Initialize the GFFReader.
+
+        Args:
+            path: The path to the GFF file.
+        """
+
         self._gff_reader = _GFFReader(str(path))
 
     def read(self) -> pl.DataFrame:

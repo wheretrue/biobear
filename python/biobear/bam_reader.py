@@ -1,3 +1,5 @@
+"""BAM File Readers."""
+
 from pathlib import Path
 
 from .biobear import _BamReader, _BamIndexedReader
