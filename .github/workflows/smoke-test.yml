@@ -32,4 +32,4 @@ jobs:
             - name: Read example fasta file
               shell: bash
               run: |
-                python -c ./.github/workflows/smoketest.py
+                python ./.github/workflows/smoketest.py
