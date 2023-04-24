@@ -4,7 +4,8 @@
     "version": "0.2.0",
     "tag_format": "v$version",
     "version_files": [
-      "Cargo.toml"
+      "Cargo.toml",
+      "README.md"
     ]
   }
 }
