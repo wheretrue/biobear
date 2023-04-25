@@ -32,5 +32,6 @@ jobs:
                   pip install -r requirements-dev.txt
                   cargo build
                   maturin develop
+
                   ruff check python/
                   pytest
