@@ -1,3 +1,13 @@
+mod bam_batch;
+
+use arrow::datatypes::SchemaRef;
+use arrow::error::ArrowError;
+use arrow::ffi_stream::export_reader_into_raw;
+use arrow::ffi_stream::ArrowArrayStreamReader;
+use arrow::ffi_stream::FFI_ArrowArrayStream;
+use arrow::pyarrow::PyArrowConvert;
+use arrow::record_batch::RecordBatch;
+use arrow::record_batch::RecordBatchReader;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
@@ -8,174 +18,111 @@ use std::fs::File;
 use std::io::BufReader;
 use std::sync::Arc;
 
-use arrow::record_batch::RecordBatch;
-use noodles::{bam, bgzf, sam};
-
-use arrow::array::*;
-use arrow::datatypes::*;
-
 use crate::batch::BearRecordBatch;
 
-struct BamBatch {
-    names: GenericStringBuilder<i32>,
-    flags: Int32Builder,
-    references: GenericStringBuilder<i32>,
-    starts: Int32Builder,
-    ends: Int32Builder,
-    mapping_qualities: GenericStringBuilder<i32>,
-    cigar: GenericStringBuilder<i32>,
-    mate_references: GenericStringBuilder<i32>,
-    sequences: GenericStringBuilder<i32>,
-    quality_scores: GenericStringBuilder<i32>,
+use self::bam_batch::add_next_bam_indexed_record_to_batch;
+use self::bam_batch::add_next_bam_record_to_batch;
+use self::bam_batch::BamBatch;
+use self::bam_batch::BamSchemaTrait;
 
-    schema: Schema,
-}
-
-impl BamBatch {
-    fn new() -> Self {
-        let schema = Schema::new(vec![
-            Field::new("name", DataType::Utf8, false),
-            Field::new("flag", DataType::Int32, false),
-            Field::new("reference", DataType::Utf8, true),
-            Field::new("start", DataType::Int32, true),
-            Field::new("end", DataType::Int32, true),
-            Field::new("mapping_quality", DataType::Utf8, true),
-            Field::new("cigar", DataType::Utf8, false),
-            Field::new("mate_reference", DataType::Utf8, true),
-            Field::new("sequence", DataType::Utf8, false),
-            Field::new("quality_score", DataType::Utf8, false),
-        ]);
-
-        Self {
-            names: GenericStringBuilder::<i32>::new(),
-            flags: Int32Builder::new(),
-            references: GenericStringBuilder::<i32>::new(),
-            starts: Int32Builder::new(),
-            ends: Int32Builder::new(),
-            mapping_qualities: GenericStringBuilder::<i32>::new(),
-            cigar: GenericStringBuilder::<i32>::new(),
-            mate_references: GenericStringBuilder::<i32>::new(),
-            sequences: GenericStringBuilder::<i32>::new(),
-            quality_scores: GenericStringBuilder::<i32>::new(),
-            schema,
-        }
-    }
-
-    fn add(&mut self, record: sam::alignment::Record, header: &sam::Header) {
-        self.names.append_option(record.read_name());
-
-        let flag_bits = record.flags().bits();
-        self.flags.append_value(flag_bits as i32);
-
-        let reference_name = match record.reference_sequence(header) {
-            Some(Ok((name, _))) => Some(name.as_str()),
-            Some(Err(_)) => None,
-            None => None,
-        };
-        self.references.append_option(reference_name);
-
-        self.starts
-            .append_option(record.alignment_start().map(|v| v.get() as i32));
-
-        self.ends
-            .append_option(record.alignment_end().map(|v| v.get() as i32));
-
-        self.mapping_qualities
-            .append_option(record.mapping_quality().map(|v| v.get().to_string()));
-
-        let cigar_string = record.cigar().to_string();
-        self.cigar.append_value(cigar_string.as_str());
-
-        let mate_reference_name = match record.mate_reference_sequence(header) {
-            Some(Ok((name, _))) => Some(name.as_str()),
-            Some(Err(_)) => None,
-            None => None,
-        };
-        self.mate_references.append_option(mate_reference_name);
-
-        let sequence_string = record.sequence().to_string();
-        self.sequences.append_value(sequence_string.as_str());
-
-        let quality_scores = record.quality_scores();
-        self.quality_scores
-            .append_value(quality_scores.to_string().as_str());
-    }
-}
-
-impl BearRecordBatch for BamBatch {
-    fn to_batch(&mut self) -> RecordBatch {
-        let names = self.names.finish();
-        let flags = self.flags.finish();
-        let references = self.references.finish();
-        let starts = self.starts.finish();
-        let ends = self.ends.finish();
-        let mapping_qualities = self.mapping_qualities.finish();
-        let cigar = self.cigar.finish();
-        let mate_references = self.mate_references.finish();
-        let sequences = self.sequences.finish();
-        let quality_scores = self.quality_scores.finish();
-
-        RecordBatch::try_new(
-            Arc::new(self.schema.clone()),
-            vec![
-                Arc::new(names),
-                Arc::new(flags),
-                Arc::new(references),
-                Arc::new(starts),
-                Arc::new(ends),
-                Arc::new(mapping_qualities),
-                Arc::new(cigar),
-                Arc::new(mate_references),
-                Arc::new(sequences),
-                Arc::new(quality_scores),
-            ],
-        )
-        .unwrap()
-    }
-}
+use noodles::{bam, bgzf, sam};
 
 #[pyclass(name = "_BamReader")]
 pub struct BamReader {
     reader: bam::Reader<bgzf::Reader<BufReader<File>>>,
     header: sam::Header,
+    file_path: String,
+    batch_size: usize,
 }
 
 #[pymethods]
 impl BamReader {
     #[new]
-    fn new(path: &str) -> PyResult<Self> {
+    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         let file = File::open(path)?;
         let buf_reader = BufReader::new(file);
         let mut reader = bam::Reader::new(buf_reader);
         let header = reader.read_header().unwrap();
 
-        Ok(Self { reader, header })
+        Ok(Self {
+            reader,
+            header,
+            file_path: path.to_string(),
+            batch_size: batch_size.unwrap_or(2048),
+        })
     }
+}
 
-    fn read(&mut self) -> PyResult<PyObject> {
-        let mut batch = BamBatch::new();
+impl BamSchemaTrait for BamReader {}
 
-        for record in self.reader.records(&self.header) {
-            let record = record?;
-            batch.add(record, &self.header);
+impl Iterator for BamReader {
+    type Item = Result<RecordBatch, ArrowError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        add_next_bam_record_to_batch(&mut self.reader, &self.header, Some(self.batch_size))
+    }
+}
+
+impl RecordBatchReader for BamReader {
+    fn schema(&self) -> SchemaRef {
+        self.bam_schema().into()
+    }
+}
+
+impl BamReader {
+    pub fn to_pyarrow(self) -> PyResult<PyObject> {
+        Python::with_gil(|py| {
+            let stream = Arc::new(FFI_ArrowArrayStream::empty());
+            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
+
+            unsafe {
+                export_reader_into_raw(Box::new(self), stream_ptr);
+
+                match ArrowArrayStreamReader::from_raw(stream_ptr) {
+                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Error converting to pyarrow: {}",
+                        err
+                    ))),
+                }
+            }
+        })
+    }
+}
+
+impl Clone for BamReader {
+    fn clone(&self) -> Self {
+        let file = File::open(self.file_path.clone()).unwrap();
+        let buf_reader = BufReader::new(file);
+        let mut reader = bam::Reader::new(buf_reader);
+        let header = reader.read_header().unwrap();
+
+        Self {
+            reader,
+            header,
+            file_path: self.file_path.clone(),
+            batch_size: self.batch_size,
         }
-
-        Ok(Python::with_gil(|py| {
-            PyBytes::new(py, &batch.serialize()).into()
-        }))
     }
+}
+
+#[pyfunction]
+pub fn bam_reader_to_pyarrow(reader: BamReader) -> PyResult<PyObject> {
+    reader.to_pyarrow()
 }
 
 #[pyclass(name = "_BamIndexedReader")]
 pub struct BamIndexedReader {
     reader: bam::IndexedReader<bgzf::Reader<BufReader<File>>>,
+    file_path: String,
     header: sam::Header,
+    batch_size: usize,
 }
 
 #[pymethods]
 impl BamIndexedReader {
     #[new]
-    fn new(path: &str, index_path: Option<&str>) -> PyResult<Self> {
+    fn new(path: &str, index_path: Option<&str>, batch_size: Option<usize>) -> PyResult<Self> {
         let file = File::open(path)?;
 
         let buf_reader = BufReader::new(file);
@@ -210,20 +157,12 @@ impl BamIndexedReader {
             }
         };
 
-        Ok(Self { reader, header })
-    }
-
-    fn read(&mut self) -> PyResult<PyObject> {
-        let mut batch = BamBatch::new();
-
-        for record in self.reader.records(&self.header) {
-            let record = record?;
-            batch.add(record, &self.header);
-        }
-
-        Ok(Python::with_gil(|py| {
-            PyBytes::new(py, &batch.serialize()).into()
-        }))
+        Ok(Self {
+            reader,
+            file_path: path.to_string(),
+            header,
+            batch_size: batch_size.unwrap_or(2048),
+        })
     }
 
     fn query(&mut self, chromosome: &str, start: usize, end: usize) -> PyResult<PyObject> {
@@ -254,4 +193,69 @@ impl BamIndexedReader {
             PyBytes::new(py, &batch.serialize()).into()
         }))
     }
+}
+
+impl BamSchemaTrait for BamIndexedReader {}
+
+impl Iterator for BamIndexedReader {
+    type Item = Result<RecordBatch, ArrowError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        add_next_bam_indexed_record_to_batch(&mut self.reader, &self.header, Some(self.batch_size))
+    }
+}
+
+impl RecordBatchReader for BamIndexedReader {
+    fn schema(&self) -> SchemaRef {
+        self.bam_schema().into()
+    }
+}
+
+impl BamIndexedReader {
+    pub fn to_pyarrow(self) -> PyResult<PyObject> {
+        Python::with_gil(|py| {
+            let stream = Arc::new(FFI_ArrowArrayStream::empty());
+            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
+
+            unsafe {
+                export_reader_into_raw(Box::new(self), stream_ptr);
+
+                match ArrowArrayStreamReader::from_raw(stream_ptr) {
+                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Error converting to pyarrow: {}",
+                        err
+                    ))),
+                }
+            }
+        })
+    }
+}
+
+impl Clone for BamIndexedReader {
+    fn clone(&self) -> Self {
+        let file = File::open(self.file_path.clone()).unwrap();
+        let buf_reader = BufReader::new(file);
+
+        let index = bam::bai::read(format!("{}.bai", self.file_path)).unwrap();
+
+        let mut reader = bam::indexed_reader::Builder::default()
+            .set_index(index)
+            .build_from_reader(buf_reader)
+            .unwrap();
+
+        let header = reader.read_header().unwrap();
+
+        Self {
+            reader,
+            header,
+            file_path: self.file_path.clone(),
+            batch_size: self.batch_size,
+        }
+    }
+}
+
+#[pyfunction]
+pub fn bam_indexed_reader_to_pyarrow(reader: BamIndexedReader) -> PyResult<PyObject> {
+    reader.to_pyarrow()
 }

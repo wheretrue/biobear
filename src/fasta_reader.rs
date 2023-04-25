@@ -10,17 +10,13 @@ use pyo3::prelude::*;
 
 use arrow::datatypes::*;
 use arrow::record_batch::RecordBatch;
-use pyo3::types::PyBytes;
 
 use std::io::BufReader;
 use std::sync::Arc;
 
 use noodles::fasta::Reader;
 
-use crate::batch::BearRecordBatch;
-
 use self::fasta_batch::add_next_record_to_batch;
-use self::fasta_batch::FastaBatch;
 use self::fasta_batch::FastaSchemaTrait;
 
 #[pyclass(name = "_FastaReader")]
@@ -60,18 +56,6 @@ impl FastaReader {
             file_path: fasta_path.to_string(),
             batch_size: batch_size.unwrap_or(2048),
         })
-    }
-
-    pub fn read(&mut self) -> PyResult<PyObject> {
-        let mut batch = FastaBatch::new();
-
-        for result in self.reader.records() {
-            let record = result?;
-            batch.add(record);
-        }
-
-        let buffer = batch.serialize();
-        Ok(Python::with_gil(|py| PyBytes::new(py, &buffer).into()))
     }
 }
 
@@ -152,18 +136,6 @@ impl FastaGzippedReader {
             file_path: fasta_path.to_string(),
             batch_size: batch_size.unwrap_or(2048),
         })
-    }
-
-    pub fn read(&mut self) -> PyResult<PyObject> {
-        let mut batch = FastaBatch::new();
-
-        for result in self.reader.records() {
-            let record = result?;
-            batch.add(record);
-        }
-
-        let buffer = batch.serialize();
-        Ok(Python::with_gil(|py| PyBytes::new(py, &buffer).into()))
     }
 }
 

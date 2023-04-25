@@ -10,11 +10,7 @@ use arrow::pyarrow::PyArrowConvert;
 use arrow::record_batch::{RecordBatch, RecordBatchReader};
 use pyo3::prelude::*;
 
-use pyo3::types::PyBytes;
-
-use crate::batch::BearRecordBatch;
-
-use self::gff_batch::{add_next_gff_record_to_batch, GFFBatch, GffSchemaTrait};
+use self::gff_batch::{add_next_gff_record_to_batch, GffSchemaTrait};
 
 #[pyclass(name = "_GFFReader")]
 pub struct GFFReader {
@@ -35,25 +31,6 @@ impl GFFReader {
             file_path: path.to_string(),
             batch_size: batch_size.unwrap_or(2048),
         })
-    }
-
-    fn read(&mut self) -> PyResult<PyObject> {
-        let mut batch = GFFBatch::new();
-        for record in self.reader.records() {
-            let record = match record {
-                Ok(record) => record,
-                Err(e) => {
-                    return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                        "Error reading record: {}",
-                        e
-                    )))
-                }
-            };
-            batch.add(record);
-        }
-
-        let buffer = batch.serialize();
-        Ok(Python::with_gil(|py| PyBytes::new(py, &buffer).into()))
     }
 }
 
