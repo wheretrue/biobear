@@ -30,6 +30,13 @@ def test_fasta_gzipped_reader():
     assert len(df) == 2
 
 
+def test_fasta_reader_to_arrow():
+    fasta_reader = FastaReader(DATA / "test.fasta")
+    arrow_reader = fasta_reader.to_arrow_record_batch_reader()
+
+    assert arrow_reader.read_all().num_rows == 2
+
+
 def test_fasta_reader_no_file():
     with pytest.raises(FileNotFoundError):
         FastaReader("test.fasta")
