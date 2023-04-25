@@ -2,9 +2,16 @@
 
 from pathlib import Path
 
-from .biobear import _BamReader, _BamIndexedReader
+from .biobear import (
+    _BamReader,
+    _BamIndexedReader,
+    bam_reader_to_pyarrow,
+    bam_indexed_reader_to_pyarrow,
+)
 
 import polars as pl
+import pyarrow as pa
+import pyarrow.dataset as ds
 
 
 class BamReader:
@@ -19,10 +26,17 @@ class BamReader:
         """
         self._bam_reader = _BamReader(str(path))
 
+    def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
+        """Convert the BAM reader to an arrow batch reader."""
+        return bam_reader_to_pyarrow(self._bam_reader)
+
+    def to_arrow_scanner(self) -> ds.Scanner:
+        """Convert the BAM reader to an arrow scanner."""
+        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
+
     def read(self) -> pl.DataFrame:
         """Read the BAM file and return a polars DataFrame."""
-        contents = self._bam_reader.read()
-        return pl.read_ipc(contents)
+        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
 
 
 class BamIndexedReader:
@@ -40,8 +54,15 @@ class BamIndexedReader:
 
     def read(self) -> pl.DataFrame:
         """Read the BAM file and return a polars DataFrame."""
-        contents = self._bam_reader.read()
-        return pl.read_ipc(contents)
+        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
+
+    def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
+        """Convert the BAM reader to an arrow batch reader."""
+        return bam_indexed_reader_to_pyarrow(self._bam_reader)
+
+    def to_arrow_scanner(self) -> ds.Scanner:
+        """Convert the BAM reader to an arrow scanner."""
+        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
 
     def query(self, chrom: str, start: int, end: int) -> pl.DataFrame:
         """Query the BAM file and return a polars DataFrame.
