@@ -4,8 +4,8 @@ from pathlib import Path
 from .biobear import (
     _FastaReader,
     _FastaGzippedReader,
-    fasta_reader_to_py_arrow,
-    fasta_gzipped_reader_to_py_arrow,
+    fasta_reader_to_pyarrow,
+    fasta_gzipped_reader_to_pyarrow,
 )
 from biobear.compression import Compression
 
@@ -41,9 +41,9 @@ class FastaReader:
     def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
         """Convert the fasta reader to an arrow batch reader."""
         if isinstance(self._fasta_reader, _FastaReader):
-            return fasta_reader_to_py_arrow(self._fasta_reader)
+            return fasta_reader_to_pyarrow(self._fasta_reader)
 
         elif isinstance(self._fasta_reader, _FastaGzippedReader):
-            return fasta_gzipped_reader_to_py_arrow(self._fasta_reader)
+            return fasta_gzipped_reader_to_pyarrow(self._fasta_reader)
 
         raise NotImplementedError("Unknown fasta reader type")

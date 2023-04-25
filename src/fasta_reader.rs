@@ -110,7 +110,7 @@ impl Clone for FastaReader {
 }
 
 #[pyfunction]
-pub fn fasta_reader_to_py_arrow(reader: FastaReader) -> PyResult<PyObject> {
+pub fn fasta_reader_to_pyarrow(reader: FastaReader) -> PyResult<PyObject> {
     reader.to_pyarrow()
 }
 
@@ -182,7 +182,7 @@ impl RecordBatchReader for FastaGzippedReader {
 }
 
 #[pyfunction]
-pub fn fasta_gzipped_reader_to_py_arrow(reader: FastaGzippedReader) -> PyResult<PyObject> {
+pub fn fasta_gzipped_reader_to_pyarrow(reader: FastaGzippedReader) -> PyResult<PyObject> {
     reader.to_pyarrow()
 }
 
