@@ -37,19 +37,6 @@ impl FastaBatch {
         }
     }
 
-    pub fn add(&mut self, record: noodles::fasta::record::Record) {
-        self.names.append_value(record.name());
-
-        match record.description() {
-            Some(description) => self.descriptions.append_value(description),
-            None => self.descriptions.append_null(),
-        }
-
-        let record_sequence = record.sequence().as_ref();
-        let sequence = std::str::from_utf8(record_sequence).unwrap();
-        self.sequences.append_value(sequence);
-    }
-
     pub fn add_from_parts(&mut self, name: &str, description: Option<&str>, sequence: &str) {
         self.names.append_value(name);
 
