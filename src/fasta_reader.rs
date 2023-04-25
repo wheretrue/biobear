@@ -63,14 +63,6 @@ impl FastaBatch {
         }
 
         self.sequences.append_value(sequence);
-
-        eprintln!(
-            "Added record: {} {} {}",
-            name,
-            description.unwrap_or(""),
-            sequence
-        );
-
         self.batch_size += 1;
     }
 }
@@ -146,7 +138,6 @@ impl Iterator for FastaReader {
                 }
                 Some(definition) => match definition.split_once(" ") {
                     Some((id, description)) => {
-                        eprintln!("Adding {} {}", id, description);
                         fasta_batch.add_from_parts(id, Some(description), sequence_str);
                     }
                     None => fasta_batch.add_from_parts(definition, None, sequence_str),
@@ -354,7 +345,6 @@ impl Iterator for FastaGzippedReader {
                 }
                 Some(definition) => match definition.split_once(" ") {
                     Some((id, description)) => {
-                        eprintln!("Adding {} {}", id, description);
                         fasta_batch.add_from_parts(id, Some(description), sequence_str);
                     }
                     None => fasta_batch.add_from_parts(definition, None, sequence_str),

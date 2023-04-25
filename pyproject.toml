@@ -11,7 +11,8 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = ["polars>=0.17.0"]
+dependencies = ["polars[pyarrow]>=0.17.0"]
+
 license = {file = "LICENSE"}
 name = "biobear"
 readme = "README.md"

@@ -25,6 +25,7 @@ class FastaReader:
                 Compression.INFERRED.
 
         """
+        self.compression = compression
         if compression == Compression.INFERRED:
             self.compression = compression.from_file(path)
 
