@@ -16,6 +16,13 @@ def test_gff_reader():
     assert len(df) == 2
 
 
+def test_gff_reader_to_scanner():
+    reader = GFFReader(DATA / "test.gff")
+    scanner = reader.to_arrow_scanner()
+
+    assert scanner.count_rows() == 2
+
+
 def test_gff_reader_no_file():
     with pytest.raises(FileNotFoundError):
         GFFReader("test.gff")

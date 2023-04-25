@@ -1,126 +1,40 @@
-use std::fs::File;
-use std::io::BufReader;
-use std::sync::Arc;
-use std::vec;
+mod gff_batch;
 
-use arrow::record_batch::RecordBatch;
+use std::io::BufReader;
+use std::{fs::File, sync::Arc};
+
+use arrow::datatypes::SchemaRef;
+use arrow::error::ArrowError;
+use arrow::ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream};
+use arrow::pyarrow::PyArrowConvert;
+use arrow::record_batch::{RecordBatch, RecordBatchReader};
 use pyo3::prelude::*;
 
-use arrow::array::*;
-use arrow::datatypes::*;
 use pyo3::types::PyBytes;
 
 use crate::batch::BearRecordBatch;
 
-struct GFFBatch {
-    seqnames: GenericStringBuilder<i32>,
-    sources: GenericStringBuilder<i32>,
-    feature_types: GenericStringBuilder<i32>,
-    starts: Int64Builder,
-    ends: Int64Builder,
-    scores: Float32Builder,
-    strands: GenericStringBuilder<i32>,
-    phases: GenericStringBuilder<i32>,
-    attributes: GenericStringBuilder<i32>,
-
-    schema: Schema,
-}
-
-impl GFFBatch {
-    fn new() -> Self {
-        let file_schema = Schema::new(vec![
-            Field::new("seqname", DataType::Utf8, false),
-            Field::new("source", DataType::Utf8, true),
-            Field::new("feature", DataType::Utf8, false),
-            Field::new("start", DataType::Int64, false),
-            Field::new("end", DataType::Int64, false),
-            Field::new("score", DataType::Float32, true),
-            Field::new("strand", DataType::Utf8, false),
-            Field::new("phase", DataType::Utf8, true),
-            Field::new("attributes", DataType::Utf8, true),
-        ]);
-
-        Self {
-            seqnames: GenericStringBuilder::<i32>::new(),
-            sources: GenericStringBuilder::<i32>::new(),
-            feature_types: GenericStringBuilder::<i32>::new(),
-            starts: Int64Builder::new(),
-            ends: Int64Builder::new(),
-            scores: Float32Builder::new(),
-            strands: GenericStringBuilder::<i32>::new(),
-            phases: GenericStringBuilder::<i32>::new(),
-            attributes: GenericStringBuilder::<i32>::new(),
-            schema: file_schema,
-        }
-    }
-
-    fn add(&mut self, record: noodles::gff::Record) {
-        self.seqnames.append_value(record.reference_sequence_name());
-        self.sources.append_value(record.source());
-        self.feature_types.append_value(record.ty());
-        self.starts.append_value(record.start().get() as i64);
-        self.ends.append_value(record.end().get() as i64);
-        self.scores.append_option(record.score());
-        self.strands.append_value(record.strand().to_string());
-        self.phases
-            .append_option(record.phase().map(|p| p.to_string()));
-
-        let attrs = record.attributes();
-        if attrs.is_empty() {
-            self.attributes.append_null();
-        } else {
-            let mut attr_str = String::new();
-            for entry in attrs.into_iter() {
-                attr_str.push_str(&format!("{}={};", entry.key(), entry.value()));
-            }
-            self.attributes.append_value(&attr_str);
-        }
-    }
-}
-
-impl BearRecordBatch for GFFBatch {
-    fn to_batch(&mut self) -> RecordBatch {
-        let seqnames = self.seqnames.finish();
-        let sources = self.sources.finish();
-        let feature_types = self.feature_types.finish();
-        let starts = self.starts.finish();
-        let ends = self.ends.finish();
-        let scores = self.scores.finish();
-        let strands = self.strands.finish();
-        let phases = self.phases.finish();
-        let attributes = self.attributes.finish();
-
-        RecordBatch::try_new(
-            Arc::new(self.schema.clone()),
-            vec![
-                Arc::new(seqnames),
-                Arc::new(sources),
-                Arc::new(feature_types),
-                Arc::new(starts),
-                Arc::new(ends),
-                Arc::new(scores),
-                Arc::new(strands),
-                Arc::new(phases),
-                Arc::new(attributes),
-            ],
-        )
-        .unwrap()
-    }
-}
+use self::gff_batch::{add_next_gff_record_to_batch, GFFBatch, GffSchemaTrait};
 
 #[pyclass(name = "_GFFReader")]
 pub struct GFFReader {
     reader: noodles::gff::Reader<BufReader<File>>,
+    file_path: String,
+    batch_size: usize,
 }
 
 #[pymethods]
 impl GFFReader {
     #[new]
-    fn new(path: &str) -> PyResult<Self> {
+    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         let file = File::open(path)?;
         let reader = noodles::gff::Reader::new(BufReader::new(file));
 
-        Ok(Self { reader })
+        Ok(Self {
+            reader,
+            file_path: path.to_string(),
+            batch_size: batch_size.unwrap_or(2048),
+        })
     }
 
     fn read(&mut self) -> PyResult<PyObject> {
@@ -138,9 +52,62 @@ impl GFFReader {
             batch.add(record);
         }
 
-        Ok(Python::with_gil(|py| {
-            let pybytes = PyBytes::new(py, &batch.serialize());
-            pybytes.into()
-        }))
+        let buffer = batch.serialize();
+        Ok(Python::with_gil(|py| PyBytes::new(py, &buffer).into()))
     }
+}
+
+impl GffSchemaTrait for GFFReader {}
+
+impl Iterator for GFFReader {
+    type Item = Result<RecordBatch, ArrowError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        add_next_gff_record_to_batch(&mut self.reader, Some(self.batch_size))
+    }
+}
+
+impl RecordBatchReader for GFFReader {
+    fn schema(&self) -> SchemaRef {
+        self.gff_schema().into()
+    }
+}
+
+impl GFFReader {
+    pub fn to_pyarrow(self) -> PyResult<PyObject> {
+        Python::with_gil(|py| {
+            let stream = Arc::new(FFI_ArrowArrayStream::empty());
+            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
+
+            unsafe {
+                export_reader_into_raw(Box::new(self), stream_ptr);
+
+                match ArrowArrayStreamReader::from_raw(stream_ptr) {
+                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Error converting to pyarrow: {}",
+                        err
+                    ))),
+                }
+            }
+        })
+    }
+}
+
+impl Clone for GFFReader {
+    fn clone(&self) -> Self {
+        let file = File::open(&self.file_path).unwrap();
+        let reader = noodles::gff::Reader::new(BufReader::new(file));
+
+        Self {
+            reader,
+            file_path: self.file_path.clone(),
+            batch_size: self.batch_size,
+        }
+    }
+}
+
+#[pyfunction]
+pub fn gff_reader_to_pyarrow(reader: GFFReader) -> PyResult<PyObject> {
+    reader.to_pyarrow()
 }

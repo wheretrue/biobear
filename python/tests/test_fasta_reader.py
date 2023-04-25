@@ -30,6 +30,13 @@ def test_fasta_gzipped_reader():
     assert len(df) == 2
 
 
+def test_fasta_reader_to_scanner():
+    fasta_reader = FastaReader(DATA / "test.fasta")
+    scanner = fasta_reader.to_arrow_scanner()
+
+    assert scanner.count_rows() == 2
+
+
 def test_fasta_reader_to_arrow():
     fasta_reader = FastaReader(DATA / "test.fasta")
     arrow_reader = fasta_reader.to_arrow_record_batch_reader()

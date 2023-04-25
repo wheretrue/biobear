@@ -4,12 +4,13 @@ from pathlib import Path
 from .biobear import (
     _FastaReader,
     _FastaGzippedReader,
-    fasta_reader_to_py_arrow,
-    fasta_gzipped_reader_to_py_arrow,
+    fasta_reader_to_pyarrow,
+    fasta_gzipped_reader_to_pyarrow,
 )
 from biobear.compression import Compression
 
 import pyarrow as pa
+import pyarrow.dataset as ds
 import polars as pl
 
 
@@ -38,12 +39,16 @@ class FastaReader:
         """Read the fasta file and return a polars DataFrame."""
         return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
 
+    def to_arrow_scanner(self) -> ds.Scanner:
+        """Convert the fasta reader to an arrow scanner."""
+        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
+
     def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
         """Convert the fasta reader to an arrow batch reader."""
         if isinstance(self._fasta_reader, _FastaReader):
-            return fasta_reader_to_py_arrow(self._fasta_reader)
+            return fasta_reader_to_pyarrow(self._fasta_reader)
 
         elif isinstance(self._fasta_reader, _FastaGzippedReader):
-            return fasta_gzipped_reader_to_py_arrow(self._fasta_reader)
+            return fasta_gzipped_reader_to_pyarrow(self._fasta_reader)
 
         raise NotImplementedError("Unknown fasta reader type")
