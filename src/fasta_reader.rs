@@ -1,3 +1,5 @@
+mod fasta_batch;
+
 use arrow::error::ArrowError;
 use arrow::ffi_stream::export_reader_into_raw;
 use arrow::ffi_stream::ArrowArrayStreamReader;
@@ -6,7 +8,6 @@ use arrow::pyarrow::PyArrowConvert;
 use arrow::record_batch::RecordBatchReader;
 use pyo3::prelude::*;
 
-use arrow::array::*;
 use arrow::datatypes::*;
 use arrow::record_batch::RecordBatch;
 use pyo3::types::PyBytes;
@@ -18,174 +19,51 @@ use noodles::fasta::Reader;
 
 use crate::batch::BearRecordBatch;
 
-struct FastaBatch {
-    names: GenericStringBuilder<i32>,
-    descriptions: GenericStringBuilder<i32>,
-    sequences: GenericStringBuilder<i32>,
-
-    batch_size: usize,
-
-    schema: Schema,
-}
-
-impl FastaBatch {
-    fn new(schema: Schema) -> Self {
-        Self {
-            names: GenericStringBuilder::<i32>::new(),
-            descriptions: GenericStringBuilder::<i32>::new(),
-            sequences: GenericStringBuilder::<i32>::new(),
-            schema,
-            batch_size: 0,
-        }
-    }
-
-    fn add(&mut self, record: noodles::fasta::Record) {
-        self.names.append_value(record.name());
-
-        match record.description() {
-            Some(description) => self.descriptions.append_value(description),
-            None => self.descriptions.append_null(),
-        }
-
-        let record_sequence = record.sequence().as_ref();
-        let sequence = std::str::from_utf8(record_sequence).unwrap();
-        self.sequences.append_value(sequence);
-
-        self.batch_size += 1;
-    }
-
-    fn add_from_parts(&mut self, name: &str, description: Option<&str>, sequence: &str) {
-        self.names.append_value(name);
-
-        match description {
-            Some(description) => self.descriptions.append_value(description),
-            None => self.descriptions.append_null(),
-        }
-
-        self.sequences.append_value(sequence);
-        self.batch_size += 1;
-    }
-}
-
-impl BearRecordBatch for FastaBatch {
-    fn to_batch(&mut self) -> RecordBatch {
-        let names = self.names.finish();
-        let descriptions = self.descriptions.finish();
-        let sequences = self.sequences.finish();
-
-        RecordBatch::try_new(
-            Arc::new(self.schema.clone()),
-            vec![Arc::new(names), Arc::new(descriptions), Arc::new(sequences)],
-        )
-        .unwrap()
-    }
-}
+use self::fasta_batch::add_next_record_to_batch;
+use self::fasta_batch::FastaBatch;
+use self::fasta_batch::FastaSchemaTrait;
 
 #[pyclass(name = "_FastaReader")]
 pub struct FastaReader {
     reader: Reader<BufReader<std::fs::File>>,
     file_path: String,
-
-    schema: Schema,
     batch_size: usize,
 }
+
+impl FastaSchemaTrait for FastaReader {}
 
 impl Iterator for FastaReader {
     type Item = Result<RecordBatch, ArrowError>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut fasta_batch = FastaBatch::new(self.schema.clone());
-
-        for _i in 1..self.batch_size {
-            let mut buf = String::new();
-            let mut sequence = Vec::new();
-
-            match self.reader.read_definition(&mut buf) {
-                Ok(bytes_read) => {
-                    if bytes_read == 0 {
-                        let ii = fasta_batch.to_batch();
-
-                        if ii.num_rows() == 0 {
-                            return None;
-                        }
-
-                        return Some(Ok(ii));
-                    }
-                }
-                Err(e) => return Some(Err(ArrowError::ExternalError(Box::new(e)))),
-            }
-
-            match self.reader.read_sequence(&mut sequence) {
-                Ok(bytes_read) => {
-                    if bytes_read == 0 {
-                        let ii = fasta_batch.to_batch();
-
-                        if ii.num_rows() == 0 {
-                            return None;
-                        }
-
-                        return Some(Ok(ii));
-                    }
-                }
-                Err(e) => return Some(Err(ArrowError::ExternalError(Box::new(e)))),
-            }
-
-            let sequence_str = std::str::from_utf8(&sequence).unwrap();
-
-            match buf.strip_prefix(">") {
-                None => {
-                    panic!("Invalid fasta header");
-                }
-                Some(definition) => match definition.split_once(" ") {
-                    Some((id, description)) => {
-                        fasta_batch.add_from_parts(id, Some(description), sequence_str);
-                    }
-                    None => fasta_batch.add_from_parts(definition, None, sequence_str),
-                },
-            }
-        }
-
-        Some(Ok(fasta_batch.to_batch()))
+        add_next_record_to_batch(&mut self.reader, self.batch_size)
     }
 }
 
 impl RecordBatchReader for FastaReader {
     fn schema(&self) -> SchemaRef {
-        let schema = Schema::new(vec![
-            Field::new("name", DataType::Utf8, false),
-            Field::new("description", DataType::Utf8, true),
-            Field::new("sequence", DataType::Utf8, false),
-        ]);
-
-        schema.into()
+        self.fasta_schema().into()
     }
 }
 
 #[pymethods]
 impl FastaReader {
     #[new]
-    fn new(fasta_path: &str) -> PyResult<Self> {
+    fn new(fasta_path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         let file = std::fs::File::open(fasta_path)?;
         let buf_reader = BufReader::new(file);
 
         let reader = Reader::new(buf_reader);
 
-        let schema = Schema::new(vec![
-            Field::new("name", DataType::Utf8, false),
-            Field::new("description", DataType::Utf8, true),
-            Field::new("sequence", DataType::Utf8, false),
-        ]);
-
         Ok(Self {
             reader,
             file_path: fasta_path.to_string(),
-            schema,
-            batch_size: 1000,
+            batch_size: batch_size.unwrap_or(2048),
         })
     }
 
     pub fn read(&mut self) -> PyResult<PyObject> {
-        let mut batch = FastaBatch::new(self.schema.clone());
+        let mut batch = FastaBatch::new();
 
         for result in self.reader.records() {
             let record = result?;
@@ -226,7 +104,6 @@ impl Clone for FastaReader {
         Self {
             reader: Reader::new(buf_reader),
             file_path: self.file_path.clone(),
-            schema: self.schema.clone(),
             batch_size: self.batch_size,
         }
     }
@@ -240,10 +117,11 @@ pub fn fasta_reader_to_py_arrow(reader: FastaReader) -> PyResult<PyObject> {
 #[pyclass(name = "_FastaGzippedReader")]
 pub struct FastaGzippedReader {
     reader: Reader<BufReader<flate2::read::GzDecoder<std::fs::File>>>,
-    schema: Schema,
     batch_size: usize,
     file_path: String,
 }
+
+impl FastaSchemaTrait for FastaGzippedReader {}
 
 impl Clone for FastaGzippedReader {
     fn clone(&self) -> Self {
@@ -254,7 +132,6 @@ impl Clone for FastaGzippedReader {
         Self {
             reader: Reader::new(buf_reader),
             file_path: self.file_path.clone(),
-            schema: self.schema.clone(),
             batch_size: self.batch_size,
         }
     }
@@ -263,29 +140,22 @@ impl Clone for FastaGzippedReader {
 #[pymethods]
 impl FastaGzippedReader {
     #[new]
-    fn new(fasta_path: &str) -> PyResult<Self> {
+    fn new(fasta_path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         let file = std::fs::File::open(fasta_path)?;
         let gz_decoder = flate2::read::GzDecoder::new(file);
         let buf_reader = BufReader::new(gz_decoder);
 
         let reader = Reader::new(buf_reader);
 
-        let schema = Schema::new(vec![
-            Field::new("name", DataType::Utf8, false),
-            Field::new("description", DataType::Utf8, true),
-            Field::new("sequence", DataType::Utf8, false),
-        ]);
-
         Ok(Self {
             reader,
             file_path: fasta_path.to_string(),
-            schema,
-            batch_size: 1000,
+            batch_size: batch_size.unwrap_or(2048),
         })
     }
 
     pub fn read(&mut self) -> PyResult<PyObject> {
-        let mut batch = FastaBatch::new(self.schema.clone());
+        let mut batch = FastaBatch::new();
 
         for result in self.reader.records() {
             let record = result?;
@@ -301,64 +171,13 @@ impl Iterator for FastaGzippedReader {
     type Item = Result<RecordBatch, ArrowError>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut fasta_batch = FastaBatch::new(self.schema.clone());
-
-        for _i in 1..self.batch_size {
-            let mut buf = String::new();
-            let mut sequence = Vec::new();
-
-            match self.reader.read_definition(&mut buf) {
-                Ok(bytes_read) => {
-                    if bytes_read == 0 {
-                        let ii = fasta_batch.to_batch();
-
-                        if ii.num_rows() == 0 {
-                            return None;
-                        }
-
-                        return Some(Ok(ii));
-                    }
-                }
-                Err(e) => return Some(Err(ArrowError::ExternalError(Box::new(e)))),
-            }
-
-            match self.reader.read_sequence(&mut sequence) {
-                Ok(bytes_read) => {
-                    if bytes_read == 0 {
-                        let ii = fasta_batch.to_batch();
-
-                        if ii.num_rows() == 0 {
-                            return None;
-                        }
-
-                        return Some(Ok(ii));
-                    }
-                }
-                Err(e) => return Some(Err(ArrowError::ExternalError(Box::new(e)))),
-            }
-
-            let sequence_str = std::str::from_utf8(&sequence).unwrap();
-
-            match buf.strip_prefix(">") {
-                None => {
-                    panic!("Invalid fasta header");
-                }
-                Some(definition) => match definition.split_once(" ") {
-                    Some((id, description)) => {
-                        fasta_batch.add_from_parts(id, Some(description), sequence_str);
-                    }
-                    None => fasta_batch.add_from_parts(definition, None, sequence_str),
-                },
-            }
-        }
-
-        Some(Ok(fasta_batch.to_batch()))
+        add_next_record_to_batch(&mut self.reader, self.batch_size)
     }
 }
 
 impl RecordBatchReader for FastaGzippedReader {
     fn schema(&self) -> SchemaRef {
-        Arc::new(self.schema.clone())
+        self.fasta_schema().into()
     }
 }
 
