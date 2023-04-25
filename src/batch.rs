@@ -1,11 +1,6 @@
 // Implement a trait for a type with a `to_batch` method that returns an arrow record batch
 
-use std::io::Cursor;
-
-use arrow::{
-    ipc::writer::{FileWriter, StreamWriter},
-    record_batch::RecordBatch,
-};
+use arrow::{ipc::writer::FileWriter, record_batch::RecordBatch};
 
 pub trait BearRecordBatch {
     fn to_batch(&mut self) -> RecordBatch;

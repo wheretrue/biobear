@@ -147,12 +147,6 @@ impl VCFReader {
             PyBytes::new(py, &batch.serialize()).into()
         }))
     }
-
-    pub fn __enter__(slf: Py<Self>) -> Py<Self> {
-        slf
-    }
-
-    pub fn __exit__(&mut self, _exc_type: PyObject, _exc_value: PyObject, _traceback: PyObject) {}
 }
 
 #[pyclass(name = "_VCFIndexedReader")]
@@ -250,10 +244,4 @@ impl VCFIndexedReader {
             PyBytes::new(py, &batch.serialize()).into()
         }))
     }
-
-    pub fn __enter__(slf: Py<Self>) -> Py<Self> {
-        slf
-    }
-
-    pub fn __exit__(&mut self, _exc_type: PyObject, _exc_value: PyObject, _traceback: PyObject) {}
 }

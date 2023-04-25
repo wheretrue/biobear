@@ -20,5 +20,12 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<bam_reader::BamIndexedReader>()?;
     m.add_class::<vcf_reader::VCFReader>()?;
     m.add_class::<vcf_reader::VCFIndexedReader>()?;
+
+    m.add_function(wrap_pyfunction!(fasta_reader::fasta_reader_to_py_arrow, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        fasta_reader::fasta_gzipped_reader_to_py_arrow,
+        m
+    )?)?;
+
     Ok(())
 }
