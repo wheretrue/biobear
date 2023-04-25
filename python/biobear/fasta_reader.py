@@ -11,7 +11,6 @@ from biobear.compression import Compression
 
 import pyarrow as pa
 import polars as pl
-import pyarrow.dataset as ds
 
 
 class FastaReader:
