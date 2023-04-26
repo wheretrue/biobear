@@ -1,140 +1,168 @@
-use pyo3::prelude::*;
+mod fastq_batch;
 
-use arrow::array::*;
-use arrow::datatypes::*;
+use arrow::ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream};
+use arrow::pyarrow::PyArrowConvert;
 use arrow::record_batch::RecordBatch;
-use pyo3::types::PyBytes;
+use arrow::{error::ArrowError, record_batch::RecordBatchReader};
+use pyo3::prelude::*;
 
 use std::io::BufReader;
 use std::sync::Arc;
 
 use noodles::fastq::Reader;
 
-use crate::batch::BearRecordBatch;
-
-struct FastqBatch {
-    names: GenericStringBuilder<i32>,
-    descriptions: GenericStringBuilder<i32>,
-    sequences: GenericStringBuilder<i32>,
-    qualities: GenericStringBuilder<i32>,
-
-    schema: Schema,
-}
-
-impl FastqBatch {
-    fn new() -> Self {
-        let schema = Schema::new(vec![
-            Field::new("name", DataType::Utf8, false),
-            Field::new("description", DataType::Utf8, true),
-            Field::new("sequence", DataType::Utf8, false),
-            Field::new("quality", DataType::Utf8, false),
-        ]);
-
-        Self {
-            names: GenericStringBuilder::<i32>::new(),
-            descriptions: GenericStringBuilder::<i32>::new(),
-            sequences: GenericStringBuilder::<i32>::new(),
-            qualities: GenericStringBuilder::<i32>::new(),
-            schema,
-        }
-    }
-
-    fn add(&mut self, record: noodles::fastq::Record) {
-        let name = std::str::from_utf8(record.name()).unwrap();
-        self.names.append_value(name);
-
-        let desc = record.description();
-        if desc.is_empty() {
-            self.descriptions.append_null();
-        } else {
-            let desc_str = std::str::from_utf8(desc).unwrap();
-            self.descriptions.append_value(desc_str);
-        }
-
-        let record_sequence = record.sequence().as_ref();
-        let sequence = std::str::from_utf8(record_sequence).unwrap();
-        self.sequences.append_value(sequence);
-
-        let record_quality = record.quality_scores().as_ref();
-        let quality = std::str::from_utf8(record_quality).unwrap();
-        self.qualities.append_value(quality);
-    }
-}
-
-impl BearRecordBatch for FastqBatch {
-    fn to_batch(&mut self) -> RecordBatch {
-        let names = self.names.finish();
-        let descriptions = self.descriptions.finish();
-        let sequences = self.sequences.finish();
-        let qualities = self.qualities.finish();
-
-        RecordBatch::try_new(
-            Arc::new(self.schema.clone()),
-            vec![
-                Arc::new(names),
-                Arc::new(descriptions),
-                Arc::new(sequences),
-                Arc::new(qualities),
-            ],
-        )
-        .unwrap()
-    }
-}
+use self::fastq_batch::{add_next_fastq_record_to_batch, FastqSchemaTrait};
 
 #[pyclass(name = "_FastqReader")]
 pub struct FastqReader {
     reader: Reader<BufReader<std::fs::File>>,
+    file_path: String,
+    batch_size: usize,
 }
+
+impl FastqSchemaTrait for FastqReader {}
 
 #[pymethods]
 impl FastqReader {
     #[new]
-    fn new(path: &str) -> PyResult<Self> {
+    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         let file = std::fs::File::open(path)?;
         let reader = Reader::new(BufReader::new(file));
 
-        Ok(Self { reader })
+        Ok(Self {
+            reader,
+            file_path: path.to_string(),
+            batch_size: batch_size.unwrap_or(2048),
+        })
     }
+}
 
-    pub fn read(&mut self) -> PyResult<PyObject> {
-        let mut batch = FastqBatch::new();
+impl Iterator for FastqReader {
+    type Item = Result<RecordBatch, ArrowError>;
 
-        for record in self.reader.records() {
-            let record = record?;
-            batch.add(record);
+    fn next(&mut self) -> Option<Self::Item> {
+        add_next_fastq_record_to_batch(&mut self.reader, self.batch_size)
+    }
+}
+
+impl RecordBatchReader for FastqReader {
+    fn schema(&self) -> arrow::datatypes::SchemaRef {
+        self.fastq_schema().into()
+    }
+}
+
+impl FastqReader {
+    pub fn to_pyarrow(self) -> PyResult<PyObject> {
+        Python::with_gil(|py| {
+            let stream = Arc::new(FFI_ArrowArrayStream::empty());
+            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
+
+            unsafe {
+                export_reader_into_raw(Box::new(self), stream_ptr);
+
+                match ArrowArrayStreamReader::from_raw(stream_ptr) {
+                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Error converting to pyarrow: {}",
+                        err
+                    ))),
+                }
+            }
+        })
+    }
+}
+
+impl Clone for FastqReader {
+    fn clone(&self) -> Self {
+        let file = std::fs::File::open(&self.file_path).unwrap();
+        let reader = Reader::new(BufReader::new(file));
+
+        Self {
+            reader,
+            file_path: self.file_path.clone(),
+            batch_size: self.batch_size,
         }
-
-        Ok(Python::with_gil(|py| {
-            PyBytes::new(py, &batch.serialize()).into()
-        }))
     }
+}
+
+#[pyfunction]
+pub fn fastq_reader_to_pyarrow(reader: FastqReader) -> PyResult<PyObject> {
+    reader.to_pyarrow()
 }
 
 #[pyclass(name = "_FastqGzippedReader")]
 pub struct FastqGzippedReader {
     reader: Reader<BufReader<flate2::read::GzDecoder<std::fs::File>>>,
+    file_path: String,
+    batch_size: usize,
 }
 
 #[pymethods]
 impl FastqGzippedReader {
     #[new]
-    fn new(path: &str) -> PyResult<Self> {
+    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         let file = std::fs::File::open(path)?;
         let reader = Reader::new(BufReader::new(flate2::read::GzDecoder::new(file)));
 
-        Ok(Self { reader })
+        Ok(Self {
+            reader,
+            file_path: path.to_string(),
+            batch_size: batch_size.unwrap_or(2048),
+        })
     }
+}
 
-    pub fn read(&mut self) -> PyResult<PyObject> {
-        let mut batch = FastqBatch::new();
+impl FastqSchemaTrait for FastqGzippedReader {}
 
-        for record in self.reader.records() {
-            let record = record?;
-            batch.add(record);
+impl Iterator for FastqGzippedReader {
+    type Item = Result<RecordBatch, ArrowError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        add_next_fastq_record_to_batch(&mut self.reader, self.batch_size)
+    }
+}
+
+impl RecordBatchReader for FastqGzippedReader {
+    fn schema(&self) -> arrow::datatypes::SchemaRef {
+        self.fastq_schema().into()
+    }
+}
+
+impl FastqGzippedReader {
+    pub fn to_pyarrow(self) -> PyResult<PyObject> {
+        Python::with_gil(|py| {
+            let stream = Arc::new(FFI_ArrowArrayStream::empty());
+            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
+
+            unsafe {
+                export_reader_into_raw(Box::new(self), stream_ptr);
+
+                match ArrowArrayStreamReader::from_raw(stream_ptr) {
+                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Error converting to pyarrow: {}",
+                        err
+                    ))),
+                }
+            }
+        })
+    }
+}
+
+impl Clone for FastqGzippedReader {
+    fn clone(&self) -> Self {
+        let file = std::fs::File::open(&self.file_path).unwrap();
+        let reader = Reader::new(BufReader::new(flate2::read::GzDecoder::new(file)));
+
+        Self {
+            reader,
+            file_path: self.file_path.clone(),
+            batch_size: self.batch_size,
         }
-
-        Ok(Python::with_gil(|py| {
-            PyBytes::new(py, &batch.serialize()).into()
-        }))
     }
+}
+
+#[pyfunction]
+pub fn fastq_gzipped_reader_to_pyarrow(reader: FastqGzippedReader) -> PyResult<PyObject> {
+    reader.to_pyarrow()
 }

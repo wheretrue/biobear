@@ -31,6 +31,18 @@ def test_fastq_gzipped_reader():
     assert len(df) == 2
 
 
+def test_to_arrow_scanner():
+    fastq_reader = FastqReader(DATA / "test.fastq")
+    scanner = fastq_reader.to_arrow_scanner()
+
+    assert scanner.count_rows() == 2
+
+    gzipped_fastq_reader = FastqReader(DATA / "test.fastq.gz")
+    scanner = gzipped_fastq_reader.to_arrow_scanner()
+
+    assert scanner.count_rows() == 2
+
+
 def test_fastq_reader_no_file():
     with pytest.raises(FileNotFoundError):
         FastqReader("test.fastq")
