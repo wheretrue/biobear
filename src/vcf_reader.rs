@@ -1,207 +1,146 @@
+mod vcf_batch;
+
+use arrow::{
+    datatypes::SchemaRef,
+    error::ArrowError,
+    ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream},
+    pyarrow::PyArrowConvert,
+    record_batch::{RecordBatch, RecordBatchReader},
+};
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
-use std::fs::File;
-use std::io::BufReader;
-use std::sync::Arc;
+use std::io::{self, BufReader};
+use std::{fs::File, sync::Arc};
 
-use arrow::record_batch::RecordBatch;
 use noodles::vcf;
-
-use arrow::array::*;
-use arrow::datatypes::*;
 
 use crate::batch::BearRecordBatch;
 
-struct VcfBatch {
-    chromosomes: GenericStringBuilder<i32>,
-    positions: Int32Builder,
-    ids: GenericStringBuilder<i32>,
-    references: GenericStringBuilder<i32>,
-    alternates: GenericStringBuilder<i32>,
-    qualities: Float32Builder,
-    filters: GenericStringBuilder<i32>,
-
-    //TODO: dynamic schema for info and format
-    infos: GenericStringBuilder<i32>,
-    formats: GenericStringBuilder<i32>,
-
-    schema: Schema,
-}
-
-impl VcfBatch {
-    fn new() -> Self {
-        let schema = Schema::new(vec![
-            Field::new("chromosome", DataType::Utf8, false),
-            Field::new("position", DataType::Int32, false),
-            Field::new("id", DataType::Utf8, true),
-            Field::new("reference", DataType::Utf8, false),
-            Field::new("alternate", DataType::Utf8, false),
-            Field::new("quality_score", DataType::Float32, true),
-            Field::new("filter", DataType::Utf8, true),
-            Field::new("info", DataType::Utf8, true),
-            Field::new("format", DataType::Utf8, true),
-        ]);
-
-        Self {
-            chromosomes: GenericStringBuilder::<i32>::new(),
-            positions: Int32Builder::new(),
-            ids: GenericStringBuilder::<i32>::new(),
-            references: GenericStringBuilder::<i32>::new(),
-            alternates: GenericStringBuilder::<i32>::new(),
-            qualities: Float32Builder::new(),
-            filters: GenericStringBuilder::<i32>::new(),
-            infos: GenericStringBuilder::<i32>::new(),
-            formats: GenericStringBuilder::<i32>::new(),
-
-            schema,
-        }
-    }
-
-    fn add(&mut self, record: &vcf::Record) {
-        let chromosome: String = format!("{}", record.chromosome());
-        self.chromosomes.append_value(chromosome);
-
-        let position: usize = record.position().into();
-        self.positions.append_value(position as i32);
-
-        let id: String = format!("{}", record.ids());
-        self.ids.append_value(id);
-
-        let reference: String = format!("{}", record.reference_bases());
-        self.references.append_value(reference);
-
-        let alternate: String = format!("{}", record.alternate_bases());
-        self.alternates.append_value(alternate);
-
-        let quality = record.quality_score().map(f32::from);
-        self.qualities.append_option(quality);
-
-        let filter = record.filters().map(|filters| format!("{}", filters));
-        self.filters.append_option(filter);
-
-        let info: String = format!("{}", record.info());
-        self.infos.append_value(info);
-
-        let format: String = format!("{}", record.format());
-        self.formats.append_value(format);
-    }
-}
-
-impl BearRecordBatch for VcfBatch {
-    fn to_batch(&mut self) -> RecordBatch {
-        let chromosomes = self.chromosomes.finish();
-        let positions = self.positions.finish();
-        let ids = self.ids.finish();
-        let references = self.references.finish();
-        let alternates = self.alternates.finish();
-        let qualities = self.qualities.finish();
-        let filters = self.filters.finish();
-        let infos = self.infos.finish();
-        let formats = self.formats.finish();
-
-        RecordBatch::try_new(
-            Arc::new(self.schema.clone()),
-            vec![
-                Arc::new(chromosomes),
-                Arc::new(positions),
-                Arc::new(ids),
-                Arc::new(references),
-                Arc::new(alternates),
-                Arc::new(qualities),
-                Arc::new(filters),
-                Arc::new(infos),
-                Arc::new(formats),
-            ],
-        )
-        .unwrap()
-    }
-}
+use self::vcf_batch::{
+    add_next_vcf_indexed_record_to_batch, add_next_vcf_record_to_batch, VcfBatch, VcfSchemaTrait,
+};
 
 #[pyclass(name = "_VCFReader")]
 pub struct VCFReader {
     reader: vcf::Reader<BufReader<File>>,
     header: vcf::Header,
+    batch_size: usize,
+    file_path: String,
 }
 
 #[pymethods]
 impl VCFReader {
     #[new]
-    fn new(path: &str) -> PyResult<Self> {
+    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         let file = File::open(path)?;
         let mut reader = vcf::Reader::new(BufReader::new(file));
         let header = reader.read_header()?;
 
-        Ok(Self { reader, header })
+        Ok(Self {
+            reader,
+            header,
+            batch_size: batch_size.unwrap_or(2048),
+            file_path: path.to_string(),
+        })
     }
+}
 
-    fn read(&mut self) -> PyResult<PyObject> {
-        let mut batch = VcfBatch::new();
+impl VcfSchemaTrait for VCFReader {}
 
-        for record in self.reader.records(&self.header) {
-            let record = record?;
-            batch.add(&record);
+impl Iterator for VCFReader {
+    type Item = Result<RecordBatch, ArrowError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        add_next_vcf_record_to_batch(&mut self.reader, &self.header, Some(self.batch_size))
+    }
+}
+
+impl RecordBatchReader for VCFReader {
+    fn schema(&self) -> SchemaRef {
+        self.vcf_schema().into()
+    }
+}
+
+impl Clone for VCFReader {
+    fn clone(&self) -> Self {
+        let file = File::open(self.file_path.clone()).unwrap();
+        let buf_reader = BufReader::new(file);
+
+        let mut reader = vcf::Reader::new(buf_reader);
+        let header = reader.read_header().unwrap();
+
+        Self {
+            reader,
+            header,
+            file_path: self.file_path.clone(),
+            batch_size: self.batch_size,
         }
-
-        Ok(Python::with_gil(|py| {
-            PyBytes::new(py, &batch.serialize()).into()
-        }))
     }
+}
+
+impl VCFReader {
+    pub fn to_pyarrow(self) -> PyResult<PyObject> {
+        Python::with_gil(|py| {
+            let stream = Arc::new(FFI_ArrowArrayStream::empty());
+            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
+
+            unsafe {
+                export_reader_into_raw(Box::new(self), stream_ptr);
+
+                match ArrowArrayStreamReader::from_raw(stream_ptr) {
+                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Error converting to pyarrow: {}",
+                        err
+                    ))),
+                }
+            }
+        })
+    }
+}
+
+#[pyfunction]
+pub fn vcf_reader_to_pyarrow(reader: VCFReader) -> PyResult<PyObject> {
+    reader.to_pyarrow()
 }
 
 #[pyclass(name = "_VCFIndexedReader")]
 pub struct VCFIndexedReader {
     reader: vcf::IndexedReader<File>,
     header: vcf::Header,
+    file_path: String,
+    batch_size: usize,
+}
+
+impl VCFIndexedReader {
+    fn new(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
+        let mut reader = vcf::indexed_reader::Builder::default().build_from_path(path)?;
+
+        let header = match reader.read_header() {
+            Ok(header) => header,
+            Err(e) => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("Error reading VCF header: {}", e),
+                ))
+            }
+        };
+
+        Ok(Self {
+            reader,
+            header,
+            batch_size: batch_size.unwrap_or(2048),
+            file_path: path.to_string(),
+        })
+    }
 }
 
 #[pymethods]
 impl VCFIndexedReader {
     #[new]
-    fn new(path: &str) -> PyResult<Self> {
-        let reader = vcf::indexed_reader::Builder::default().build_from_path(path);
-        let mut reader = match reader {
-            Ok(reader) => reader,
-            Err(e) => {
-                return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                    "Error reading VCF file: {}",
-                    e
-                )))
-            }
-        };
-
-        let header = match reader.read_header() {
-            Ok(header) => header,
-            Err(e) => {
-                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Error reading VCF header: {}",
-                    e
-                )))
-            }
-        };
-
-        Ok(Self { reader, header })
-    }
-
-    fn read(&mut self) -> PyResult<PyObject> {
-        let mut batch = VcfBatch::new();
-
-        for record in self.reader.records(&self.header) {
-            let record = match record {
-                Ok(record) => record,
-                Err(e) => {
-                    return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Error reading VCF record: {}",
-                        e
-                    )))
-                }
-            };
-            batch.add(&record);
-        }
-
-        Ok(Python::with_gil(|py| {
-            PyBytes::new(py, &batch.serialize()).into()
-        }))
+    fn py_new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
+        Self::new(path, batch_size).map_err(PyErr::new::<pyo3::exceptions::PyValueError, _>)
     }
 
     fn query(&mut self, region: &str) -> PyResult<PyObject> {
@@ -244,4 +183,53 @@ impl VCFIndexedReader {
             PyBytes::new(py, &batch.serialize()).into()
         }))
     }
+}
+
+impl VcfSchemaTrait for VCFIndexedReader {}
+
+impl Iterator for VCFIndexedReader {
+    type Item = Result<RecordBatch, ArrowError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        add_next_vcf_indexed_record_to_batch(&mut self.reader, &self.header, Some(self.batch_size))
+    }
+}
+
+impl RecordBatchReader for VCFIndexedReader {
+    fn schema(&self) -> SchemaRef {
+        self.vcf_schema().into()
+    }
+}
+
+impl Clone for VCFIndexedReader {
+    fn clone(&self) -> Self {
+        let obj = Self::new(&self.file_path, Some(self.batch_size)).unwrap();
+        obj
+    }
+}
+
+impl VCFIndexedReader {
+    pub fn to_pyarrow(self) -> PyResult<PyObject> {
+        Python::with_gil(|py| {
+            let stream = Arc::new(FFI_ArrowArrayStream::empty());
+            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
+
+            unsafe {
+                export_reader_into_raw(Box::new(self), stream_ptr);
+
+                match ArrowArrayStreamReader::from_raw(stream_ptr) {
+                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Error converting to pyarrow: {}",
+                        err
+                    ))),
+                }
+            }
+        })
+    }
+}
+
+#[pyfunction]
+pub fn vcf_indexed_reader_to_pyarrow(reader: VCFIndexedReader) -> PyResult<PyObject> {
+    reader.to_pyarrow()
 }

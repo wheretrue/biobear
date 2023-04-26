@@ -2,9 +2,16 @@
 
 from pathlib import Path
 
-from .biobear import _VCFReader, _VCFIndexedReader
+from .biobear import (
+    _VCFReader,
+    _VCFIndexedReader,
+    vcf_reader_to_pyarrow,
+    vcf_indexed_reader_to_pyarrow,
+)
 
 import polars as pl
+import pyarrow as pa
+import pyarrow.dataset as ds
 
 
 class VCFReader:
@@ -22,10 +29,17 @@ class VCFReader:
         """
         self._vcf_reader = _VCFReader(str(path))
 
+    def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
+        """Convert the VCF reader to an arrow batch reader."""
+        return vcf_reader_to_pyarrow(self._vcf_reader)
+
+    def to_arrow_scanner(self) -> ds.Scanner:
+        """Convert the VCF reader to an arrow scanner."""
+        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
+
     def read(self) -> pl.DataFrame:
         """Read the VCF file and return a polars DataFrame."""
-        contents = self._vcf_reader.read()
-        return pl.read_ipc(contents)
+        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
 
 
 class VCFIndexedReader:
@@ -42,8 +56,15 @@ class VCFIndexedReader:
 
     def read(self) -> pl.DataFrame:
         """Read the VCF file and return a polars DataFrame."""
-        contents = self._vcf_reader.read()
-        return pl.read_ipc(contents)
+        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
+
+    def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
+        """Convert the VCF reader to an arrow batch reader."""
+        return vcf_indexed_reader_to_pyarrow(self._vcf_reader)
+
+    def to_arrow_scanner(self) -> ds.Scanner:
+        """Convert the VCF reader to an arrow scanner."""
+        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
 
     def query(self, region: str) -> pl.DataFrame:
         """Query the VCF file and return a polars DataFrame.

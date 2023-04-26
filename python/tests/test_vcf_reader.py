@@ -15,15 +15,18 @@ def test_vcf_reader():
 
     assert len(df) == 15
 
+
 def test_vcf_reader_missing_file():
     with pytest.raises(FileNotFoundError):
         VCFReader("test.vcf")
+
 
 def test_vcf_indexed_reader_read():
     reader = VCFIndexedReader(DATA / "vcf_file.vcf.gz")
     df = reader.read()
 
     assert len(df) == 15
+
 
 def test_vcf_indexed_reader_query():
     reader = VCFIndexedReader(DATA / "vcf_file.vcf.gz")
@@ -34,6 +37,7 @@ def test_vcf_indexed_reader_query():
     with pytest.raises(ValueError):
         reader.query("chr1")
 
+
 def test_vcf_indexed_reader_query_missing_file():
-    with pytest.raises(OSError):
+    with pytest.raises(ValueError):
         VCFIndexedReader("test.vcf.gz")

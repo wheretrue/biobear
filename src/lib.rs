@@ -38,6 +38,11 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
 
     m.add_class::<vcf_reader::VCFReader>()?;
     m.add_class::<vcf_reader::VCFIndexedReader>()?;
+    m.add_function(wrap_pyfunction!(vcf_reader::vcf_reader_to_pyarrow, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        vcf_reader::vcf_indexed_reader_to_pyarrow,
+        m
+    )?)?;
 
     Ok(())
 }
