@@ -1,10 +1,17 @@
 """FASTQ reader."""
 import os
 
-from .biobear import _FastqReader, _FastqGzippedReader
+from .biobear import (
+    _FastqReader,
+    _FastqGzippedReader,
+    fastq_reader_to_pyarrow,
+    fastq_gzipped_reader_to_pyarrow,
+)
 from biobear.compression import Compression
 
 import polars as pl
+import pyarrow as pa
+import pyarrow.dataset as ds
 
 
 class FastqReader:
@@ -21,15 +28,29 @@ class FastqReader:
                 Compression.INFERRED.
 
         """
-        if compression == Compression.INFERRED:
-            compression = compression.from_file(path)
+        self.compression = compression
+        if self.compression == Compression.INFERRED:
+            self.compression = compression.from_file(path)
 
-        if compression == Compression.GZIP:
+        if self.compression == Compression.GZIP:
             self._fastq_reader = _FastqGzippedReader(str(path))
         else:
             self._fastq_reader = _FastqReader(str(path))
 
     def read(self) -> pl.DataFrame:
-        """Read the fastq file and return a polars DataFrame."""
-        contents = self._fastq_reader.read()
-        return pl.read_ipc(contents)
+        """Read the fasta file and return a polars DataFrame."""
+        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
+
+    def to_arrow_scanner(self) -> ds.Scanner:
+        """Convert the fasta reader to an arrow scanner."""
+        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
+
+    def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
+        """Convert the fasta reader to an arrow batch reader."""
+        if isinstance(self._fastq_reader, _FastqReader):
+            return fastq_reader_to_pyarrow(self._fastq_reader)
+
+        elif isinstance(self._fastq_reader, _FastqGzippedReader):
+            return fastq_gzipped_reader_to_pyarrow(self._fastq_reader)
+
+        raise NotImplementedError("Unknown fasta reader type")
