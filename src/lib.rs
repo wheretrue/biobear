@@ -5,6 +5,7 @@ mod batch;
 mod fasta_reader;
 mod fastq_reader;
 mod gff_reader;
+mod to_arrow;
 mod vcf_reader;
 
 #[pymodule]
@@ -30,11 +31,6 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
 
     m.add_class::<bam_reader::BamReader>()?;
     m.add_class::<bam_reader::BamIndexedReader>()?;
-    m.add_function(wrap_pyfunction!(bam_reader::bam_reader_to_pyarrow, m)?)?;
-    m.add_function(wrap_pyfunction!(
-        bam_reader::bam_indexed_reader_to_pyarrow,
-        m
-    )?)?;
 
     m.add_class::<vcf_reader::VCFReader>()?;
     m.add_class::<vcf_reader::VCFIndexedReader>()?;

@@ -17,7 +17,7 @@ def test_bam_reader():
 
 
 def test_bam_reader_no_file():
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(OSError):
         BamReader("test.bam")
 
 
@@ -32,5 +32,5 @@ def test_bam_indexed_reader():
 
 
 def test_bam_indexed_reader_no_file():
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(OSError):
         BamIndexedReader("test.bam", "test.bam.bai")

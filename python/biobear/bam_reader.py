@@ -5,8 +5,6 @@ from pathlib import Path
 from .biobear import (
     _BamReader,
     _BamIndexedReader,
-    bam_reader_to_pyarrow,
-    bam_indexed_reader_to_pyarrow,
 )
 
 import polars as pl
@@ -28,7 +26,7 @@ class BamReader:
 
     def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
         """Convert the BAM reader to an arrow batch reader."""
-        return bam_reader_to_pyarrow(self._bam_reader)
+        return self._bam_reader.to_pyarrow()
 
     def to_arrow_scanner(self) -> ds.Scanner:
         """Convert the BAM reader to an arrow scanner."""
@@ -58,7 +56,7 @@ class BamIndexedReader:
 
     def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
         """Convert the BAM reader to an arrow batch reader."""
-        return bam_indexed_reader_to_pyarrow(self._bam_reader)
+        return self._bam_reader.to_pyarrow()
 
     def to_arrow_scanner(self) -> ds.Scanner:
         """Convert the BAM reader to an arrow scanner."""
