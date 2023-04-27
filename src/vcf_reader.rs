@@ -16,7 +16,7 @@ use noodles::vcf;
 use crate::{batch::BearRecordBatch, to_arrow::to_pyarrow};
 
 use self::vcf_batch::{
-    add_next_vcf_indexed_record_to_batch, add_next_vcf_record_to_batch, VcfBatch, VcfSchemaTrait,
+    add_next_vcf_indexed_record_to_batch, add_next_vcf_record_to_batch, VCFBatch, VCFSchemaTrait,
 };
 
 #[pyclass(name = "_VCFReader")]
@@ -59,7 +59,7 @@ impl VCFReader {
     }
 }
 
-impl VcfSchemaTrait for VCFReader {}
+impl VCFSchemaTrait for VCFReader {}
 
 impl Iterator for VCFReader {
     type Item = Result<RecordBatch, ArrowError>;
@@ -124,7 +124,7 @@ impl VCFIndexedReader {
     }
 
     fn query(&mut self, region: &str) -> PyResult<PyObject> {
-        let mut batch = VcfBatch::new();
+        let mut batch = VCFBatch::new();
 
         let region = match region.parse() {
             Ok(region) => region,
@@ -165,7 +165,7 @@ impl VCFIndexedReader {
     }
 }
 
-impl VcfSchemaTrait for VCFIndexedReader {}
+impl VCFSchemaTrait for VCFIndexedReader {}
 
 impl Iterator for VCFIndexedReader {
     type Item = Result<RecordBatch, ArrowError>;

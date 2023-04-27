@@ -24,9 +24,7 @@ class FastaReader:
                 Compression.INFERRED.
 
         """
-        self.compression = compression
-        if compression == Compression.INFERRED:
-            self.compression = compression.from_file(path)
+        self.compression = compression.infer_or_use(path)
 
         if self.compression == Compression.GZIP:
             self._fasta_reader = _FastaGzippedReader(str(path))

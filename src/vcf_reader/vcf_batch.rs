@@ -13,7 +13,7 @@ use noodles::vcf;
 
 use crate::batch::BearRecordBatch;
 
-pub trait VcfSchemaTrait {
+pub trait VCFSchemaTrait {
     fn vcf_schema(&self) -> Schema {
         let schema = Schema::new(vec![
             Field::new("chromosome", DataType::Utf8, false),
@@ -31,7 +31,7 @@ pub trait VcfSchemaTrait {
     }
 }
 
-pub struct VcfBatch {
+pub struct VCFBatch {
     chromosomes: GenericStringBuilder<i32>,
     positions: Int32Builder,
     ids: GenericStringBuilder<i32>,
@@ -43,9 +43,9 @@ pub struct VcfBatch {
     formats: GenericStringBuilder<i32>,
 }
 
-impl VcfSchemaTrait for VcfBatch {}
+impl VCFSchemaTrait for VCFBatch {}
 
-impl VcfBatch {
+impl VCFBatch {
     pub fn new() -> Self {
         Self {
             chromosomes: GenericStringBuilder::<i32>::new(),
@@ -90,7 +90,7 @@ impl VcfBatch {
     }
 }
 
-impl BearRecordBatch for VcfBatch {
+impl BearRecordBatch for VCFBatch {
     fn to_batch(&mut self) -> RecordBatch {
         let chromosomes = self.chromosomes.finish();
         let positions = self.positions.finish();
@@ -125,7 +125,7 @@ pub fn add_next_vcf_record_to_batch<R: BufRead>(
     header: &noodles::vcf::Header,
     n_records: Option<usize>,
 ) -> Option<Result<RecordBatch, ArrowError>> {
-    let mut vcf_batch = VcfBatch::new();
+    let mut vcf_batch = VCFBatch::new();
 
     for _ in 0..n_records.unwrap_or(2048) {
         let mut record = noodles::vcf::Record::default();
@@ -157,7 +157,7 @@ pub fn add_next_vcf_indexed_record_to_batch<R: Read>(
     header: &noodles::vcf::Header,
     n_records: Option<usize>,
 ) -> Option<Result<RecordBatch, ArrowError>> {
-    let mut vcf_batch = VcfBatch::new();
+    let mut vcf_batch = VCFBatch::new();
 
     for _ in 0..n_records.unwrap_or(2048) {
         let mut record = noodles::vcf::Record::default();

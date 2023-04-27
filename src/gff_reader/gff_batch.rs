@@ -10,7 +10,7 @@ use noodles::gff::Line;
 
 use crate::batch::BearRecordBatch;
 
-pub trait GffSchemaTrait {
+pub trait GFFSchemaTrait {
     fn gff_schema(&self) -> Schema {
         Schema::new(vec![
             Field::new("seqname", DataType::Utf8, false),
@@ -38,7 +38,7 @@ pub struct GFFBatch {
     attributes: GenericStringBuilder<i32>,
 }
 
-impl GffSchemaTrait for GFFBatch {}
+impl GFFSchemaTrait for GFFBatch {}
 
 impl GFFBatch {
     pub fn new() -> Self {
