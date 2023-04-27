@@ -17,7 +17,7 @@ def test_vcf_reader():
 
 
 def test_vcf_reader_missing_file():
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(OSError):
         VCFReader("test.vcf")
 
 

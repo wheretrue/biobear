@@ -1,10 +1,6 @@
 mod fasta_batch;
 
 use arrow::error::ArrowError;
-use arrow::ffi_stream::export_reader_into_raw;
-use arrow::ffi_stream::ArrowArrayStreamReader;
-use arrow::ffi_stream::FFI_ArrowArrayStream;
-use arrow::pyarrow::PyArrowConvert;
 use arrow::record_batch::RecordBatchReader;
 use pyo3::prelude::*;
 
@@ -13,7 +9,6 @@ use arrow::record_batch::RecordBatch;
 
 use std::io;
 use std::io::BufReader;
-use std::sync::Arc;
 
 use noodles::fasta::Reader;
 

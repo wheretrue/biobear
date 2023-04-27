@@ -1,14 +1,14 @@
 mod gff_batch;
 
-use std::io::BufReader;
-use std::{fs::File, sync::Arc};
+use std::fs::File;
+use std::io::{self, BufReader};
 
 use arrow::datatypes::SchemaRef;
 use arrow::error::ArrowError;
-use arrow::ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream};
-use arrow::pyarrow::PyArrowConvert;
 use arrow::record_batch::{RecordBatch, RecordBatchReader};
 use pyo3::prelude::*;
+
+use crate::to_arrow::to_pyarrow;
 
 use self::gff_batch::{add_next_gff_record_to_batch, GffSchemaTrait};
 
@@ -19,10 +19,8 @@ pub struct GFFReader {
     batch_size: usize,
 }
 
-#[pymethods]
 impl GFFReader {
-    #[new]
-    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
+    fn open(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
         let file = File::open(path)?;
         let reader = noodles::gff::Reader::new(BufReader::new(file));
 
@@ -31,6 +29,23 @@ impl GFFReader {
             file_path: path.to_string(),
             batch_size: batch_size.unwrap_or(2048),
         })
+    }
+}
+
+#[pymethods]
+impl GFFReader {
+    #[new]
+    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
+        Self::open(path, batch_size).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                "Error opening file {}: {}",
+                path, e
+            ))
+        })
+    }
+
+    fn to_pyarrow(&self) -> PyResult<PyObject> {
+        to_pyarrow(self.clone())
     }
 }
 
@@ -50,41 +65,8 @@ impl RecordBatchReader for GFFReader {
     }
 }
 
-impl GFFReader {
-    pub fn to_pyarrow(self) -> PyResult<PyObject> {
-        Python::with_gil(|py| {
-            let stream = Arc::new(FFI_ArrowArrayStream::empty());
-            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
-
-            unsafe {
-                export_reader_into_raw(Box::new(self), stream_ptr);
-
-                match ArrowArrayStreamReader::from_raw(stream_ptr) {
-                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
-                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Error converting to pyarrow: {}",
-                        err
-                    ))),
-                }
-            }
-        })
-    }
-}
-
 impl Clone for GFFReader {
     fn clone(&self) -> Self {
-        let file = File::open(&self.file_path).unwrap();
-        let reader = noodles::gff::Reader::new(BufReader::new(file));
-
-        Self {
-            reader,
-            file_path: self.file_path.clone(),
-            batch_size: self.batch_size,
-        }
+        Self::open(&self.file_path, Some(self.batch_size)).unwrap()
     }
-}
-
-#[pyfunction]
-pub fn gff_reader_to_pyarrow(reader: GFFReader) -> PyResult<PyObject> {
-    reader.to_pyarrow()
 }

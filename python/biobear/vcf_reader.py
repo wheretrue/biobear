@@ -5,8 +5,6 @@ from pathlib import Path
 from .biobear import (
     _VCFReader,
     _VCFIndexedReader,
-    vcf_reader_to_pyarrow,
-    vcf_indexed_reader_to_pyarrow,
 )
 
 import polars as pl
@@ -31,7 +29,7 @@ class VCFReader:
 
     def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
         """Convert the VCF reader to an arrow batch reader."""
-        return vcf_reader_to_pyarrow(self._vcf_reader)
+        return self._vcf_reader.to_pyarrow()
 
     def to_arrow_scanner(self) -> ds.Scanner:
         """Convert the VCF reader to an arrow scanner."""
@@ -60,7 +58,7 @@ class VCFIndexedReader:
 
     def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
         """Convert the VCF reader to an arrow batch reader."""
-        return vcf_indexed_reader_to_pyarrow(self._vcf_reader)
+        return self._vcf_reader.to_pyarrow()
 
     def to_arrow_scanner(self) -> ds.Scanner:
         """Convert the VCF reader to an arrow scanner."""

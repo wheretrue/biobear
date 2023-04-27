@@ -4,8 +4,6 @@ import os
 from .biobear import (
     _FastqReader,
     _FastqGzippedReader,
-    fastq_reader_to_pyarrow,
-    fastq_gzipped_reader_to_pyarrow,
 )
 from biobear.compression import Compression
 
@@ -47,10 +45,4 @@ class FastqReader:
 
     def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
         """Convert the fasta reader to an arrow batch reader."""
-        if isinstance(self._fastq_reader, _FastqReader):
-            return fastq_reader_to_pyarrow(self._fastq_reader)
-
-        elif isinstance(self._fastq_reader, _FastqGzippedReader):
-            return fastq_gzipped_reader_to_pyarrow(self._fastq_reader)
-
-        raise NotImplementedError("Unknown fasta reader type")
+        return self._fastq_reader.to_pyarrow()

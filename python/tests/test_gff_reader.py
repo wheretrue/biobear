@@ -24,5 +24,5 @@ def test_gff_reader_to_scanner():
 
 
 def test_gff_reader_no_file():
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(OSError):
         GFFReader("test.gff")

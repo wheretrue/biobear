@@ -15,25 +15,14 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
 
     m.add_class::<fastq_reader::FastqReader>()?;
     m.add_class::<fastq_reader::FastqGzippedReader>()?;
-    m.add_function(wrap_pyfunction!(fastq_reader::fastq_reader_to_pyarrow, m)?)?;
-    m.add_function(wrap_pyfunction!(
-        fastq_reader::fastq_gzipped_reader_to_pyarrow,
-        m
-    )?)?;
 
     m.add_class::<gff_reader::GFFReader>()?;
-    m.add_function(wrap_pyfunction!(gff_reader::gff_reader_to_pyarrow, m)?)?;
 
     m.add_class::<bam_reader::BamReader>()?;
     m.add_class::<bam_reader::BamIndexedReader>()?;
 
     m.add_class::<vcf_reader::VCFReader>()?;
     m.add_class::<vcf_reader::VCFIndexedReader>()?;
-    m.add_function(wrap_pyfunction!(vcf_reader::vcf_reader_to_pyarrow, m)?)?;
-    m.add_function(wrap_pyfunction!(
-        vcf_reader::vcf_indexed_reader_to_pyarrow,
-        m
-    )?)?;
 
     Ok(())
 }

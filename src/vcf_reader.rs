@@ -3,19 +3,17 @@ mod vcf_batch;
 use arrow::{
     datatypes::SchemaRef,
     error::ArrowError,
-    ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream},
-    pyarrow::PyArrowConvert,
     record_batch::{RecordBatch, RecordBatchReader},
 };
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
+use std::fs::File;
 use std::io::{self, BufReader};
-use std::{fs::File, sync::Arc};
 
 use noodles::vcf;
 
-use crate::batch::BearRecordBatch;
+use crate::{batch::BearRecordBatch, to_arrow::to_pyarrow};
 
 use self::vcf_batch::{
     add_next_vcf_indexed_record_to_batch, add_next_vcf_record_to_batch, VcfBatch, VcfSchemaTrait,
@@ -29,10 +27,8 @@ pub struct VCFReader {
     file_path: String,
 }
 
-#[pymethods]
 impl VCFReader {
-    #[new]
-    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
+    fn open(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
         let file = File::open(path)?;
         let mut reader = vcf::Reader::new(BufReader::new(file));
         let header = reader.read_header()?;
@@ -43,6 +39,23 @@ impl VCFReader {
             batch_size: batch_size.unwrap_or(2048),
             file_path: path.to_string(),
         })
+    }
+}
+
+#[pymethods]
+impl VCFReader {
+    #[new]
+    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
+        Self::open(path, batch_size).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                "Error opening file {}: {}",
+                path, e
+            ))
+        })
+    }
+
+    fn to_pyarrow(&self) -> PyResult<PyObject> {
+        to_pyarrow(self.clone())
     }
 }
 
@@ -64,45 +77,8 @@ impl RecordBatchReader for VCFReader {
 
 impl Clone for VCFReader {
     fn clone(&self) -> Self {
-        let file = File::open(self.file_path.clone()).unwrap();
-        let buf_reader = BufReader::new(file);
-
-        let mut reader = vcf::Reader::new(buf_reader);
-        let header = reader.read_header().unwrap();
-
-        Self {
-            reader,
-            header,
-            file_path: self.file_path.clone(),
-            batch_size: self.batch_size,
-        }
+        Self::open(self.file_path.as_str(), Some(self.batch_size)).unwrap()
     }
-}
-
-impl VCFReader {
-    pub fn to_pyarrow(self) -> PyResult<PyObject> {
-        Python::with_gil(|py| {
-            let stream = Arc::new(FFI_ArrowArrayStream::empty());
-            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
-
-            unsafe {
-                export_reader_into_raw(Box::new(self), stream_ptr);
-
-                match ArrowArrayStreamReader::from_raw(stream_ptr) {
-                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
-                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Error converting to pyarrow: {}",
-                        err
-                    ))),
-                }
-            }
-        })
-    }
-}
-
-#[pyfunction]
-pub fn vcf_reader_to_pyarrow(reader: VCFReader) -> PyResult<PyObject> {
-    reader.to_pyarrow()
 }
 
 #[pyclass(name = "_VCFIndexedReader")]
@@ -114,7 +90,7 @@ pub struct VCFIndexedReader {
 }
 
 impl VCFIndexedReader {
-    fn new(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
+    fn open(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
         let mut reader = vcf::indexed_reader::Builder::default().build_from_path(path)?;
 
         let header = match reader.read_header() {
@@ -139,8 +115,12 @@ impl VCFIndexedReader {
 #[pymethods]
 impl VCFIndexedReader {
     #[new]
-    fn py_new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
-        Self::new(path, batch_size).map_err(PyErr::new::<pyo3::exceptions::PyValueError, _>)
+    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
+        Self::open(path, batch_size).map_err(PyErr::new::<pyo3::exceptions::PyValueError, _>)
+    }
+
+    fn to_pyarrow(&self) -> PyResult<PyObject> {
+        to_pyarrow(self.clone())
     }
 
     fn query(&mut self, region: &str) -> PyResult<PyObject> {
@@ -203,33 +183,6 @@ impl RecordBatchReader for VCFIndexedReader {
 
 impl Clone for VCFIndexedReader {
     fn clone(&self) -> Self {
-        let obj = Self::new(&self.file_path, Some(self.batch_size)).unwrap();
-        obj
+        Self::open(&self.file_path, Some(self.batch_size)).unwrap()
     }
-}
-
-impl VCFIndexedReader {
-    pub fn to_pyarrow(self) -> PyResult<PyObject> {
-        Python::with_gil(|py| {
-            let stream = Arc::new(FFI_ArrowArrayStream::empty());
-            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
-
-            unsafe {
-                export_reader_into_raw(Box::new(self), stream_ptr);
-
-                match ArrowArrayStreamReader::from_raw(stream_ptr) {
-                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
-                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Error converting to pyarrow: {}",
-                        err
-                    ))),
-                }
-            }
-        })
-    }
-}
-
-#[pyfunction]
-pub fn vcf_indexed_reader_to_pyarrow(reader: VCFIndexedReader) -> PyResult<PyObject> {
-    reader.to_pyarrow()
 }
