@@ -45,5 +45,5 @@ def test_fasta_reader_to_arrow():
 
 
 def test_fasta_reader_no_file():
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(OSError):
         FastaReader("test.fasta")

@@ -12,11 +12,6 @@ mod vcf_reader;
 fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<fasta_reader::FastaReader>()?;
     m.add_class::<fasta_reader::FastaGzippedReader>()?;
-    m.add_function(wrap_pyfunction!(fasta_reader::fasta_reader_to_pyarrow, m)?)?;
-    m.add_function(wrap_pyfunction!(
-        fasta_reader::fasta_gzipped_reader_to_pyarrow,
-        m
-    )?)?;
 
     m.add_class::<fastq_reader::FastqReader>()?;
     m.add_class::<fastq_reader::FastqGzippedReader>()?;
