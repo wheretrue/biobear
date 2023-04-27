@@ -2,10 +2,6 @@ mod bam_batch;
 
 use arrow::datatypes::SchemaRef;
 use arrow::error::ArrowError;
-use arrow::ffi_stream::export_reader_into_raw;
-use arrow::ffi_stream::ArrowArrayStreamReader;
-use arrow::ffi_stream::FFI_ArrowArrayStream;
-use arrow::pyarrow::PyArrowConvert;
 use arrow::record_batch::RecordBatch;
 use arrow::record_batch::RecordBatchReader;
 use pyo3::prelude::*;
@@ -15,10 +11,11 @@ use noodles::core::Position;
 use noodles::core::Region;
 
 use std::fs::File;
+use std::io;
 use std::io::BufReader;
-use std::sync::Arc;
 
 use crate::batch::BearRecordBatch;
+use crate::to_arrow::to_pyarrow;
 
 use self::bam_batch::add_next_bam_indexed_record_to_batch;
 use self::bam_batch::add_next_bam_record_to_batch;
@@ -35,10 +32,8 @@ pub struct BamReader {
     batch_size: usize,
 }
 
-#[pymethods]
 impl BamReader {
-    #[new]
-    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
+    fn open(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
         let file = File::open(path)?;
         let buf_reader = BufReader::new(file);
         let mut reader = bam::Reader::new(buf_reader);
@@ -69,24 +64,20 @@ impl RecordBatchReader for BamReader {
     }
 }
 
+#[pymethods]
 impl BamReader {
-    pub fn to_pyarrow(self) -> PyResult<PyObject> {
-        Python::with_gil(|py| {
-            let stream = Arc::new(FFI_ArrowArrayStream::empty());
-            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
-
-            unsafe {
-                export_reader_into_raw(Box::new(self), stream_ptr);
-
-                match ArrowArrayStreamReader::from_raw(stream_ptr) {
-                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
-                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Error converting to pyarrow: {}",
-                        err
-                    ))),
-                }
-            }
+    #[new]
+    fn py_new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
+        Self::open(path, batch_size).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                "Failed to open file: {} with error: {}",
+                path, e
+            ))
         })
+    }
+
+    pub fn to_pyarrow(&mut self) -> PyResult<PyObject> {
+        to_pyarrow(self.clone())
     }
 }
 
@@ -106,11 +97,6 @@ impl Clone for BamReader {
     }
 }
 
-#[pyfunction]
-pub fn bam_reader_to_pyarrow(reader: BamReader) -> PyResult<PyObject> {
-    reader.to_pyarrow()
-}
-
 #[pyclass(name = "_BamIndexedReader")]
 pub struct BamIndexedReader {
     reader: bam::IndexedReader<bgzf::Reader<BufReader<File>>>,
@@ -119,10 +105,8 @@ pub struct BamIndexedReader {
     batch_size: usize,
 }
 
-#[pymethods]
 impl BamIndexedReader {
-    #[new]
-    fn new(path: &str, index_path: Option<&str>, batch_size: Option<usize>) -> PyResult<Self> {
+    fn open(path: &str, index_path: Option<&str>, batch_size: Option<usize>) -> io::Result<Self> {
         let file = File::open(path)?;
 
         let buf_reader = BufReader::new(file);
@@ -140,20 +124,20 @@ impl BamIndexedReader {
         {
             Ok(reader) => reader,
             Err(_) => {
-                return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                    "Failed to open file: {}",
-                    path
-                )))
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    format!("Failed to open file: {}", path),
+                ))
             }
         };
 
         let header = match reader.read_header() {
             Ok(header) => header,
             Err(_) => {
-                return Err(PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                    "Failed to read header: {}",
-                    path
-                )))
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    format!("Failed to read header: {}", path),
+                ))
             }
         };
 
@@ -162,6 +146,19 @@ impl BamIndexedReader {
             file_path: path.to_string(),
             header,
             batch_size: batch_size.unwrap_or(2048),
+        })
+    }
+}
+
+#[pymethods]
+impl BamIndexedReader {
+    #[new]
+    fn new(path: &str, index_path: Option<&str>, batch_size: Option<usize>) -> PyResult<Self> {
+        Self::open(path, index_path, batch_size).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
+                "Failed to open file: {} with error: {}",
+                path, e
+            ))
         })
     }
 
@@ -193,6 +190,10 @@ impl BamIndexedReader {
             PyBytes::new(py, &batch.serialize()).into()
         }))
     }
+
+    pub fn to_pyarrow(&mut self) -> PyResult<PyObject> {
+        to_pyarrow(self.clone())
+    }
 }
 
 impl BamSchemaTrait for BamIndexedReader {}
@@ -210,28 +211,6 @@ impl RecordBatchReader for BamIndexedReader {
         self.bam_schema().into()
     }
 }
-
-impl BamIndexedReader {
-    pub fn to_pyarrow(self) -> PyResult<PyObject> {
-        Python::with_gil(|py| {
-            let stream = Arc::new(FFI_ArrowArrayStream::empty());
-            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
-
-            unsafe {
-                export_reader_into_raw(Box::new(self), stream_ptr);
-
-                match ArrowArrayStreamReader::from_raw(stream_ptr) {
-                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
-                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Error converting to pyarrow: {}",
-                        err
-                    ))),
-                }
-            }
-        })
-    }
-}
-
 impl Clone for BamIndexedReader {
     fn clone(&self) -> Self {
         let file = File::open(self.file_path.clone()).unwrap();
@@ -253,9 +232,4 @@ impl Clone for BamIndexedReader {
             batch_size: self.batch_size,
         }
     }
-}
-
-#[pyfunction]
-pub fn bam_indexed_reader_to_pyarrow(reader: BamIndexedReader) -> PyResult<PyObject> {
-    reader.to_pyarrow()
 }

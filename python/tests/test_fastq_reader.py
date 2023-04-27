@@ -44,5 +44,5 @@ def test_to_arrow_scanner():
 
 
 def test_fastq_reader_no_file():
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(OSError):
         FastqReader("test.fastq")

@@ -6,7 +6,7 @@ import polars as pl
 import pyarrow as pa
 import pyarrow.dataset as ds
 
-from .biobear import _GFFReader, gff_reader_to_pyarrow
+from .biobear import _GFFReader
 
 
 class GFFReader:
@@ -27,7 +27,7 @@ class GFFReader:
 
     def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
         """Convert the GFF reader to an arrow batch reader."""
-        return gff_reader_to_pyarrow(self._gff_reader)
+        return self._gff_reader.to_pyarrow()
 
     def to_arrow_scanner(self) -> ds.Scanner:
         """Convert the GFF reader to an arrow scanner."""

@@ -1,20 +1,18 @@
 mod fasta_batch;
 
 use arrow::error::ArrowError;
-use arrow::ffi_stream::export_reader_into_raw;
-use arrow::ffi_stream::ArrowArrayStreamReader;
-use arrow::ffi_stream::FFI_ArrowArrayStream;
-use arrow::pyarrow::PyArrowConvert;
 use arrow::record_batch::RecordBatchReader;
 use pyo3::prelude::*;
 
 use arrow::datatypes::*;
 use arrow::record_batch::RecordBatch;
 
+use std::io;
 use std::io::BufReader;
-use std::sync::Arc;
 
 use noodles::fasta::Reader;
+
+use crate::to_arrow::to_pyarrow;
 
 use self::fasta_batch::add_next_record_to_batch;
 use self::fasta_batch::FastaSchemaTrait;
@@ -42,60 +40,39 @@ impl RecordBatchReader for FastaReader {
     }
 }
 
-#[pymethods]
 impl FastaReader {
-    #[new]
-    fn new(fasta_path: &str, batch_size: Option<usize>) -> PyResult<Self> {
-        let file = std::fs::File::open(fasta_path)?;
+    pub fn open(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
+        let file = std::fs::File::open(path)?;
         let buf_reader = BufReader::new(file);
 
         let reader = Reader::new(buf_reader);
 
         Ok(Self {
             reader,
-            file_path: fasta_path.to_string(),
+            file_path: path.to_string(),
             batch_size: batch_size.unwrap_or(2048),
         })
     }
 }
 
+#[pymethods]
 impl FastaReader {
-    pub fn to_pyarrow(self) -> PyResult<PyObject> {
-        Python::with_gil(|py| {
-            let stream = Arc::new(FFI_ArrowArrayStream::empty());
-            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
-
-            unsafe {
-                export_reader_into_raw(Box::new(self), stream_ptr);
-
-                match ArrowArrayStreamReader::from_raw(stream_ptr) {
-                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
-                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Error converting to pyarrow: {}",
-                        err
-                    ))),
-                }
-            }
+    #[new]
+    fn new(fasta_path: &str, batch_size: Option<usize>) -> PyResult<Self> {
+        Self::open(fasta_path, batch_size).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening fasta file: {}", e))
         })
+    }
+
+    pub fn to_pyarrow(&mut self) -> PyResult<PyObject> {
+        to_pyarrow(self.clone())
     }
 }
 
 impl Clone for FastaReader {
     fn clone(&self) -> Self {
-        let file = std::fs::File::open(&self.file_path).unwrap();
-        let buf_reader = BufReader::new(file);
-
-        Self {
-            reader: Reader::new(buf_reader),
-            file_path: self.file_path.clone(),
-            batch_size: self.batch_size,
-        }
+        Self::open(&self.file_path, Some(self.batch_size)).unwrap()
     }
-}
-
-#[pyfunction]
-pub fn fasta_reader_to_pyarrow(reader: FastaReader) -> PyResult<PyObject> {
-    reader.to_pyarrow()
 }
 
 #[pyclass(name = "_FastaGzippedReader")]
@@ -103,6 +80,22 @@ pub struct FastaGzippedReader {
     reader: Reader<BufReader<flate2::read::GzDecoder<std::fs::File>>>,
     batch_size: usize,
     file_path: String,
+}
+
+impl FastaGzippedReader {
+    pub fn open(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
+        let file = std::fs::File::open(path)?;
+        let gz_decoder = flate2::read::GzDecoder::new(file);
+        let buf_reader = BufReader::new(gz_decoder);
+
+        let reader = Reader::new(buf_reader);
+
+        Ok(Self {
+            reader,
+            file_path: path.to_string(),
+            batch_size: batch_size.unwrap_or(2048),
+        })
+    }
 }
 
 impl FastaSchemaTrait for FastaGzippedReader {}
@@ -125,17 +118,13 @@ impl Clone for FastaGzippedReader {
 impl FastaGzippedReader {
     #[new]
     fn new(fasta_path: &str, batch_size: Option<usize>) -> PyResult<Self> {
-        let file = std::fs::File::open(fasta_path)?;
-        let gz_decoder = flate2::read::GzDecoder::new(file);
-        let buf_reader = BufReader::new(gz_decoder);
-
-        let reader = Reader::new(buf_reader);
-
-        Ok(Self {
-            reader,
-            file_path: fasta_path.to_string(),
-            batch_size: batch_size.unwrap_or(2048),
+        Self::open(fasta_path, batch_size).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening fasta file: {}", e))
         })
+    }
+
+    pub fn to_pyarrow(&mut self) -> PyResult<PyObject> {
+        to_pyarrow(self.clone())
     }
 }
 
@@ -150,31 +139,5 @@ impl Iterator for FastaGzippedReader {
 impl RecordBatchReader for FastaGzippedReader {
     fn schema(&self) -> SchemaRef {
         self.fasta_schema().into()
-    }
-}
-
-#[pyfunction]
-pub fn fasta_gzipped_reader_to_pyarrow(reader: FastaGzippedReader) -> PyResult<PyObject> {
-    reader.to_pyarrow()
-}
-
-impl FastaGzippedReader {
-    pub fn to_pyarrow(self) -> PyResult<PyObject> {
-        Python::with_gil(|py| {
-            let stream = Arc::new(FFI_ArrowArrayStream::empty());
-            let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
-
-            unsafe {
-                export_reader_into_raw(Box::new(self), stream_ptr);
-
-                match ArrowArrayStreamReader::from_raw(stream_ptr) {
-                    Ok(stream_reader) => stream_reader.to_pyarrow(py),
-                    Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Error converting to pyarrow: {}",
-                        err
-                    ))),
-                }
-            }
-        })
     }
 }
