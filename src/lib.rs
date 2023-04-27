@@ -17,6 +17,7 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<fastq_reader::FastqGzippedReader>()?;
 
     m.add_class::<gff_reader::GFFReader>()?;
+    m.add_class::<gff_reader::GFFGzippedReader>()?;
 
     m.add_class::<bam_reader::BamReader>()?;
     m.add_class::<bam_reader::BamIndexedReader>()?;
