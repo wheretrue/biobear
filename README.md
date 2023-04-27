@@ -6,6 +6,7 @@ The python package has minimal dependencies and only requires Polars. Biobear ca
 
 - [Installation](#installation)
 - [Usage](#usage)
+  - [DuckDB](#duckdb)
 - [Similar Packages](#similar-packages)
 - [API Documentation](#api-documentation)
   - [vcf\_reader](#vcf_reader)
@@ -101,6 +102,23 @@ print(df.head())
 # │ 1          ┆ 3062915  ┆ idSNP ┆ G         ┆ … ┆ 12.6          ┆ test   ┆ TEST=5;DP4=1,2,3,4;AN=3;AC=1,1    ┆ GT:TT:GQ:DP:GL │
 # │ 1          ┆ 3106154  ┆       ┆ CAAA      ┆ … ┆ 342.0         ┆ PASS   ┆ AN=4;AC=2                         ┆ GT:GQ:DP       │
 # └────────────┴──────────┴───────┴───────────┴───┴───────────────┴────────┴───────────────────────────────────┴────────────────┘
+```
+
+### DuckDB
+
+For classes that have the `to_arrow_scanner` method, you can use them with duckdb:
+
+```python
+import biobear as bb
+import duckdb
+
+gff = bb.GFFReader("test.gff").to_arrow_scanner()
+
+con = duckdb.connect()
+df = con.execute("SELECT * FROM gff").df()
+#   seqname source feature  start  end  score strand phase                      attributes
+# 0     sq0   caat    gene      8   13    NaN      +   NaN  gene_id=caat1;gene_name=gene0;
+# 1     sq1   caat    gene      8   14    0.1      +     0  gene_id=caat2;gene_name=gene0;
 ```
 
 ## Similar Packages
