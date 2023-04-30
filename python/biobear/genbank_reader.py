@@ -20,7 +20,8 @@ class GenbankReader:
 
     def read(self) -> pl.DataFrame:
         """Read the fasta file and return a polars DataFrame."""
-        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
+        pydict = self.to_arrow_scanner().to_table().to_pydict()
+        return pl.from_dict(pydict)
 
     def to_arrow_scanner(self) -> ds.Scanner:
         """Convert the fasta reader to an arrow scanner."""
