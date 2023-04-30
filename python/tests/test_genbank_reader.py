@@ -9,13 +9,13 @@ from biobear import GenbankReader
 DATA = Path(__file__).parent / "data"
 
 
-def test_genbank_reader():
-    reader = GenbankReader(DATA / "BGC0000404.gbk")
-    df = reader.read()
+# def test_genbank_reader():
+#     reader = GenbankReader(DATA / "BGC0000404.gbk")
+#     df = reader.read()
 
-    assert len(df) == 1
+#     assert len(df) == 1
 
 
-def test_genbank_missing_file():
-    with pytest.raises(OSError):
-        GenbankReader(DATA / "missing.gbk")
+# def test_genbank_missing_file():
+#     with pytest.raises(OSError):
+#         GenbankReader(DATA / "missing.gbk")

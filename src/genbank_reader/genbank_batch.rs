@@ -1,7 +1,10 @@
 use std::{io::BufRead, sync::Arc};
 
 use arrow::{
-    array::{GenericListBuilder, GenericStringBuilder, StringBuilder, StructBuilder},
+    array::{
+        GenericListBuilder, GenericStringBuilder, ListBuilder, MapBuilder, StringBuilder,
+        StructBuilder,
+    },
     datatypes::{DataType, Field, Fields, Schema},
     error::ArrowError,
     record_batch::RecordBatch,
@@ -68,11 +71,25 @@ impl GenbankBatch {
     pub fn new() -> Self {
         let kind_builder = GenericStringBuilder::<i32>::new();
         let location_builder = GenericStringBuilder::<i32>::new();
-        let qualifiers_builder = GenericStringBuilder::<i32>::new();
+
+        let qualifiers_builder = MapBuilder::new(
+            None,
+            GenericStringBuilder::<i32>::new(),
+            GenericStringBuilder::<i32>::new(),
+        );
 
         let kind_field = Field::new("kind", DataType::Utf8, false);
         let location_field = Field::new("location", DataType::Utf8, false);
-        let qualifiers_field = Field::new("qualifiers", DataType::Utf8, false);
+
+        // Create a qualifiers_field for a Map
+        let qualifiers_field = Field::new_map(
+            "qualifiers",
+            "item",
+            Field::new("key", DataType::Utf8, false),
+            Field::new("value", DataType::Utf8, false),
+            false,
+            true,
+        );
 
         let fields = Fields::from(vec![kind_field, location_field, qualifiers_field]);
 
@@ -150,7 +167,6 @@ impl GenbankBatch {
         for feature in seq_features {
             let kind = feature.kind.to_string();
             let location = feature.location.to_string();
-            // let qualifiers = feature.qualifiers;
 
             feature_values
                 .field_builder::<StringBuilder>(0)
@@ -162,10 +178,16 @@ impl GenbankBatch {
                 .unwrap()
                 .append_value(location);
 
-            feature_values
-                .field_builder::<StringBuilder>(2)
+            let qualifier_values = feature_values
+                .field_builder::<MapBuilder<GenericStringBuilder<i32>, GenericStringBuilder<i32>>>(
+                    2,
+                )
                 .unwrap()
-                .append_value("qualifiers");
+                .values();
+
+            for (k, v) in feature.qualifiers.iter() {
+                continue;
+            }
 
             feature_values.append(true);
         }

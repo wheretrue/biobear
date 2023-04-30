@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+import polars as pl
 from biobear import GFFReader
 
 DATA = Path(__file__).parent / "data"
@@ -14,6 +15,17 @@ def test_gff_reader():
     df = reader.read()
 
     assert len(df) == 2
+
+
+def test_gff_attr_struct():
+    reader = GFFReader(DATA / "test.gff")
+    df = reader.read()
+
+    dtype = df.select(pl.col("attributes")).dtypes[0]
+
+    key_field = pl.Field("key", pl.Utf8)
+    value_field = pl.Field("value", pl.Utf8)
+    assert dtype == pl.List(pl.Struct([key_field, value_field]))
 
 
 def test_gff_reader_to_scanner():
