@@ -20,6 +20,7 @@ class GenbankReader:
 
     def read(self) -> pl.DataFrame:
         """Read the fasta file and return a polars DataFrame."""
+        # A bit of a hack as polars doesn't like Maps
         pydict = self.to_arrow_scanner().to_table().to_pydict()
         return pl.from_dict(pydict)
 
