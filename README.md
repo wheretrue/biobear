@@ -11,11 +11,13 @@ The python package has minimal dependencies and only requires Polars. Biobear ca
   - [vcf\_reader](#vcf_reader)
     - [VCFReader](#vcfreader)
     - [VCFIndexedReader](#vcfindexedreader)
+  - [genbank\_reader](#genbank_reader)
+    - [GenbankReader](#genbankreader)
   - [fasta\_reader](#fasta_reader)
     - [FastaReader](#fastareader)
   - [compression](#compression)
     - [Compression](#compression-1)
-  - [\_\_init\_\_](#__init__-3)
+  - [\_\_init\_\_](#__init__-4)
   - [bam\_reader](#bam_reader)
     - [BamReader](#bamreader)
     - [BamIndexedReader](#bamindexedreader)
@@ -245,6 +247,64 @@ Query the VCF file and return a polars DataFrame.
 **Arguments**:
 
 - `region` _str_ - The region to query.
+
+<a id="genbank_reader"></a>
+
+### genbank\_reader
+
+Genbank file reader.
+
+<a id="genbank_reader.GenbankReader"></a>
+
+#### GenbankReader
+
+```python
+class GenbankReader()
+```
+
+<a id="genbank_reader.GenbankReader.__init__"></a>
+
+##### \_\_init\_\_
+
+```python
+def __init__(path: Path)
+```
+
+Read a fasta file.
+
+**Arguments**:
+
+- `path` _Path_ - Path to the fasta file.
+
+<a id="genbank_reader.GenbankReader.read"></a>
+
+##### read
+
+```python
+def read() -> pl.DataFrame
+```
+
+Read the fasta file and return a polars DataFrame.
+
+<a id="genbank_reader.GenbankReader.to_arrow_scanner"></a>
+
+##### to\_arrow\_scanner
+
+```python
+def to_arrow_scanner() -> ds.Scanner
+```
+
+Convert the fasta reader to an arrow scanner.
+
+<a id="genbank_reader.GenbankReader.to_arrow_record_batch_reader"></a>
+
+##### to\_arrow\_record\_batch\_reader
+
+```python
+def to_arrow_record_batch_reader() -> pa.RecordBatchReader
+```
+
+Convert the fasta reader to an arrow batch reader.
 
 <a id="fasta_reader"></a>
 
