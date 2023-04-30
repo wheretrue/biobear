@@ -20,3 +20,6 @@ version = "0.35.0"
 
 [dependencies.flate2]
 version = "1.0.25"
+
+[dependencies.gb-io]
+version = "0.7.1"
