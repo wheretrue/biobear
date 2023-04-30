@@ -1,7 +1,7 @@
 use std::{io::BufRead, str::FromStr, sync::Arc};
 
 use arrow::{
-    array::{Float32Builder, GenericStringBuilder, Int64Builder},
+    array::{Float32Builder, GenericStringBuilder, Int64Builder, MapBuilder},
     datatypes::{DataType, Field, Schema},
     error::ArrowError,
     record_batch::RecordBatch,
@@ -12,6 +12,9 @@ use crate::batch::BearRecordBatch;
 
 pub trait GFFSchemaTrait {
     fn gff_schema(&self) -> Schema {
+        let attribute_key_field = Field::new("keys", DataType::Utf8, false);
+        let attribute_value_field = Field::new("values", DataType::Utf8, true);
+
         Schema::new(vec![
             Field::new("seqname", DataType::Utf8, false),
             Field::new("source", DataType::Utf8, true),
@@ -21,7 +24,14 @@ pub trait GFFSchemaTrait {
             Field::new("score", DataType::Float32, true),
             Field::new("strand", DataType::Utf8, false),
             Field::new("phase", DataType::Utf8, true),
-            Field::new("attributes", DataType::Utf8, true),
+            Field::new_map(
+                "attributes",
+                "entries",
+                attribute_key_field,
+                attribute_value_field,
+                false,
+                true,
+            ),
         ])
     }
 }
@@ -35,7 +45,7 @@ pub struct GFFBatch {
     scores: Float32Builder,
     strands: GenericStringBuilder<i32>,
     phases: GenericStringBuilder<i32>,
-    attributes: GenericStringBuilder<i32>,
+    attributes: MapBuilder<GenericStringBuilder<i32>, GenericStringBuilder<i32>>,
 }
 
 impl GFFSchemaTrait for GFFBatch {}
@@ -51,7 +61,11 @@ impl GFFBatch {
             scores: Float32Builder::new(),
             strands: GenericStringBuilder::<i32>::new(),
             phases: GenericStringBuilder::<i32>::new(),
-            attributes: GenericStringBuilder::<i32>::new(),
+            attributes: MapBuilder::new(
+                None,
+                GenericStringBuilder::<i32>::new(),
+                GenericStringBuilder::<i32>::new(),
+            ),
         }
     }
 
@@ -66,16 +80,12 @@ impl GFFBatch {
         self.phases
             .append_option(record.phase().map(|p| p.to_string()));
 
-        let attrs = record.attributes();
-        if attrs.is_empty() {
-            self.attributes.append_null();
-        } else {
-            let mut attr_str = String::new();
-            for entry in attrs.into_iter() {
-                attr_str.push_str(&format!("{}={};", entry.key(), entry.value()));
-            }
-            self.attributes.append_value(&attr_str);
+        for entry in record.attributes().iter() {
+            self.attributes.keys().append_value(entry.key());
+            self.attributes.values().append_value(entry.value());
         }
+
+        self.attributes.append(true).unwrap();
     }
 }
 

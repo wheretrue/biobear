@@ -4,6 +4,7 @@ mod bam_reader;
 mod batch;
 mod fasta_reader;
 mod fastq_reader;
+mod genbank_reader;
 mod gff_reader;
 mod to_arrow;
 mod vcf_reader;
@@ -24,6 +25,8 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
 
     m.add_class::<vcf_reader::VCFReader>()?;
     m.add_class::<vcf_reader::VCFIndexedReader>()?;
+
+    m.add_class::<genbank_reader::GenbankReader>()?;
 
     Ok(())
 }
