@@ -15,7 +15,7 @@ use crate::batch::BearRecordBatch;
 
 pub trait VCFSchemaTrait {
     fn vcf_schema(&self) -> Schema {
-        let schema = Schema::new(vec![
+        Schema::new(vec![
             Field::new("chromosome", DataType::Utf8, false),
             Field::new("position", DataType::Int32, false),
             Field::new("id", DataType::Utf8, true),
@@ -25,9 +25,7 @@ pub trait VCFSchemaTrait {
             Field::new("filter", DataType::Utf8, true),
             Field::new("info", DataType::Utf8, true),
             Field::new("format", DataType::Utf8, true),
-        ]);
-
-        schema
+        ])
     }
 }
 
@@ -79,7 +77,7 @@ impl VCFBatch {
         let quality = record.quality_score().map(f32::from);
         self.qualities.append_option(quality);
 
-        let filter = record.filters().map(|filters| format!("{}", filters));
+        let filter = record.filters().map(|filters| filters.to_string());
         self.filters.append_option(filter);
 
         let info: String = format!("{}", record.info());
@@ -130,7 +128,7 @@ pub fn add_next_vcf_record_to_batch<R: BufRead>(
     for _ in 0..n_records.unwrap_or(2048) {
         let mut record = noodles::vcf::Record::default();
 
-        match reader.read_record(&header, &mut record) {
+        match reader.read_record(header, &mut record) {
             Ok(0) => {
                 let arrow_batch = vcf_batch.to_batch();
 
@@ -162,7 +160,7 @@ pub fn add_next_vcf_indexed_record_to_batch<R: Read>(
     for _ in 0..n_records.unwrap_or(2048) {
         let mut record = noodles::vcf::Record::default();
 
-        match reader.read_record(&header, &mut record) {
+        match reader.read_record(header, &mut record) {
             Ok(0) => {
                 let arrow_batch = vcf_batch.to_batch();
 

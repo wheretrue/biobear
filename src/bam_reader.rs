@@ -70,13 +70,12 @@ impl BamReader {
     fn py_new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         Self::open(path, batch_size).map_err(|e| {
             PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                "Failed to open file: {} with error: {}",
-                path, e
+                "Failed to open file: {path} with error: {e}",
             ))
         })
     }
 
-    pub fn to_pyarrow(&mut self) -> PyResult<PyObject> {
+    pub fn to_pyarrow(&self) -> PyResult<PyObject> {
         to_pyarrow(self.clone())
     }
 }
@@ -113,7 +112,7 @@ impl BamIndexedReader {
 
         let inferred_path = match index_path {
             Some(path) => path.to_string(),
-            None => format!("{}.bai", path),
+            None => format!("{path}.bai"),
         };
 
         let index = bam::bai::read(inferred_path)?;
@@ -126,7 +125,7 @@ impl BamIndexedReader {
             Err(_) => {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
-                    format!("Failed to open file: {}", path),
+                    format!("Failed to open file: {path}"),
                 ))
             }
         };
@@ -136,7 +135,7 @@ impl BamIndexedReader {
             Err(_) => {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
-                    format!("Failed to read header: {}", path),
+                    format!("Failed to read header: {path}"),
                 ))
             }
         };
@@ -156,8 +155,7 @@ impl BamIndexedReader {
     fn new(path: &str, index_path: Option<&str>, batch_size: Option<usize>) -> PyResult<Self> {
         Self::open(path, index_path, batch_size).map_err(|e| {
             PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                "Failed to open file: {} with error: {}",
-                path, e
+                "Failed to open file: {path} with error: {e}"
             ))
         })
     }
@@ -175,8 +173,7 @@ impl BamIndexedReader {
             Ok(query) => query,
             Err(_) => {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Failed to query region: {}:{}-{}",
-                    chromosome, start, end
+                    "Failed to query region: {chromosome}:{start}-{end}"
                 )))
             }
         };
@@ -191,7 +188,7 @@ impl BamIndexedReader {
         }))
     }
 
-    pub fn to_pyarrow(&mut self) -> PyResult<PyObject> {
+    pub fn to_pyarrow(&self) -> PyResult<PyObject> {
         to_pyarrow(self.clone())
     }
 }

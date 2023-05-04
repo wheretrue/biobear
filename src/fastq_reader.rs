@@ -39,10 +39,7 @@ impl FastqReader {
     #[new]
     fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         Self::open(path, batch_size).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                "Error opening file {}: {}",
-                path, e
-            ))
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening file {path}: {e}"))
         })
     }
 
@@ -102,14 +99,11 @@ impl FastqGzippedReader {
     #[new]
     fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         Self::open(path, batch_size).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                "Error opening file {}: {}",
-                path, e
-            ))
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening file {path}: {e}"))
         })
     }
 
-    pub fn to_pyarrow(&mut self) -> PyResult<PyObject> {
+    pub fn to_pyarrow(&self) -> PyResult<PyObject> {
         to_pyarrow(self.clone())
     }
 }

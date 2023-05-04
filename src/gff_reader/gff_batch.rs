@@ -141,12 +141,11 @@ pub fn add_next_gff_record_to_batch<R: BufRead>(
                 let line_result = Line::from_str(&buffer);
 
                 match line_result {
-                    Ok(line) => match line {
-                        Line::Record(record) => {
+                    Ok(line) => {
+                        if let noodles::gff::Line::Record(record) = line {
                             gff_batch.add(record);
                         }
-                        _ => {}
-                    },
+                    }
                     Err(e) => {
                         return Some(Err(ArrowError::ExternalError(Box::new(
                             std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()),

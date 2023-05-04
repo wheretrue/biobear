@@ -18,8 +18,7 @@ pub fn to_pyarrow<C: Clone + RecordBatchReader + 'static>(reader: C) -> PyResult
             match ArrowArrayStreamReader::from_raw(stream_ptr) {
                 Ok(stream_reader) => stream_reader.to_pyarrow(py),
                 Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Error converting to pyarrow: {}",
-                    err
+                    "Error converting to pyarrow: {err}"
                 ))),
             }
         }
