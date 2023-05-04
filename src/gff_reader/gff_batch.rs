@@ -76,7 +76,7 @@ impl GFFBatch {
         self.starts.append_value(record.start().get() as i64);
         self.ends.append_value(record.end().get() as i64);
         self.scores.append_option(record.score());
-        self.strands.append_value(record.strand().to_string());
+        self.strands.append_value(record.strand());
         self.phases
             .append_option(record.phase().map(|p| p.to_string()));
 
