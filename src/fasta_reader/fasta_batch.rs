@@ -105,13 +105,13 @@ pub fn add_next_record_to_batch<R: BufRead>(
 
         let sequence_str = std::str::from_utf8(&sequence).unwrap();
 
-        match buf.strip_prefix(">") {
+        match buf.strip_prefix('>') {
             None => {
                 return Some(Err(ArrowError::ExternalError(Box::new(
                     std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid FASTA record"),
                 ))))
             }
-            Some(definition) => match definition.split_once(" ") {
+            Some(definition) => match definition.split_once(' ') {
                 Some((id, description)) => {
                     fasta_batch.add_from_parts(id, Some(description), sequence_str);
                 }

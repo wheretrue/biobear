@@ -37,10 +37,7 @@ impl GFFReader {
     #[new]
     fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         Self::open(path, batch_size).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                "Error opening file {}: {}",
-                path, e
-            ))
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening file {path}: {e}"))
         })
     }
 
@@ -112,10 +109,7 @@ impl GFFGzippedReader {
     #[new]
     fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         Self::open(path, batch_size).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                "Error opening file {}: {}",
-                path, e
-            ))
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening file {path}: {e}"))
         })
     }
 

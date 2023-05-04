@@ -47,10 +47,7 @@ impl VCFReader {
     #[new]
     fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         Self::open(path, batch_size).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                "Error opening file {}: {}",
-                path, e
-            ))
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening file {path}: {e}"))
         })
     }
 
@@ -98,7 +95,7 @@ impl VCFIndexedReader {
             Err(e) => {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidData,
-                    format!("Error reading VCF header: {}", e),
+                    format!("Error reading VCF header: {e}"),
                 ))
             }
         };
@@ -130,29 +127,26 @@ impl VCFIndexedReader {
             Ok(region) => region,
             Err(e) => {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Error parsing region: {}",
-                    e
+                    "Error parsing region: {e}"
                 )))
             }
         };
 
-        let mut iter = match self.reader.query(&self.header, &region) {
+        let iter = match self.reader.query(&self.header, &region) {
             Ok(iter) => iter,
             Err(e) => {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Error querying VCF file: {}",
-                    e
+                    "Error querying VCF file: {e}",
                 )))
             }
         };
 
-        while let Some(record) = iter.next() {
+        for record in iter {
             let record = match record {
                 Ok(record) => record,
                 Err(e) => {
                     return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Error reading VCF record: {}",
-                        e
+                        "Error reading VCF record: {e}",
                     )))
                 }
             };

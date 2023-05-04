@@ -32,7 +32,7 @@ pub trait GenbankSchemaTrait {
 
         let comment_field = Field::new("item", DataType::Utf8, true);
 
-        let schema = Schema::new(vec![
+        Schema::new(vec![
             Field::new("sequence", DataType::Utf8, false),
             Field::new("accession", DataType::Utf8, true),
             Field::new("comments", DataType::List(Arc::new(comment_field)), true),
@@ -48,9 +48,7 @@ pub trait GenbankSchemaTrait {
             Field::new("version", DataType::Utf8, true),
             Field::new("topology", DataType::Utf8, true),
             Field::new("features", DataType::List(Arc::new(feature_field)), true),
-        ]);
-
-        schema
+        ])
     }
 }
 
@@ -135,7 +133,7 @@ impl GenbankBatch {
 
         self.accession.append_option(record.accession.as_ref());
 
-        if record.comments.len() > 0 {
+        if !record.comments.is_empty() {
             let values = self.comments.values();
 
             record.comments.iter().for_each(|comment| {
@@ -153,7 +151,7 @@ impl GenbankBatch {
             .append_option(record.date.as_ref().map(|date| date.to_string()));
         self.dblink.append_option(record.dblink.as_ref());
         self.definition.append_option(record.definition.as_ref());
-        self.division.append_value(record.division.to_string());
+        self.division.append_value(&record.division);
         self.keywords.append_option(record.keywords.as_ref());
         self.molecule_type
             .append_option(record.molecule_type.as_ref());

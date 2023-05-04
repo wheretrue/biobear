@@ -52,11 +52,11 @@ impl FastqBatch {
             self.descriptions.append_value(desc_str);
         }
 
-        let record_sequence = record.sequence().as_ref();
+        let record_sequence = record.sequence();
         let sequence = std::str::from_utf8(record_sequence).unwrap();
         self.sequences.append_value(sequence);
 
-        let record_quality = record.quality_scores().as_ref();
+        let record_quality = record.quality_scores();
         let quality = std::str::from_utf8(record_quality).unwrap();
         self.qualities.append_value(quality);
     }

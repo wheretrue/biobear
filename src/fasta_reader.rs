@@ -60,11 +60,11 @@ impl FastaReader {
     #[new]
     fn new(fasta_path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         Self::open(fasta_path, batch_size).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening fasta file: {}", e))
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening fasta file: {e}"))
         })
     }
 
-    pub fn to_pyarrow(&mut self) -> PyResult<PyObject> {
+    pub fn to_pyarrow(&self) -> PyResult<PyObject> {
         to_pyarrow(self.clone())
     }
 }
@@ -119,11 +119,11 @@ impl FastaGzippedReader {
     #[new]
     fn new(fasta_path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         Self::open(fasta_path, batch_size).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening fasta file: {}", e))
+            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening fasta file: {e}"))
         })
     }
 
-    pub fn to_pyarrow(&mut self) -> PyResult<PyObject> {
+    pub fn to_pyarrow(&self) -> PyResult<PyObject> {
         to_pyarrow(self.clone())
     }
 }

@@ -76,7 +76,7 @@ impl GFFBatch {
         self.starts.append_value(record.start().get() as i64);
         self.ends.append_value(record.end().get() as i64);
         self.scores.append_option(record.score());
-        self.strands.append_value(record.strand().to_string());
+        self.strands.append_value(record.strand());
         self.phases
             .append_option(record.phase().map(|p| p.to_string()));
 
@@ -141,12 +141,11 @@ pub fn add_next_gff_record_to_batch<R: BufRead>(
                 let line_result = Line::from_str(&buffer);
 
                 match line_result {
-                    Ok(line) => match line {
-                        Line::Record(record) => {
+                    Ok(line) => {
+                        if let noodles::gff::Line::Record(record) = line {
                             gff_batch.add(record);
                         }
-                        _ => {}
-                    },
+                    }
                     Err(e) => {
                         return Some(Err(ArrowError::ExternalError(Box::new(
                             std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()),
