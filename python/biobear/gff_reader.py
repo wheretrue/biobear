@@ -1,19 +1,23 @@
 """GFF File Reader."""
 
-from pathlib import Path
+import os
 
 import polars as pl
 import pyarrow as pa
 import pyarrow.dataset as ds
 
-from .biobear import _GFFReader, _GFFGzippedReader
 from biobear.compression import Compression
+from biobear.reader import Reader
+
+from .biobear import _GFFReader, _GFFGzippedReader
 
 
-class GFFReader:
+class GFFReader(Reader):
     """A GFF File Reader."""
 
-    def __init__(self, path: Path, compression: Compression = Compression.INFERRED):
+    def __init__(
+        self, path: os.PathLike, compression: Compression = Compression.INFERRED
+    ):
         """Initialize the GFFReader.
 
         Args:
@@ -38,3 +42,8 @@ class GFFReader:
     def to_arrow_scanner(self) -> ds.Scanner:
         """Convert the GFF reader to an arrow scanner."""
         return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
+
+    @property
+    def inner(self):
+        """Return the inner reader."""
+        return self._gff_reader

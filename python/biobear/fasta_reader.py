@@ -1,19 +1,21 @@
 """FASTA file reader."""
-from pathlib import Path
+import os
 
-from .biobear import (
-    _FastaReader,
-    _FastaGzippedReader,
-)
+from biobear.reader import Reader
 from biobear.compression import Compression
 
-import pyarrow as pa
-import pyarrow.dataset as ds
-import polars as pl
+from .biobear import (
+    _FastaGzippedReader,
+    _FastaReader,
+)
 
 
-class FastaReader:
-    def __init__(self, path: Path, compression: Compression = Compression.INFERRED):
+class FastaReader(Reader):
+    """FASTA file reader."""
+
+    def __init__(
+        self, path: os.PathLike, compression: Compression = Compression.INFERRED
+    ):
         """Read a fasta file.
 
         Args:
@@ -31,14 +33,7 @@ class FastaReader:
         else:
             self._fasta_reader = _FastaReader(str(path))
 
-    def read(self) -> pl.DataFrame:
-        """Read the fasta file and return a polars DataFrame."""
-        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
-
-    def to_arrow_scanner(self) -> ds.Scanner:
-        """Convert the fasta reader to an arrow scanner."""
-        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
-
-    def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
-        """Convert the fasta reader to an arrow batch reader."""
-        return self._fasta_reader.to_pyarrow()
+    @property
+    def inner(self):
+        """Return the inner reader."""
+        return self._fasta_reader

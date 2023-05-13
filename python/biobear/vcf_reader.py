@@ -1,24 +1,21 @@
 """VCF File Readers."""
 
-from pathlib import Path
-
-from .biobear import (
-    _VCFReader,
-    _VCFIndexedReader,
-)
+import os
 
 import polars as pl
-import pyarrow as pa
-import pyarrow.dataset as ds
+
+from biobear.reader import Reader
+
+from .biobear import _VCFReader, _VCFIndexedReader
 
 
-class VCFReader:
+class VCFReader(Reader):
     """A VCF File Reader.
 
     This class is used to read a VCF file and convert it to a polars DataFrame.
     """
 
-    def __init__(self, path: Path):
+    def __init__(self, path: os.PathLike):
         """Initialize the VCFReader.
 
         Args:
@@ -27,20 +24,13 @@ class VCFReader:
         """
         self._vcf_reader = _VCFReader(str(path))
 
-    def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
-        """Convert the VCF reader to an arrow batch reader."""
-        return self._vcf_reader.to_pyarrow()
-
-    def to_arrow_scanner(self) -> ds.Scanner:
-        """Convert the VCF reader to an arrow scanner."""
-        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
-
-    def read(self) -> pl.DataFrame:
-        """Read the VCF file and return a polars DataFrame."""
-        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
+    @property
+    def inner(self):
+        """Return the inner reader."""
+        return self._vcf_reader
 
 
-class VCFIndexedReader:
+class VCFIndexedReader(Reader):
     """An Indexed VCF File Reader.
 
     This class is used to read or query an indexed VCF file and convert it to a
@@ -48,21 +38,14 @@ class VCFIndexedReader:
 
     """
 
-    def __init__(self, path: Path):
+    def __init__(self, path: os.PathLike):
         """Initialize the VCFIndexedReader."""
         self._vcf_reader = _VCFIndexedReader(str(path))
 
-    def read(self) -> pl.DataFrame:
-        """Read the VCF file and return a polars DataFrame."""
-        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
-
-    def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
-        """Convert the VCF reader to an arrow batch reader."""
-        return self._vcf_reader.to_pyarrow()
-
-    def to_arrow_scanner(self) -> ds.Scanner:
-        """Convert the VCF reader to an arrow scanner."""
-        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
+    @property
+    def inner(self):
+        """Return the inner reader."""
+        return self._vcf_reader
 
     def query(self, region: str) -> pl.DataFrame:
         """Query the VCF file and return a polars DataFrame.

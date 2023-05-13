@@ -1,21 +1,17 @@
 """BAM File Readers."""
 
-from pathlib import Path
-
-from .biobear import (
-    _BamReader,
-    _BamIndexedReader,
-)
+import os
 
 import polars as pl
-import pyarrow as pa
-import pyarrow.dataset as ds
+
+from biobear.reader import Reader
+from .biobear import _BamIndexedReader, _BamReader
 
 
-class BamReader:
+class BamReader(Reader):
     """A BAM File Reader."""
 
-    def __init__(self, path: Path):
+    def __init__(self, path: os.PathLike):
         """Initialize the BamReader.
 
         Args:
@@ -24,23 +20,16 @@ class BamReader:
         """
         self._bam_reader = _BamReader(str(path))
 
-    def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
-        """Convert the BAM reader to an arrow batch reader."""
-        return self._bam_reader.to_pyarrow()
-
-    def to_arrow_scanner(self) -> ds.Scanner:
-        """Convert the BAM reader to an arrow scanner."""
-        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
-
-    def read(self) -> pl.DataFrame:
-        """Read the BAM file and return a polars DataFrame."""
-        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
+    @property
+    def inner(self):
+        """Return the inner reader."""
+        return self._bam_reader
 
 
-class BamIndexedReader:
+class BamIndexedReader(Reader):
     """An Indexed BAM File Reader."""
 
-    def __init__(self, path: Path, index: Path):
+    def __init__(self, path: os.PathLike, index: os.PathLike):
         """Initialize the BamIndexedReader.
 
         Args:
@@ -50,17 +39,10 @@ class BamIndexedReader:
         """
         self._bam_reader = _BamIndexedReader(str(path), str(index))
 
-    def read(self) -> pl.DataFrame:
-        """Read the BAM file and return a polars DataFrame."""
-        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
-
-    def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
-        """Convert the BAM reader to an arrow batch reader."""
-        return self._bam_reader.to_pyarrow()
-
-    def to_arrow_scanner(self) -> ds.Scanner:
-        """Convert the BAM reader to an arrow scanner."""
-        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
+    @property
+    def inner(self):
+        """Return the inner reader."""
+        return self._bam_reader
 
     def query(self, chrom: str, start: int, end: int) -> pl.DataFrame:
         """Query the BAM file and return a polars DataFrame.

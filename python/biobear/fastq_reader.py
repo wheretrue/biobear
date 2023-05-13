@@ -1,18 +1,18 @@
 """FASTQ reader."""
 import os
 
+from biobear.reader import Reader
+from biobear.compression import Compression
+
 from .biobear import (
     _FastqReader,
     _FastqGzippedReader,
 )
-from biobear.compression import Compression
-
-import polars as pl
-import pyarrow as pa
-import pyarrow.dataset as ds
 
 
-class FastqReader:
+class FastqReader(Reader):
+    """FASTQ file reader."""
+
     def __init__(
         self, path: os.PathLike, compression: Compression = Compression.INFERRED
     ):
@@ -26,23 +26,15 @@ class FastqReader:
                 Compression.INFERRED.
 
         """
-        self.compression = compression
-        if self.compression == Compression.INFERRED:
-            self.compression = compression.from_file(path)
+
+        self.compression = compression.infer_or_use(path)
 
         if self.compression == Compression.GZIP:
             self._fastq_reader = _FastqGzippedReader(str(path))
         else:
             self._fastq_reader = _FastqReader(str(path))
 
-    def read(self) -> pl.DataFrame:
-        """Read the fasta file and return a polars DataFrame."""
-        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
-
-    def to_arrow_scanner(self) -> ds.Scanner:
-        """Convert the fasta reader to an arrow scanner."""
-        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
-
-    def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
-        """Convert the fasta reader to an arrow batch reader."""
-        return self._fastq_reader.to_pyarrow()
+    @property
+    def inner(self):
+        """Return the inner reader."""
+        return self._fastq_reader
