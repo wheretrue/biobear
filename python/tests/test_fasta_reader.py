@@ -18,7 +18,7 @@ def test_fasta_reader():
 
 def test_fasta_gzipped_reader():
     # Test that the gzip compression is inferred
-    fasta_reader = FastaReader(DATA / "test.fasta.gz")
+    fasta_reader = FastaReader((DATA / "test.fasta.gz").as_posix())
     df = fasta_reader.read()
 
     assert len(df) == 2
