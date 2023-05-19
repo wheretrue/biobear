@@ -8,7 +8,7 @@ crate-type = ["cdylib"]
 name = "biobear"
 
 [dependencies]
-pyo3 = "0.18.1"
+pyo3 = "0.18.3"
 
 [dependencies.arrow]
 features = ["pyarrow"]
@@ -16,10 +16,10 @@ version = "37.0.0"
 
 [dependencies.noodles]
 features = ["fasta", "fastq", "gff", "core", "sam", "bam", "vcf", "bed", "bgzf", "bcf"]
-version = "0.35.0"
+version = "0.38.0"
 
 [dependencies.flate2]
-version = "1.0.25"
+version = "1.0.26"
 
 [dependencies.gb-io]
 version = "0.7.1"
