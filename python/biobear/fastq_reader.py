@@ -4,10 +4,7 @@ import os
 from biobear.reader import Reader
 from biobear.compression import Compression
 
-from .biobear import (
-    _FastqReader,
-    _FastqGzippedReader,
-)
+from .biobear import _ExonReader
 
 
 class FastqReader(Reader):
@@ -30,9 +27,9 @@ class FastqReader(Reader):
         self.compression = compression.infer_or_use(path)
 
         if self.compression == Compression.GZIP:
-            self._fastq_reader = _FastqGzippedReader(str(path))
+            self._fastq_reader = _ExonReader(str(path), "FASTQ", "GZIP")
         else:
-            self._fastq_reader = _FastqReader(str(path))
+            self._fastq_reader = _ExonReader(str(path), "FASTQ", None)
 
     @property
     def inner(self):

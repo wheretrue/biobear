@@ -4,10 +4,7 @@ import os
 from biobear.reader import Reader
 from biobear.compression import Compression
 
-from .biobear import (
-    _FastaGzippedReader,
-    _FastaReader,
-)
+from .biobear import _ExonReader
 
 
 class FastaReader(Reader):
@@ -29,9 +26,9 @@ class FastaReader(Reader):
         self.compression = compression.infer_or_use(path)
 
         if self.compression == Compression.GZIP:
-            self._fasta_reader = _FastaGzippedReader(str(path))
+            self._fasta_reader = _ExonReader(str(path), "FASTA", "GZIP")
         else:
-            self._fasta_reader = _FastaReader(str(path))
+            self._fasta_reader = _ExonReader(str(path), "FASTA", None)
 
     @property
     def inner(self):

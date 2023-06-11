@@ -9,7 +9,7 @@ import pyarrow.dataset as ds
 from biobear.compression import Compression
 from biobear.reader import Reader
 
-from .biobear import _GFFReader, _GFFGzippedReader
+from .biobear import _ExonReader
 
 
 class GFFReader(Reader):
@@ -27,9 +27,9 @@ class GFFReader(Reader):
         self.compression = compression.infer_or_use(path)
 
         if self.compression == Compression.GZIP:
-            self._gff_reader = _GFFGzippedReader(str(path))
+            self._gff_reader = _ExonReader(str(path), "GFF", "GZIP")
         else:
-            self._gff_reader = _GFFReader(str(path))
+            self._gff_reader = _ExonReader(str(path), "GFF", None)
 
     def read(self) -> pl.DataFrame:
         """Read the GFF file and return a polars DataFrame."""
