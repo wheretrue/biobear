@@ -14,7 +14,6 @@ use tokio::runtime::Runtime;
 
 #[pyclass(name = "_ExonReader")]
 pub struct ExonReader {
-    batch_size: usize,
     df: datafusion::dataframe::DataFrame,
     _runtime: Arc<Runtime>,
 }
@@ -28,7 +27,11 @@ impl ExonReader {
     ) -> io::Result<Self> {
         let rt = Arc::new(Runtime::new().unwrap());
 
-        let config = SessionConfig::new();
+        let mut config = SessionConfig::new();
+        if let Some(batch_size) = batch_size {
+            config = config.with_batch_size(batch_size);
+        }
+
         let ctx = SessionContext::with_config(config);
 
         let df = rt.block_on(async {
@@ -36,17 +39,13 @@ impl ExonReader {
                 Ok(df) => Ok(df),
                 Err(e) => Err(io::Error::new(
                     io::ErrorKind::Other,
-                    format!("Error reading GFF file: {}", e),
+                    format!("Error reading GFF file: {e}"),
                 )),
             }
         });
 
         match df {
-            Ok(df) => Ok(Self {
-                df,
-                _runtime: rt,
-                batch_size: batch_size.unwrap_or(2048),
-            }),
+            Ok(df) => Ok(Self { df, _runtime: rt }),
             Err(e) => Err(e),
         }
     }
