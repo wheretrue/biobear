@@ -2,21 +2,29 @@
 import os
 
 from biobear.reader import Reader
+from biobear.compression import Compression
 
-from .biobear import _GenbankReader
+from .biobear import _ExonReader
 
 
 class GenbankReader(Reader):
     """Genbank file reader."""
 
-    def __init__(self, path: os.PathLike):
+    def __init__(
+        self, path: os.PathLike, compression: Compression = Compression.INFERRED
+    ):
         """Read a fasta file.
 
         Args:
             path (Path): Path to the fasta file.
 
         """
-        self._reader = _GenbankReader(str(path))
+        self.compression = compression.infer_or_use(path)
+
+        if self.compression == Compression.GZIP:
+            self._reader = _ExonReader(str(path), "GENBANK", "GZIP")
+        else:
+            self._reader = _ExonReader(str(path), "GENBANK", None)
 
     @property
     def inner(self):
