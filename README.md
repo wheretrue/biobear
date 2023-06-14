@@ -18,6 +18,8 @@ The python package has minimal dependencies and only requires Polars. Biobear ca
   - [compression](#compression)
     - [Compression](#compression-1)
   - [\_\_init\_\_](#__init__-4)
+  - [reader](#reader)
+    - [Reader](#reader-1)
   - [bam\_reader](#bam_reader)
     - [BamReader](#bamreader)
     - [BamIndexedReader](#bamindexedreader)
@@ -25,6 +27,7 @@ The python package has minimal dependencies and only requires Polars. Biobear ca
     - [FastqReader](#fastqreader)
   - [gff\_reader](#gff_reader)
     - [GFFReader](#gffreader)
+
 
 ## Installation
 
@@ -118,7 +121,6 @@ Similar packages and/or inspiration for this package:
 ## API Documentation
 
 These docs are auto-generated, please file an issue if something is amiss.
-
 <a id="vcf_reader"></a>
 
 ### vcf\_reader
@@ -130,7 +132,7 @@ VCF File Readers.
 #### VCFReader
 
 ```python
-class VCFReader()
+class VCFReader(Reader)
 ```
 
 A VCF File Reader.
@@ -142,7 +144,7 @@ This class is used to read a VCF file and convert it to a polars DataFrame.
 ##### \_\_init\_\_
 
 ```python
-def __init__(path: Path)
+def __init__(path: os.PathLike)
 ```
 
 Initialize the VCFReader.
@@ -151,42 +153,23 @@ Initialize the VCFReader.
 
 - `path` _Path_ - Path to the VCF file.
 
-<a id="vcf_reader.VCFReader.to_arrow_record_batch_reader"></a>
+<a id="vcf_reader.VCFReader.inner"></a>
 
-##### to\_arrow\_record\_batch\_reader
-
-```python
-def to_arrow_record_batch_reader() -> pa.RecordBatchReader
-```
-
-Convert the VCF reader to an arrow batch reader.
-
-<a id="vcf_reader.VCFReader.to_arrow_scanner"></a>
-
-##### to\_arrow\_scanner
+##### inner
 
 ```python
-def to_arrow_scanner() -> ds.Scanner
+@property
+def inner()
 ```
 
-Convert the VCF reader to an arrow scanner.
-
-<a id="vcf_reader.VCFReader.read"></a>
-
-##### read
-
-```python
-def read() -> pl.DataFrame
-```
-
-Read the VCF file and return a polars DataFrame.
+Return the inner reader.
 
 <a id="vcf_reader.VCFIndexedReader"></a>
 
 #### VCFIndexedReader
 
 ```python
-class VCFIndexedReader()
+class VCFIndexedReader(Reader)
 ```
 
 An Indexed VCF File Reader.
@@ -199,40 +182,21 @@ polars DataFrame.
 ##### \_\_init\_\_
 
 ```python
-def __init__(path: Path)
+def __init__(path: os.PathLike)
 ```
 
 Initialize the VCFIndexedReader.
 
-<a id="vcf_reader.VCFIndexedReader.read"></a>
+<a id="vcf_reader.VCFIndexedReader.inner"></a>
 
-##### read
-
-```python
-def read() -> pl.DataFrame
-```
-
-Read the VCF file and return a polars DataFrame.
-
-<a id="vcf_reader.VCFIndexedReader.to_arrow_record_batch_reader"></a>
-
-##### to\_arrow\_record\_batch\_reader
+##### inner
 
 ```python
-def to_arrow_record_batch_reader() -> pa.RecordBatchReader
+@property
+def inner()
 ```
 
-Convert the VCF reader to an arrow batch reader.
-
-<a id="vcf_reader.VCFIndexedReader.to_arrow_scanner"></a>
-
-##### to\_arrow\_scanner
-
-```python
-def to_arrow_scanner() -> ds.Scanner
-```
-
-Convert the VCF reader to an arrow scanner.
+Return the inner reader.
 
 <a id="vcf_reader.VCFIndexedReader.query"></a>
 
@@ -259,15 +223,18 @@ Genbank file reader.
 #### GenbankReader
 
 ```python
-class GenbankReader()
+class GenbankReader(Reader)
 ```
+
+Genbank file reader.
 
 <a id="genbank_reader.GenbankReader.__init__"></a>
 
 ##### \_\_init\_\_
 
 ```python
-def __init__(path: Path)
+def __init__(path: os.PathLike,
+             compression: Compression = Compression.INFERRED)
 ```
 
 Read a fasta file.
@@ -276,35 +243,16 @@ Read a fasta file.
 
 - `path` _Path_ - Path to the fasta file.
 
-<a id="genbank_reader.GenbankReader.read"></a>
+<a id="genbank_reader.GenbankReader.inner"></a>
 
-##### read
-
-```python
-def read() -> pl.DataFrame
-```
-
-Read the fasta file and return a polars DataFrame.
-
-<a id="genbank_reader.GenbankReader.to_arrow_scanner"></a>
-
-##### to\_arrow\_scanner
+##### inner
 
 ```python
-def to_arrow_scanner() -> ds.Scanner
+@property
+def inner()
 ```
 
-Convert the fasta reader to an arrow scanner.
-
-<a id="genbank_reader.GenbankReader.to_arrow_record_batch_reader"></a>
-
-##### to\_arrow\_record\_batch\_reader
-
-```python
-def to_arrow_record_batch_reader() -> pa.RecordBatchReader
-```
-
-Convert the fasta reader to an arrow batch reader.
+Return the inner reader.
 
 <a id="fasta_reader"></a>
 
@@ -317,15 +265,18 @@ FASTA file reader.
 #### FastaReader
 
 ```python
-class FastaReader()
+class FastaReader(Reader)
 ```
+
+FASTA file reader.
 
 <a id="fasta_reader.FastaReader.__init__"></a>
 
 ##### \_\_init\_\_
 
 ```python
-def __init__(path: Path, compression: Compression = Compression.INFERRED)
+def __init__(path: os.PathLike,
+             compression: Compression = Compression.INFERRED)
 ```
 
 Read a fasta file.
@@ -338,35 +289,16 @@ Read a fasta file.
 - `compression` _Compression_ - Compression type of the file. Defaults to
   Compression.INFERRED.
 
-<a id="fasta_reader.FastaReader.read"></a>
+<a id="fasta_reader.FastaReader.inner"></a>
 
-##### read
-
-```python
-def read() -> pl.DataFrame
-```
-
-Read the fasta file and return a polars DataFrame.
-
-<a id="fasta_reader.FastaReader.to_arrow_scanner"></a>
-
-##### to\_arrow\_scanner
+##### inner
 
 ```python
-def to_arrow_scanner() -> ds.Scanner
+@property
+def inner()
 ```
 
-Convert the fasta reader to an arrow scanner.
-
-<a id="fasta_reader.FastaReader.to_arrow_record_batch_reader"></a>
-
-##### to\_arrow\_record\_batch\_reader
-
-```python
-def to_arrow_record_batch_reader() -> pa.RecordBatchReader
-```
-
-Convert the fasta reader to an arrow batch reader.
+Return the inner reader.
 
 <a id="compression"></a>
 
@@ -411,6 +343,64 @@ Infer the compression type from the file extension if needed.
 
 Main biobear package.
 
+<a id="reader"></a>
+
+### reader
+
+Abstract Reader class for reading data from a file or stream.
+
+<a id="reader.Reader"></a>
+
+#### Reader
+
+```python
+class Reader(ABC)
+```
+
+The abstract reader class.
+
+<a id="reader.Reader.inner"></a>
+
+##### inner
+
+```python
+@property
+@abstractmethod
+def inner()
+```
+
+Return the inner reader.
+
+<a id="reader.Reader.read"></a>
+
+##### read
+
+```python
+def read() -> pl.DataFrame
+```
+
+Read the fasta file and return a polars DataFrame.
+
+<a id="reader.Reader.to_arrow_scanner"></a>
+
+##### to\_arrow\_scanner
+
+```python
+def to_arrow_scanner() -> ds.Scanner
+```
+
+Convert the fasta reader to an arrow scanner.
+
+<a id="reader.Reader.to_arrow_record_batch_reader"></a>
+
+##### to\_arrow\_record\_batch\_reader
+
+```python
+def to_arrow_record_batch_reader() -> pa.RecordBatchReader
+```
+
+Convert the fasta reader to an arrow batch reader.
+
 <a id="bam_reader"></a>
 
 ### bam\_reader
@@ -422,7 +412,7 @@ BAM File Readers.
 #### BamReader
 
 ```python
-class BamReader()
+class BamReader(Reader)
 ```
 
 A BAM File Reader.
@@ -432,7 +422,7 @@ A BAM File Reader.
 ##### \_\_init\_\_
 
 ```python
-def __init__(path: Path)
+def __init__(path: os.PathLike)
 ```
 
 Initialize the BamReader.
@@ -441,42 +431,23 @@ Initialize the BamReader.
 
 - `path` _Path_ - Path to the BAM file.
 
-<a id="bam_reader.BamReader.to_arrow_record_batch_reader"></a>
+<a id="bam_reader.BamReader.inner"></a>
 
-##### to\_arrow\_record\_batch\_reader
-
-```python
-def to_arrow_record_batch_reader() -> pa.RecordBatchReader
-```
-
-Convert the BAM reader to an arrow batch reader.
-
-<a id="bam_reader.BamReader.to_arrow_scanner"></a>
-
-##### to\_arrow\_scanner
+##### inner
 
 ```python
-def to_arrow_scanner() -> ds.Scanner
+@property
+def inner()
 ```
 
-Convert the BAM reader to an arrow scanner.
-
-<a id="bam_reader.BamReader.read"></a>
-
-##### read
-
-```python
-def read() -> pl.DataFrame
-```
-
-Read the BAM file and return a polars DataFrame.
+Return the inner reader.
 
 <a id="bam_reader.BamIndexedReader"></a>
 
 #### BamIndexedReader
 
 ```python
-class BamIndexedReader()
+class BamIndexedReader(Reader)
 ```
 
 An Indexed BAM File Reader.
@@ -486,7 +457,7 @@ An Indexed BAM File Reader.
 ##### \_\_init\_\_
 
 ```python
-def __init__(path: Path, index: Path)
+def __init__(path: os.PathLike)
 ```
 
 Initialize the BamIndexedReader.
@@ -496,51 +467,30 @@ Initialize the BamIndexedReader.
 - `path` _Path_ - Path to the BAM file.
 - `index` _Path_ - Path to the BAM index file.
 
-<a id="bam_reader.BamIndexedReader.read"></a>
+<a id="bam_reader.BamIndexedReader.inner"></a>
 
-##### read
-
-```python
-def read() -> pl.DataFrame
-```
-
-Read the BAM file and return a polars DataFrame.
-
-<a id="bam_reader.BamIndexedReader.to_arrow_record_batch_reader"></a>
-
-##### to\_arrow\_record\_batch\_reader
+##### inner
 
 ```python
-def to_arrow_record_batch_reader() -> pa.RecordBatchReader
+@property
+def inner()
 ```
 
-Convert the BAM reader to an arrow batch reader.
-
-<a id="bam_reader.BamIndexedReader.to_arrow_scanner"></a>
-
-##### to\_arrow\_scanner
-
-```python
-def to_arrow_scanner() -> ds.Scanner
-```
-
-Convert the BAM reader to an arrow scanner.
+Return the inner reader.
 
 <a id="bam_reader.BamIndexedReader.query"></a>
 
 ##### query
 
 ```python
-def query(chrom: str, start: int, end: int) -> pl.DataFrame
+def query(region: str) -> pl.DataFrame
 ```
 
 Query the BAM file and return a polars DataFrame.
 
 **Arguments**:
 
-- `chrom` _str_ - The chromosome to query.
-- `start` _int_ - The start position to query.
-- `end` _int_ - The end position to query.
+- `region` - A region in the format "chr:start-end".
 
 <a id="fastq_reader"></a>
 
@@ -553,8 +503,10 @@ FASTQ reader.
 #### FastqReader
 
 ```python
-class FastqReader()
+class FastqReader(Reader)
 ```
+
+FASTQ file reader.
 
 <a id="fastq_reader.FastqReader.__init__"></a>
 
@@ -575,35 +527,16 @@ Read a fastq file.
 - `compression` _Compression_ - Compression type of the file. Defaults to
   Compression.INFERRED.
 
-<a id="fastq_reader.FastqReader.read"></a>
+<a id="fastq_reader.FastqReader.inner"></a>
 
-##### read
-
-```python
-def read() -> pl.DataFrame
-```
-
-Read the fasta file and return a polars DataFrame.
-
-<a id="fastq_reader.FastqReader.to_arrow_scanner"></a>
-
-##### to\_arrow\_scanner
+##### inner
 
 ```python
-def to_arrow_scanner() -> ds.Scanner
+@property
+def inner()
 ```
 
-Convert the fasta reader to an arrow scanner.
-
-<a id="fastq_reader.FastqReader.to_arrow_record_batch_reader"></a>
-
-##### to\_arrow\_record\_batch\_reader
-
-```python
-def to_arrow_record_batch_reader() -> pa.RecordBatchReader
-```
-
-Convert the fasta reader to an arrow batch reader.
+Return the inner reader.
 
 <a id="gff_reader"></a>
 
@@ -616,7 +549,7 @@ GFF File Reader.
 #### GFFReader
 
 ```python
-class GFFReader()
+class GFFReader(Reader)
 ```
 
 A GFF File Reader.
@@ -626,7 +559,8 @@ A GFF File Reader.
 ##### \_\_init\_\_
 
 ```python
-def __init__(path: Path, compression: Compression = Compression.INFERRED)
+def __init__(path: os.PathLike,
+             compression: Compression = Compression.INFERRED)
 ```
 
 Initialize the GFFReader.
@@ -664,3 +598,14 @@ def to_arrow_scanner() -> ds.Scanner
 ```
 
 Convert the GFF reader to an arrow scanner.
+
+<a id="gff_reader.GFFReader.inner"></a>
+
+##### inner
+
+```python
+@property
+def inner()
+```
+
+Return the inner reader.
