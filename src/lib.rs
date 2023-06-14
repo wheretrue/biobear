@@ -1,9 +1,7 @@
 use pyo3::prelude::*;
 
 mod bam_reader;
-mod batch;
 mod exon_reader;
-mod to_arrow;
 mod vcf_reader;
 
 #[pymodule]

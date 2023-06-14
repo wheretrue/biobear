@@ -1,66 +1,48 @@
-mod bam_batch;
-
-use arrow::datatypes::SchemaRef;
-use arrow::error::ArrowError;
-use arrow::record_batch::RecordBatch;
-use arrow::record_batch::RecordBatchReader;
+use arrow::ffi_stream::ArrowArrayStreamReader;
+use arrow::ffi_stream::FFI_ArrowArrayStream;
+use arrow::pyarrow::PyArrowConvert;
+use datafusion::prelude::SessionConfig;
+use datafusion::prelude::SessionContext;
+use exon::context::ExonSessionExt;
+use exon::ffi::create_dataset_stream_from_table_provider;
 use pyo3::prelude::*;
-use pyo3::types::PyBytes;
 
-use noodles::core::Position;
-use noodles::core::Region;
+use tokio::runtime::Runtime;
 
-use std::fs::File;
 use std::io;
-use std::io::BufReader;
-
-use crate::batch::BearRecordBatch;
-use crate::to_arrow::to_pyarrow;
-
-use self::bam_batch::add_next_bam_indexed_record_to_batch;
-use self::bam_batch::add_next_bam_record_to_batch;
-use self::bam_batch::BamBatch;
-use self::bam_batch::BamSchemaTrait;
-
-use noodles::{bam, bgzf, sam};
+use std::sync::Arc;
 
 #[pyclass(name = "_BamReader")]
 pub struct BamReader {
-    reader: bam::Reader<bgzf::Reader<BufReader<File>>>,
-    header: sam::Header,
-    file_path: String,
-    batch_size: usize,
+    df: datafusion::dataframe::DataFrame,
+    _runtime: Arc<Runtime>,
 }
 
 impl BamReader {
     fn open(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
-        let file = File::open(path)?;
-        let buf_reader = BufReader::new(file);
-        let mut reader = bam::Reader::new(buf_reader);
-        let header = reader.read_header().unwrap();
+        let rt = Arc::new(Runtime::new().unwrap());
 
-        Ok(Self {
-            reader,
-            header,
-            file_path: path.to_string(),
-            batch_size: batch_size.unwrap_or(2048),
-        })
-    }
-}
+        let mut config = SessionConfig::new();
+        if let Some(batch_size) = batch_size {
+            config = config.with_batch_size(batch_size);
+        }
 
-impl BamSchemaTrait for BamReader {}
+        let ctx = SessionContext::with_config(config);
 
-impl Iterator for BamReader {
-    type Item = Result<RecordBatch, ArrowError>;
+        let df = rt.block_on(async {
+            match ctx.read_bam(path, None).await {
+                Ok(df) => Ok(df),
+                Err(e) => Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    format!("Error reading BAM file: {e}"),
+                )),
+            }
+        });
 
-    fn next(&mut self) -> Option<Self::Item> {
-        add_next_bam_record_to_batch(&mut self.reader, &self.header, Some(self.batch_size))
-    }
-}
-
-impl RecordBatchReader for BamReader {
-    fn schema(&self) -> SchemaRef {
-        self.bam_schema().into()
+        match df {
+            Ok(df) => Ok(Self { df, _runtime: rt }),
+            Err(e) => Err(e),
+        }
     }
 }
 
@@ -75,76 +57,53 @@ impl BamReader {
         })
     }
 
-    pub fn to_pyarrow(&self) -> PyResult<PyObject> {
-        to_pyarrow(self.clone())
-    }
-}
+    fn to_pyarrow(&self) -> PyResult<PyObject> {
+        let stream = Arc::new(FFI_ArrowArrayStream::empty());
+        let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
 
-impl Clone for BamReader {
-    fn clone(&self) -> Self {
-        let file = File::open(self.file_path.clone()).unwrap();
-        let buf_reader = BufReader::new(file);
-        let mut reader = bam::Reader::new(buf_reader);
-        let header = reader.read_header().unwrap();
+        self._runtime.block_on(async {
+            create_dataset_stream_from_table_provider(
+                self.df.clone(),
+                self._runtime.clone(),
+                stream_ptr,
+            )
+            .await;
+        });
 
-        Self {
-            reader,
-            header,
-            file_path: self.file_path.clone(),
-            batch_size: self.batch_size,
-        }
+        Python::with_gil(|py| unsafe {
+            match ArrowArrayStreamReader::from_raw(stream_ptr) {
+                Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Error converting to pyarrow: {err}"
+                ))),
+            }
+        })
     }
 }
 
 #[pyclass(name = "_BamIndexedReader")]
 pub struct BamIndexedReader {
-    reader: bam::IndexedReader<bgzf::Reader<BufReader<File>>>,
-    file_path: String,
-    header: sam::Header,
-    batch_size: usize,
+    path: String,
+    batch_size: Option<usize>,
+    _runtime: Arc<Runtime>,
 }
 
 impl BamIndexedReader {
-    fn open(path: &str, index_path: Option<&str>, batch_size: Option<usize>) -> io::Result<Self> {
-        let file = File::open(path)?;
+    fn open(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
+        // Check the path exists
+        if !std::path::Path::new(path).exists() {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                format!("File not found: {path}"),
+            ));
+        }
 
-        let buf_reader = BufReader::new(file);
-
-        let inferred_path = match index_path {
-            Some(path) => path.to_string(),
-            None => format!("{path}.bai"),
-        };
-
-        let index = bam::bai::read(inferred_path)?;
-
-        let mut reader = match bam::indexed_reader::Builder::default()
-            .set_index(index)
-            .build_from_reader(buf_reader)
-        {
-            Ok(reader) => reader,
-            Err(_) => {
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    format!("Failed to open file: {path}"),
-                ))
-            }
-        };
-
-        let header = match reader.read_header() {
-            Ok(header) => header,
-            Err(_) => {
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    format!("Failed to read header: {path}"),
-                ))
-            }
-        };
+        let rt = Arc::new(Runtime::new().unwrap());
 
         Ok(Self {
-            reader,
-            file_path: path.to_string(),
-            header,
-            batch_size: batch_size.unwrap_or(2048),
+            path: path.to_string(),
+            batch_size,
+            _runtime: rt,
         })
     }
 }
@@ -152,81 +111,51 @@ impl BamIndexedReader {
 #[pymethods]
 impl BamIndexedReader {
     #[new]
-    fn new(path: &str, index_path: Option<&str>, batch_size: Option<usize>) -> PyResult<Self> {
-        Self::open(path, index_path, batch_size).map_err(|e| {
+    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
+        Self::open(path, batch_size).map_err(|e| {
             PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
                 "Failed to open file: {path} with error: {e}"
             ))
         })
     }
 
-    fn query(&mut self, chromosome: &str, start: usize, end: usize) -> PyResult<PyObject> {
-        let mut batch = BamBatch::new();
+    fn query(&mut self, region: &str) -> PyResult<PyObject> {
+        let mut config = SessionConfig::new();
+        if let Some(batch_size) = self.batch_size {
+            config = config.with_batch_size(batch_size);
+        }
 
-        let start = Position::try_from(start)?;
-        let end = Position::try_from(end)?;
-        let query_result = self
-            .reader
-            .query(&self.header, &Region::new(chromosome, start..=end));
+        let ctx = SessionContext::with_config(config);
 
-        let query = match query_result {
-            Ok(query) => query,
-            Err(_) => {
-                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Failed to query region: {chromosome}:{start}-{end}"
-                )))
+        let df = self._runtime.block_on(async {
+            match ctx.query_bam_file(self.path.as_str(), region).await {
+                Ok(df) => Ok(df),
+                Err(e) => Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    format!("Error reading GFF file: {e}"),
+                )),
             }
-        };
+        })?;
 
-        for record in query {
-            let record = record?;
-            batch.add(record, &self.header);
-        }
+        let stream = Arc::new(FFI_ArrowArrayStream::empty());
+        let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
 
-        Ok(Python::with_gil(|py| {
-            PyBytes::new(py, &batch.serialize()).into()
-        }))
-    }
+        self._runtime.block_on(async {
+            create_dataset_stream_from_table_provider(
+                df.clone(),
+                self._runtime.clone(),
+                stream_ptr,
+            )
+            .await;
+        });
 
-    pub fn to_pyarrow(&self) -> PyResult<PyObject> {
-        to_pyarrow(self.clone())
-    }
-}
-
-impl BamSchemaTrait for BamIndexedReader {}
-
-impl Iterator for BamIndexedReader {
-    type Item = Result<RecordBatch, ArrowError>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        add_next_bam_indexed_record_to_batch(&mut self.reader, &self.header, Some(self.batch_size))
-    }
-}
-
-impl RecordBatchReader for BamIndexedReader {
-    fn schema(&self) -> SchemaRef {
-        self.bam_schema().into()
-    }
-}
-impl Clone for BamIndexedReader {
-    fn clone(&self) -> Self {
-        let file = File::open(self.file_path.clone()).unwrap();
-        let buf_reader = BufReader::new(file);
-
-        let index = bam::bai::read(format!("{}.bai", self.file_path)).unwrap();
-
-        let mut reader = bam::indexed_reader::Builder::default()
-            .set_index(index)
-            .build_from_reader(buf_reader)
-            .unwrap();
-
-        let header = reader.read_header().unwrap();
-
-        Self {
-            reader,
-            header,
-            file_path: self.file_path.clone(),
-            batch_size: self.batch_size,
-        }
+        Python::with_gil(|py| unsafe {
+            match ArrowArrayStreamReader::from_raw(stream_ptr) {
+                Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Error converting to pyarrow: {err}"
+                ))),
+            }
+        })
     }
 }

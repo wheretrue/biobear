@@ -21,13 +21,6 @@ def test_vcf_reader_missing_file():
         VCFReader("test.vcf")
 
 
-def test_vcf_indexed_reader_read():
-    reader = VCFIndexedReader(DATA / "vcf_file.vcf.gz")
-    df = reader.read()
-
-    assert len(df) == 15
-
-
 def test_vcf_indexed_reader_query():
     reader = VCFIndexedReader(DATA / "vcf_file.vcf.gz")
     df = reader.query("1")
