@@ -1,110 +1,124 @@
-mod vcf_batch;
-
 use arrow::{
-    datatypes::SchemaRef,
-    error::ArrowError,
-    record_batch::{RecordBatch, RecordBatchReader},
+    ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream},
+    pyarrow::PyArrowConvert,
+};
+use datafusion::{
+    datasource::file_format::file_type::FileCompressionType,
+    prelude::{SessionConfig, SessionContext},
 };
 use pyo3::prelude::*;
-use pyo3::types::PyBytes;
+use tokio::runtime::Runtime;
 
-use std::fs::File;
-use std::io::{self, BufReader};
+use exon::{context::ExonSessionExt, ffi::create_dataset_stream_from_table_provider};
 
-use noodles::vcf;
-
-use crate::{batch::BearRecordBatch, to_arrow::to_pyarrow};
-
-use self::vcf_batch::{
-    add_next_vcf_indexed_record_to_batch, add_next_vcf_record_to_batch, VCFBatch, VCFSchemaTrait,
-};
+use std::sync::Arc;
+use std::{io, str::FromStr};
 
 #[pyclass(name = "_VCFReader")]
 pub struct VCFReader {
-    reader: vcf::Reader<BufReader<File>>,
-    header: vcf::Header,
-    batch_size: usize,
-    file_path: String,
+    df: datafusion::dataframe::DataFrame,
+    _runtime: Arc<Runtime>,
 }
 
 impl VCFReader {
-    fn open(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
-        let file = File::open(path)?;
-        let mut reader = vcf::Reader::new(BufReader::new(file));
-        let header = reader.read_header()?;
+    fn open(
+        path: &str,
+        compression: Option<FileCompressionType>,
+        batch_size: Option<usize>,
+    ) -> io::Result<Self> {
+        let rt = Arc::new(Runtime::new().unwrap());
 
-        Ok(Self {
-            reader,
-            header,
-            batch_size: batch_size.unwrap_or(2048),
-            file_path: path.to_string(),
-        })
+        let mut config = SessionConfig::new();
+        if let Some(batch_size) = batch_size {
+            config = config.with_batch_size(batch_size);
+        }
+
+        let ctx = SessionContext::with_config(config);
+
+        let df = rt.block_on(async {
+            match ctx.read_vcf(path, compression).await {
+                Ok(df) => Ok(df),
+                Err(e) => Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    format!("Error reading VCF file: {e}"),
+                )),
+            }
+        });
+
+        match df {
+            Ok(df) => Ok(Self { df, _runtime: rt }),
+            Err(e) => Err(e),
+        }
     }
 }
 
 #[pymethods]
 impl VCFReader {
     #[new]
-    fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
-        Self::open(path, batch_size).map_err(|e| {
+    fn new(path: &str, compression: Option<&str>, batch_size: Option<usize>) -> PyResult<Self> {
+        let file_compression_type =
+            compression.map(
+                |compression| match FileCompressionType::from_str(compression) {
+                    Ok(compression_type) => Ok(compression_type),
+                    Err(e) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Error reading compression type: {e:?}"
+                    ))),
+                },
+            );
+
+        let file_compression_type = file_compression_type.transpose()?;
+        Self::open(path, file_compression_type, batch_size).map_err(|e| {
             PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening file {path}: {e}"))
         })
     }
 
     fn to_pyarrow(&self) -> PyResult<PyObject> {
-        to_pyarrow(self.clone())
-    }
-}
+        let stream = Arc::new(FFI_ArrowArrayStream::empty());
+        let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
 
-impl VCFSchemaTrait for VCFReader {}
+        self._runtime.block_on(async {
+            create_dataset_stream_from_table_provider(
+                self.df.clone(),
+                self._runtime.clone(),
+                stream_ptr,
+            )
+            .await;
+        });
 
-impl Iterator for VCFReader {
-    type Item = Result<RecordBatch, ArrowError>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        add_next_vcf_record_to_batch(&mut self.reader, &self.header, Some(self.batch_size))
-    }
-}
-
-impl RecordBatchReader for VCFReader {
-    fn schema(&self) -> SchemaRef {
-        self.vcf_schema().into()
-    }
-}
-
-impl Clone for VCFReader {
-    fn clone(&self) -> Self {
-        Self::open(self.file_path.as_str(), Some(self.batch_size)).unwrap()
+        Python::with_gil(|py| unsafe {
+            match ArrowArrayStreamReader::from_raw(stream_ptr) {
+                Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Error converting to pyarrow: {err}"
+                ))),
+            }
+        })
     }
 }
 
 #[pyclass(name = "_VCFIndexedReader")]
 pub struct VCFIndexedReader {
-    reader: vcf::IndexedReader<File>,
-    header: vcf::Header,
-    file_path: String,
-    batch_size: usize,
+    path: String,
+    batch_size: Option<usize>,
+    _runtime: Arc<Runtime>,
 }
 
 impl VCFIndexedReader {
     fn open(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
-        let mut reader = vcf::indexed_reader::Builder::default().build_from_path(path)?;
+        // Check the path exists
+        if !std::path::Path::new(path).exists() {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                format!("File not found: {path}"),
+            ));
+        }
 
-        let header = match reader.read_header() {
-            Ok(header) => header,
-            Err(e) => {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    format!("Error reading VCF header: {e}"),
-                ))
-            }
-        };
+        let rt = Arc::new(Runtime::new().unwrap());
 
         Ok(Self {
-            reader,
-            header,
-            batch_size: batch_size.unwrap_or(2048),
-            file_path: path.to_string(),
+            path: path.to_string(),
+            batch_size,
+            _runtime: rt,
         })
     }
 }
@@ -116,67 +130,43 @@ impl VCFIndexedReader {
         Self::open(path, batch_size).map_err(PyErr::new::<pyo3::exceptions::PyValueError, _>)
     }
 
-    fn to_pyarrow(&self) -> PyResult<PyObject> {
-        to_pyarrow(self.clone())
-    }
-
     fn query(&mut self, region: &str) -> PyResult<PyObject> {
-        let mut batch = VCFBatch::new();
-
-        let region = match region.parse() {
-            Ok(region) => region,
-            Err(e) => {
-                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Error parsing region: {e}"
-                )))
-            }
-        };
-
-        let iter = match self.reader.query(&self.header, &region) {
-            Ok(iter) => iter,
-            Err(e) => {
-                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Error querying VCF file: {e}",
-                )))
-            }
-        };
-
-        for record in iter {
-            let record = match record {
-                Ok(record) => record,
-                Err(e) => {
-                    return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Error reading VCF record: {e}",
-                    )))
-                }
-            };
-            batch.add(&record);
+        let mut config = SessionConfig::new();
+        if let Some(batch_size) = self.batch_size {
+            config = config.with_batch_size(batch_size);
         }
 
-        Ok(Python::with_gil(|py| {
-            PyBytes::new(py, &batch.serialize()).into()
-        }))
-    }
-}
+        let ctx = SessionContext::with_config(config);
 
-impl VCFSchemaTrait for VCFIndexedReader {}
+        let df = self._runtime.block_on(async {
+            match ctx.query_vcf_file(self.path.as_str(), region).await {
+                Ok(df) => Ok(df),
+                Err(e) => Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    format!("Error reading VCF file: {e}"),
+                )),
+            }
+        })?;
 
-impl Iterator for VCFIndexedReader {
-    type Item = Result<RecordBatch, ArrowError>;
+        let stream = Arc::new(FFI_ArrowArrayStream::empty());
+        let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        add_next_vcf_indexed_record_to_batch(&mut self.reader, &self.header, Some(self.batch_size))
-    }
-}
+        self._runtime.block_on(async {
+            create_dataset_stream_from_table_provider(
+                df.clone(),
+                self._runtime.clone(),
+                stream_ptr,
+            )
+            .await;
+        });
 
-impl RecordBatchReader for VCFIndexedReader {
-    fn schema(&self) -> SchemaRef {
-        self.vcf_schema().into()
-    }
-}
-
-impl Clone for VCFIndexedReader {
-    fn clone(&self) -> Self {
-        Self::open(&self.file_path, Some(self.batch_size)).unwrap()
+        Python::with_gil(|py| unsafe {
+            match ArrowArrayStreamReader::from_raw(stream_ptr) {
+                Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Error converting to pyarrow: {err}"
+                ))),
+            }
+        })
     }
 }

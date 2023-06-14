@@ -3,6 +3,7 @@
 import os
 
 import polars as pl
+import pyarrow.dataset as ds
 
 from biobear.reader import Reader
 
@@ -55,4 +56,6 @@ class VCFIndexedReader(Reader):
 
         """
         contents = self._vcf_reader.query(region)
-        return pl.read_ipc(contents)
+        scanner = ds.Scanner.from_batches(contents).to_table()
+
+        return pl.from_arrow(scanner)
