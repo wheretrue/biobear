@@ -1,63 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   viewBox="0 0 200.00001 75.000001"
+   viewBox="0 0 150.00001 50.000001"
    version="1.1"
    id="svg42349"
-   sodipodi:docname="biobear.svg"
-   inkscape:version="1.2.2 (b0a84865, 2022-12-01)"
-   width="200"
-   height="75"
-   inkscape:export-filename="biobear.svg"
-   inkscape:export-xdpi="2500"
-   inkscape:export-ydpi="2500"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   width="150"
+   height="50"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <defs
      id="defs42353" />
-  <sodipodi:namedview
-     id="namedview42351"
-     pagecolor="#fdfdfd"
-     bordercolor="#000000"
-     borderopacity="0.25"
-     inkscape:showpageshadow="2"
-     inkscape:pageopacity="0"
-     inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#d1d1d1"
-     showgrid="true"
-     inkscape:zoom="5.2733228"
-     inkscape:cx="39.443821"
-     inkscape:cy="13.748447"
-     inkscape:window-width="1470"
-     inkscape:window-height="891"
-     inkscape:window-x="0"
-     inkscape:window-y="37"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="svg42349">
-    <inkscape:grid
-       type="xygrid"
-       id="grid10119"
-       visible="false"
-       empcolor="#0099e5"
-       empopacity="0.0627451"
-       color="#0099e5"
-       opacity="0.07058824"
-       originx="1.8523353"
-       originy="16.269636" />
-  </sodipodi:namedview>
   <!-- Bear Head -->
   <!-- Ears -->
   <!-- Eyes -->
   <!-- Nose -->
   <g
-     id="g22281">
+     id="g22281"
+     transform="translate(8.2628821,-7.6073333)">
     <g
        id="g21390"
-       transform="matrix(1.0704785,0,0,1.0589422,8.4089382,11.934271)"
-       inkscape:export-filename="biobear.svg"
-       inkscape:export-xdpi="2500"
-       inkscape:export-ydpi="2500">
+       transform="matrix(1.0704785,0,0,1.0589422,8.4089382,11.934271)">
       <circle
          cx="10.876339"
          cy="10.228822"
@@ -67,9 +28,6 @@
          id="circle42339"
          r="7"
          style="fill:#fbf5ef;fill-opacity:1;stroke:#292a2c;stroke-width:1.2;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:export-filename="circle42339.svg"
-         inkscape:export-xdpi="2000"
-         inkscape:export-ydpi="2000"
          transform="translate(-4.4,-4.4)" />
       <circle
          cx="39.318401"
@@ -80,7 +38,6 @@
          id="circle42341"
          r="7"
          style="fill:#fbf5ef;fill-opacity:1;stroke:#292a2c;stroke-width:1.2;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:label="circle42341"
          transform="translate(-4.4,-4.4)" />
       <circle
          cx="20.6"
@@ -124,11 +81,7 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:19.5677px;font-family:'Chivo Mono';-inkscape-font-specification:'Chivo Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#e74115;fill-opacity:1;stroke:#0174c5;stroke-width:0.484294;stroke-dasharray:none;stroke-opacity:1"
        x="51.420666"
        y="55.124866"
-       id="text19720"
-       inkscape:export-filename="text19720.svg"
-       inkscape:export-xdpi="2500"
-       inkscape:export-ydpi="2500"><tspan
-         sodipodi:role="line"
+       id="text19720"><tspan
          id="tspan19718"
          x="51.420666"
          y="55.124866"
