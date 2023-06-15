@@ -1,8 +1,8 @@
-## Unreleased
+## v0.6.0 (2023-06-15)
 
 ### Feat
 
-- add s3 and gcs readers
+- add s3 and gcs readers (#30)
 
 ## v0.5.0 (2023-06-14)
 

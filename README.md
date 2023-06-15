@@ -1,4 +1,4 @@
-# biobear (v0.5.0)
+# biobear (v0.6.0)
 
 biobear is a Python library designed for reading and searching bioinformatic file formats, using Rust as its backend and producing Arrow or Polars DataFrames as its output.
 
