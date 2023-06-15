@@ -6,7 +6,7 @@ import polars as pl
 import pyarrow.dataset as ds
 
 from biobear.reader import Reader
-from .biobear import _BamIndexedReader, _BamReader
+from .biobear import _BamIndexedReader, _ExonReader
 
 
 class BamReader(Reader):
@@ -19,7 +19,7 @@ class BamReader(Reader):
             path (Path): Path to the BAM file.
 
         """
-        self._bam_reader = _BamReader(str(path))
+        self._bam_reader = _ExonReader(str(path), "BAM", None)
 
     @property
     def inner(self):
