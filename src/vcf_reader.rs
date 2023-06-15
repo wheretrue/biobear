@@ -2,99 +2,14 @@ use arrow::{
     ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream},
     pyarrow::PyArrowConvert,
 };
-use datafusion::{
-    datasource::file_format::file_type::FileCompressionType,
-    prelude::{SessionConfig, SessionContext},
-};
+use datafusion::prelude::{SessionConfig, SessionContext};
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
 use exon::{context::ExonSessionExt, ffi::create_dataset_stream_from_table_provider};
 
+use std::io;
 use std::sync::Arc;
-use std::{io, str::FromStr};
-
-#[pyclass(name = "_VCFReader")]
-pub struct VCFReader {
-    df: datafusion::dataframe::DataFrame,
-    _runtime: Arc<Runtime>,
-}
-
-impl VCFReader {
-    fn open(
-        path: &str,
-        compression: Option<FileCompressionType>,
-        batch_size: Option<usize>,
-    ) -> io::Result<Self> {
-        let rt = Arc::new(Runtime::new().unwrap());
-
-        let mut config = SessionConfig::new();
-        if let Some(batch_size) = batch_size {
-            config = config.with_batch_size(batch_size);
-        }
-
-        let ctx = SessionContext::with_config(config);
-
-        let df = rt.block_on(async {
-            match ctx.read_vcf(path, compression).await {
-                Ok(df) => Ok(df),
-                Err(e) => Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    format!("Error reading VCF file: {e}"),
-                )),
-            }
-        });
-
-        match df {
-            Ok(df) => Ok(Self { df, _runtime: rt }),
-            Err(e) => Err(e),
-        }
-    }
-}
-
-#[pymethods]
-impl VCFReader {
-    #[new]
-    fn new(path: &str, compression: Option<&str>, batch_size: Option<usize>) -> PyResult<Self> {
-        let file_compression_type =
-            compression.map(
-                |compression| match FileCompressionType::from_str(compression) {
-                    Ok(compression_type) => Ok(compression_type),
-                    Err(e) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Error reading compression type: {e:?}"
-                    ))),
-                },
-            );
-
-        let file_compression_type = file_compression_type.transpose()?;
-        Self::open(path, file_compression_type, batch_size).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening file {path}: {e}"))
-        })
-    }
-
-    fn to_pyarrow(&self) -> PyResult<PyObject> {
-        let stream = Arc::new(FFI_ArrowArrayStream::empty());
-        let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
-
-        self._runtime.block_on(async {
-            create_dataset_stream_from_table_provider(
-                self.df.clone(),
-                self._runtime.clone(),
-                stream_ptr,
-            )
-            .await;
-        });
-
-        Python::with_gil(|py| unsafe {
-            match ArrowArrayStreamReader::from_raw(stream_ptr) {
-                Ok(stream_reader) => stream_reader.to_pyarrow(py),
-                Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Error converting to pyarrow: {err}"
-                ))),
-            }
-        })
-    }
-}
 
 #[pyclass(name = "_VCFIndexedReader")]
 pub struct VCFIndexedReader {

@@ -9,8 +9,6 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<exon_reader::ExonReader>()?;
 
     m.add_class::<bam_reader::BamIndexedReader>()?;
-
-    m.add_class::<vcf_reader::VCFReader>()?;
     m.add_class::<vcf_reader::VCFIndexedReader>()?;
 
     Ok(())

@@ -1,3 +1,5 @@
+"""Smoke test for biobear."""
+
 import biobear
 
 df = biobear.FastaReader("python/tests/data/test.fasta").read()
