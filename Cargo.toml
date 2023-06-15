@@ -11,5 +11,7 @@ name = "biobear"
 arrow = {version = "40", features = ["pyarrow"]}
 datafusion = "26"
 exon = {version = "0.1.1-alpha.7", features = ["all"]}
+object_store = {version = "0.5.4", features = ["aws", "gcp", "azure", "aws_profile"]}
 pyo3 = "0.18.3"
 tokio = {version = "1", features = ["rt"]}
+url = "2.4.0"

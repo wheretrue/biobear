@@ -7,7 +7,7 @@ import pyarrow.dataset as ds
 
 from biobear.reader import Reader
 
-from .biobear import _VCFReader, _VCFIndexedReader
+from .biobear import _ExonReader, _VCFIndexedReader
 
 
 class VCFReader(Reader):
@@ -23,7 +23,7 @@ class VCFReader(Reader):
             path (Path): Path to the VCF file.
 
         """
-        self._vcf_reader = _VCFReader(str(path))
+        self._vcf_reader = _ExonReader(str(path), "VCF", None)
 
     @property
     def inner(self):

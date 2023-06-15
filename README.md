@@ -6,6 +6,7 @@ The python package has minimal dependencies and only requires Polars. Biobear ca
 
 - [Installation](#installation)
 - [Usage](#usage)
+- [S3 and GCS](#s3-and-gcs)
 - [Similar Packages](#similar-packages)
 - [API Documentation](#api-documentation)
   - [vcf\_reader](#vcf_reader)
@@ -106,6 +107,17 @@ print(df.head())
 # │ 1          ┆ 3062915  ┆ idSNP ┆ G         ┆ … ┆ 12.6          ┆ test   ┆ TEST=5;DP4=1,2,3,4;AN=3;AC=1,1    ┆ GT:TT:GQ:DP:GL │
 # │ 1          ┆ 3106154  ┆       ┆ CAAA      ┆ … ┆ 342.0         ┆ PASS   ┆ AN=4;AC=2                         ┆ GT:GQ:DP       │
 # └────────────┴──────────┴───────┴───────────┴───┴───────────────┴────────┴───────────────────────────────────┴────────────────┘
+```
+
+## S3 and GCS
+
+If you pass a `path` that is a URL to an object store, BioBear will attempt to infer your credentials from the environment, and use them to read the file. For example, if you have your `AWS_PROFILE` and `AWS_REGION` env vars set, then you can read from S3 like so:
+
+```python
+import biobear as bb
+
+# Read from S3
+df = bb.FastaReader("s3://bucket/test.fa").read()
 ```
 
 ## Similar Packages

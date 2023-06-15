@@ -6,6 +6,7 @@
     "version_files": [
       "Cargo.toml",
       "README.md"
-    ]
+    ],
+    "update_changelog_on_bump": true
   }
 }
