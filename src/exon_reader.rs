@@ -148,7 +148,8 @@ impl ExonReader {
                 self._runtime.clone(),
                 stream_ptr,
             )
-            .await;
+            .await
+            .unwrap();
         });
 
         Python::with_gil(|py| unsafe {
