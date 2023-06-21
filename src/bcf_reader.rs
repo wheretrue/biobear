@@ -1,25 +1,24 @@
-use arrow::ffi_stream::ArrowArrayStreamReader;
-use arrow::ffi_stream::FFI_ArrowArrayStream;
-use arrow::pyarrow::PyArrowConvert;
-use datafusion::prelude::SessionConfig;
-use datafusion::prelude::SessionContext;
-use exon::context::ExonSessionExt;
-use exon::ffi::create_dataset_stream_from_table_provider;
+use arrow::{
+    ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream},
+    pyarrow::PyArrowConvert,
+};
+use datafusion::prelude::{SessionConfig, SessionContext};
 use pyo3::prelude::*;
-
 use tokio::runtime::Runtime;
+
+use exon::{context::ExonSessionExt, ffi::create_dataset_stream_from_table_provider};
 
 use std::io;
 use std::sync::Arc;
 
-#[pyclass(name = "_BamIndexedReader")]
-pub struct BamIndexedReader {
+#[pyclass(name = "_BCFIndexedReader")]
+pub struct BCFIndexedReader {
     path: String,
     batch_size: Option<usize>,
     _runtime: Arc<Runtime>,
 }
 
-impl BamIndexedReader {
+impl BCFIndexedReader {
     fn open(path: &str, batch_size: Option<usize>) -> io::Result<Self> {
         // Check the path exists
         if !std::path::Path::new(path).exists() {
@@ -40,14 +39,10 @@ impl BamIndexedReader {
 }
 
 #[pymethods]
-impl BamIndexedReader {
+impl BCFIndexedReader {
     #[new]
     fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
-        Self::open(path, batch_size).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                "Failed to open file: {path} with error: {e}"
-            ))
-        })
+        Self::open(path, batch_size).map_err(PyErr::new::<pyo3::exceptions::PyValueError, _>)
     }
 
     fn query(&mut self, region: &str) -> PyResult<PyObject> {
@@ -59,11 +54,11 @@ impl BamIndexedReader {
         let ctx = SessionContext::with_config(config);
 
         let df = self._runtime.block_on(async {
-            match ctx.query_bam_file(self.path.as_str(), region).await {
+            match ctx.query_bcf_file(self.path.as_str(), region).await {
                 Ok(df) => Ok(df),
                 Err(e) => Err(io::Error::new(
                     io::ErrorKind::Other,
-                    format!("Error reading GFF file: {e}"),
+                    format!("Error reading BCF file: {e}"),
                 )),
             }
         })?;
