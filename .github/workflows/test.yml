@@ -33,8 +33,14 @@ jobs:
         virtualenv venv
         source venv/bin/activate
         pip install -r requirements-dev.txt
-        cargo build
-        maturin develop
-
         ruff check python/
+
+        cargo build
+
+        # Develop and test w/o extras
+        maturin develop
+        pytest
+
+        # Develop and test with extras
+        maturin develop --extras polars
         pytest

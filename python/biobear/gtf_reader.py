@@ -2,7 +2,6 @@
 
 import os
 
-import polars as pl
 import pyarrow as pa
 import pyarrow.dataset as ds
 
@@ -31,17 +30,26 @@ class GTFReader(Reader):
         else:
             self._gtf_reader = _ExonReader(str(path), "GTF", None)
 
-    def read(self) -> pl.DataFrame:
+    def to_polars(self):
         """Read the GTF file and return a polars DataFrame."""
-        return pl.from_arrow(self.to_arrow_record_batch_reader().read_all())
 
-    def to_arrow_record_batch_reader(self) -> pa.RecordBatchReader:
+        try:
+            import polars as pl
+        except ImportError as import_error:
+            raise ImportError(
+                "The polars library is required to convert a GTF file to "
+                "a polars DataFrame."
+            ) from import_error
+
+        return pl.from_arrow(self.to_arrow().read_all())
+
+    def to_arrow(self) -> pa.RecordBatchReader:
         """Convert the GTF reader to an arrow batch reader."""
         return self._gtf_reader.to_pyarrow()
 
     def to_arrow_scanner(self) -> ds.Scanner:
         """Convert the GTF reader to an arrow scanner."""
-        return ds.Scanner.from_batches(self.to_arrow_record_batch_reader())
+        return ds.Scanner.from_batches(self.to_arrow())
 
     @property
     def inner(self):
