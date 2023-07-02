@@ -4,22 +4,30 @@ from pathlib import Path
 
 import pytest
 
-import polars as pl
 from biobear import GTFReader
+import importlib
 
 DATA = Path(__file__).parent / "data"
 
 
-def test_gtf_reader():
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_gtf_reader_to_polars():
     reader = GTFReader(DATA / "test.gtf")
-    df = reader.read()
+    df = reader.to_polars()
 
     assert len(df) == 77
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
 def test_gtf_attr_struct():
+    import polars as pl
+
     reader = GTFReader(DATA / "test.gtf")
-    df = reader.read()
+    df = reader.to_polars()
 
     dtype = df.select(pl.col("attributes")).dtypes[0]
 
@@ -40,9 +48,12 @@ def test_gtf_reader_no_file():
         GTFReader("test.gtf")
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
 def test_gtf_reader_gz():
     reader = GTFReader(DATA / "test.gtf.gz")
-    df = reader.read()
+    df = reader.to_polars()
 
     assert len(df) == 77
 

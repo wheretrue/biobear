@@ -1,26 +1,33 @@
 # Test the fasta reader can be converted to a polars dataframe
 
+import importlib
 from pathlib import Path
 
 import pytest
 
-import polars as pl
 from biobear import GFFReader
 
 DATA = Path(__file__).parent / "data"
 
 
-def test_gff_reader():
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_gff_reader_polars():
     reader = GFFReader(DATA / "test.gff")
-    df = reader.read()
+    df = reader.to_polars()
 
     assert len(df) == 2
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
 def test_gff_attr_struct():
-    reader = GFFReader(DATA / "test.gff")
-    df = reader.read()
+    import polars as pl
 
+    reader = GFFReader(DATA / "test.gff")
+    df = reader.to_polars()
     dtype = df.select(pl.col("attributes")).dtypes[0]
 
     key_field = pl.Field("key", pl.Utf8)
@@ -40,9 +47,12 @@ def test_gff_reader_no_file():
         GFFReader("test.gff")
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
 def test_gff_reader_gz():
     reader = GFFReader(DATA / "test.gff.gz")
-    df = reader.read()
+    df = reader.to_polars()
 
     assert len(df) == 2
 

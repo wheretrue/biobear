@@ -1,6 +1,7 @@
 # Test the fasta reader can be converted to a polars dataframe
 
 from pathlib import Path
+import importlib
 
 import pytest
 
@@ -9,9 +10,12 @@ from biobear import VCFReader, VCFIndexedReader
 DATA = Path(__file__).parent / "data"
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
 def test_vcf_reader():
     reader = VCFReader(DATA / "vcf_file.vcf")
-    df = reader.read()
+    df = reader.to_polars()
 
     assert len(df) == 15
 
@@ -23,12 +27,17 @@ def test_vcf_reader_missing_file():
 
 def test_vcf_indexed_reader_query():
     reader = VCFIndexedReader(DATA / "vcf_file.vcf.gz")
-    df = reader.query("1")
+    rbr = reader.query("1")
 
-    assert len(df) == 11
+    assert 11 == sum(b.num_rows for b in rbr)
 
-    with pytest.raises(ValueError):
-        reader.query("chr1")
+
+def test_vcf_indexed_reader_query_no_results():
+    reader = VCFIndexedReader(DATA / "vcf_file.vcf.gz")
+    rbr = reader.query("chr1")
+
+    with pytest.raises(Exception):
+        assert 0 == sum(b.num_rows for b in rbr)
 
 
 def test_vcf_indexed_reader_query_missing_file():
