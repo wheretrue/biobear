@@ -8,7 +8,7 @@ crate-type = ["cdylib"]
 name = "biobear"
 
 [dependencies]
-arrow = {version = "40", features = ["pyarrow"]}
+arrow = {version = "42", features = ["pyarrow"]}
 datafusion = "26"
 exon = {version = "0.1.2", features = ["all"]}
 object_store = {version = "0.5.4", features = ["aws", "gcp", "azure", "aws_profile"]}
