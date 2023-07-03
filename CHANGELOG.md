@@ -1,3 +1,13 @@
+## v0.6.3 (2023-07-03)
+
+### Fix
+
+- fix filename
+
+### Refactor
+
+- cleanup interface (#34)
+
 ## v0.6.2 (2023-06-20)
 
 ### Feat
