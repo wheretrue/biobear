@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use arrow::{
-    ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream},
-    pyarrow::PyArrowConvert,
-};
+use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
+use arrow::pyarrow::IntoPyArrow;
 use datafusion::prelude::{SessionConfig, SessionContext};
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
@@ -92,7 +90,7 @@ impl BCFIndexedReader {
 
         Python::with_gil(|py| unsafe {
             match ArrowArrayStreamReader::from_raw(stream_ptr) {
-                Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                Ok(stream_reader) => stream_reader.into_pyarrow(py),
                 Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
                     "Error converting to pyarrow: {err}"
                 ))),

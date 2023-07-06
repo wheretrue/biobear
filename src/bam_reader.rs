@@ -14,7 +14,7 @@
 
 use arrow::ffi_stream::ArrowArrayStreamReader;
 use arrow::ffi_stream::FFI_ArrowArrayStream;
-use arrow::pyarrow::PyArrowConvert;
+use arrow::pyarrow::IntoPyArrow;
 use datafusion::prelude::SessionConfig;
 use datafusion::prelude::SessionContext;
 use exon::context::ExonSessionExt;
@@ -97,7 +97,7 @@ impl BamIndexedReader {
 
         Python::with_gil(|py| unsafe {
             match ArrowArrayStreamReader::from_raw(stream_ptr) {
-                Ok(stream_reader) => stream_reader.to_pyarrow(py),
+                Ok(stream_reader) => stream_reader.into_pyarrow(py),
                 Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
                     "Error converting to pyarrow: {err}"
                 ))),

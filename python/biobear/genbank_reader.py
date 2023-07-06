@@ -13,10 +13,11 @@ class GenbankReader(Reader):
     def __init__(
         self, path: os.PathLike, compression: Compression = Compression.INFERRED
     ):
-        """Read a fasta file.
+        """Read a genbank file.
 
         Args:
             path (Path): Path to the fasta file.
+            compression (Compression): Compression type of the file.
 
         """
         self.compression = compression.infer_or_use(path)
