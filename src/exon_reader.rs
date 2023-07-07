@@ -51,7 +51,7 @@ impl ExonReader {
 
         let df = rt.block_on(async {
             ctx.runtime_env()
-                .exon_register_object_store_uri(&path)
+                .exon_register_object_store_uri(path)
                 .await?;
 
             match ctx.read_exon_table(path, file_type, compression).await {
