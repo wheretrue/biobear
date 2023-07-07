@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::error::Error;
 use std::io;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -24,47 +23,9 @@ use datafusion::prelude::{SessionConfig, SessionContext};
 use exon::context::ExonSessionExt;
 use exon::datasources::ExonFileType;
 use exon::ffi::create_dataset_stream_from_table_provider;
-use object_store::aws::AmazonS3Builder;
-use object_store::gcp::GoogleCloudStorageBuilder;
+use exon::runtime_env::ExonRuntimeEnvExt;
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
-use url::Url;
-
-fn add_google_filesystem(ctx: &mut SessionContext, path: &str) -> Result<(), Box<dyn Error>> {
-    let url = Url::parse(path)?;
-    let host_str = url.host_str().ok_or_else(|| {
-        io::Error::new(io::ErrorKind::InvalidInput, format!("Invalid URL: {path}"))
-    })?;
-
-    let bucket_address = Url::parse(format!("gs://{host_str}").as_str())?;
-
-    let gcs = GoogleCloudStorageBuilder::from_env()
-        .with_bucket_name(host_str)
-        .build()?;
-
-    ctx.runtime_env()
-        .register_object_store(&bucket_address, Arc::new(gcs));
-
-    Ok(())
-}
-
-fn add_s3_filesystem(ctx: &mut SessionContext, path: &str) -> Result<(), Box<dyn Error>> {
-    let url = Url::parse(path)?;
-    let host_str = url.host_str().ok_or_else(|| {
-        io::Error::new(io::ErrorKind::InvalidInput, format!("Invalid URL: {path}"))
-    })?;
-
-    let bucket_address = Url::parse(format!("s3://{host_str}").as_str())?;
-
-    let s3 = AmazonS3Builder::from_env()
-        .with_bucket_name(host_str)
-        .build()?;
-
-    ctx.runtime_env()
-        .register_object_store(&bucket_address, Arc::new(s3));
-
-    Ok(())
-}
 
 #[pyclass(name = "_ExonReader")]
 pub struct ExonReader {
@@ -86,24 +47,13 @@ impl ExonReader {
             config = config.with_batch_size(batch_size);
         }
 
-        let mut ctx = SessionContext::with_config(config);
-
-        if path.starts_with("gs://") {
-            add_google_filesystem(&mut ctx, path).map_err(|e| {
-                io::Error::new(
-                    io::ErrorKind::Other,
-                    format!("Error adding Google Cloud Storage: {e}"),
-                )
-            })?;
-        }
-
-        if path.starts_with("s3://") {
-            add_s3_filesystem(&mut ctx, path).map_err(|e| {
-                io::Error::new(io::ErrorKind::Other, format!("Error adding Amazon S3: {e}"))
-            })?;
-        }
+        let ctx = SessionContext::with_config(config);
 
         let df = rt.block_on(async {
+            ctx.runtime_env()
+                .exon_register_object_store_uri(&path)
+                .await?;
+
             match ctx.read_exon_table(path, file_type, compression).await {
                 Ok(df) => Ok(df),
                 Err(e) => Err(io::Error::new(
