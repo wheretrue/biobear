@@ -30,6 +30,7 @@ use tokio::runtime::Runtime;
 #[pyclass(name = "_ExonReader")]
 pub struct ExonReader {
     df: datafusion::dataframe::DataFrame,
+    exhausted: bool,
     _runtime: Arc<Runtime>,
 }
 
@@ -64,7 +65,11 @@ impl ExonReader {
         });
 
         match df {
-            Ok(df) => Ok(Self { df, _runtime: rt }),
+            Ok(df) => Ok(Self {
+                df,
+                _runtime: rt,
+                exhausted: false,
+            }),
             Err(e) => Err(e),
         }
     }
@@ -102,7 +107,11 @@ impl ExonReader {
         })
     }
 
-    fn to_pyarrow(&self) -> PyResult<PyObject> {
+    fn is_exhausted(&self) -> bool {
+        self.exhausted
+    }
+
+    fn to_pyarrow(&mut self) -> PyResult<PyObject> {
         let stream = Arc::new(FFI_ArrowArrayStream::empty());
         let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
 
@@ -115,6 +124,8 @@ impl ExonReader {
             .await
             .unwrap();
         });
+
+        self.exhausted = true;
 
         Python::with_gil(|py| unsafe {
             match ArrowArrayStreamReader::from_raw(stream_ptr) {

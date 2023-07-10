@@ -55,3 +55,10 @@ def test_fasta_reader_to_arrow():
 def test_fasta_reader_no_file():
     with pytest.raises(OSError):
         FastaReader("test.fasta")
+
+
+def test_multiple_calls_raise_an_exhausted_error():
+    fasta_reader = FastaReader(DATA / "test.fasta")
+    fasta_reader.to_polars()
+    with pytest.raises(StopIteration):
+        fasta_reader.to_polars()
