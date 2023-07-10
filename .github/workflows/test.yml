@@ -43,4 +43,5 @@ jobs:
 
         # Develop and test with extras
         maturin develop --extras polars
+        pip install -e ".[polars]"
         pytest

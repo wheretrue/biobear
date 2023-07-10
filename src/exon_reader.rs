@@ -111,6 +111,7 @@ impl ExonReader {
         self.exhausted
     }
 
+    #[allow(clippy::wrong_self_convention)]
     fn to_pyarrow(&mut self) -> PyResult<PyObject> {
         let stream = Arc::new(FFI_ArrowArrayStream::empty());
         let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;

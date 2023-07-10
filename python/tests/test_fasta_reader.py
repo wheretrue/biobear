@@ -57,6 +57,9 @@ def test_fasta_reader_no_file():
         FastaReader("test.fasta")
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
 def test_multiple_calls_raise_an_exhausted_error():
     fasta_reader = FastaReader(DATA / "test.fasta")
     fasta_reader.to_polars()

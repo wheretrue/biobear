@@ -16,9 +16,7 @@ class Reader(ABC):
     @property
     @abstractmethod
     def inner(self):
-        """
-        Abstract property that should be overridden in a subclass to provide a specific
-        inner reader.
+        """Abstract property for the inner reader.
 
         Returns:
             The inner reader. The type of the reader is defined by the specific
