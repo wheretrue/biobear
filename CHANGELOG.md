@@ -1,3 +1,10 @@
+## v0.7.0 (2023-07-10)
+
+### Feat
+
+- add exhausted check to avoid panic (#43)
+- update exon (#42)
+
 ## v0.6.3 (2023-07-03)
 
 ### Fix
