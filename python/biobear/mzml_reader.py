@@ -2,9 +2,6 @@
 
 import os
 
-import pyarrow as pa
-import pyarrow.dataset as ds
-
 from biobear.compression import Compression
 from biobear.reader import Reader
 
