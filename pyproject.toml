@@ -18,11 +18,6 @@ name = "biobear"
 readme = "README.md"
 requires-python = ">=3.8"
 
-[tool.poetry.extras]
-polars = [
-  "polars>=0.18,<1",
-]
-
 [tool.maturin]
 features = ["pyo3/extension-module"]
 python-source = "python"
