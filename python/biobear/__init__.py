@@ -20,6 +20,7 @@ from biobear.vcf_reader import VCFReader, VCFIndexedReader
 from biobear.bam_reader import BamReader, BamIndexedReader
 from biobear.gtf_reader import GTFReader
 from biobear.gff_reader import GFFReader
+from biobear.mzml_reader import MzMLReader
 from biobear.genbank_reader import GenbankReader
 from biobear.bcf_reader import BCFReader, BCFIndexedReader
 
@@ -37,5 +38,6 @@ __all__ = [
     "GFFReader",
     "GTFReader",
     "GenbankReader",
+    "MzMLReader",
     "compression",
 ]
