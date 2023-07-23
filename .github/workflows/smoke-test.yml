@@ -30,6 +30,7 @@ jobs:
       run: |
         conda info
         conda install -c conda-forge -n biobear biobear polars
+        conda run -n biobear python ./.github/workflows/smoketest.py
 
   test-package-pip:
     runs-on: ${{ matrix.os }}
