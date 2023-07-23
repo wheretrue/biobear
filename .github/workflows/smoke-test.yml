@@ -4,7 +4,6 @@ name: Smoke Test
 
 on:
   workflow_dispatch:
-  push:
 
 jobs:
   test-package-conda:
