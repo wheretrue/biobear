@@ -18,7 +18,7 @@ use datafusion::prelude::{SessionConfig, SessionContext};
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
-use exon::{context::ExonSessionExt, ffi::create_dataset_stream_from_table_provider};
+use exon::{ffi::create_dataset_stream_from_table_provider, ExonSessionExt};
 
 use std::io;
 use std::sync::Arc;

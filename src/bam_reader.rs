@@ -15,10 +15,10 @@
 use arrow::ffi_stream::ArrowArrayStreamReader;
 use arrow::ffi_stream::FFI_ArrowArrayStream;
 use arrow::pyarrow::IntoPyArrow;
-use datafusion::prelude::SessionConfig;
 use datafusion::prelude::SessionContext;
-use exon::context::ExonSessionExt;
 use exon::ffi::create_dataset_stream_from_table_provider;
+use exon::new_exon_config;
+use exon::ExonSessionExt;
 use pyo3::prelude::*;
 
 use tokio::runtime::Runtime;
@@ -65,12 +65,12 @@ impl BamIndexedReader {
     }
 
     fn query(&mut self, region: &str) -> PyResult<PyObject> {
-        let mut config = SessionConfig::new();
+        let mut config = new_exon_config();
         if let Some(batch_size) = self.batch_size {
             config = config.with_batch_size(batch_size);
         }
 
-        let ctx = SessionContext::with_config(config);
+        let ctx = SessionContext::with_config_exon(config);
 
         let df = self._runtime.block_on(async {
             match ctx.query_bam_file(self.path.as_str(), region).await {

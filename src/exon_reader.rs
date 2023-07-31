@@ -20,10 +20,9 @@ use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::pyarrow::IntoPyArrow;
 use datafusion::datasource::file_format::file_type::FileCompressionType;
 use datafusion::prelude::{SessionConfig, SessionContext};
-use exon::context::ExonSessionExt;
 use exon::datasources::ExonFileType;
 use exon::ffi::create_dataset_stream_from_table_provider;
-use exon::runtime_env::ExonRuntimeEnvExt;
+use exon::{ExonRuntimeEnvExt, ExonSessionExt};
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
@@ -48,7 +47,7 @@ impl ExonReader {
             config = config.with_batch_size(batch_size);
         }
 
-        let ctx = SessionContext::with_config(config);
+        let ctx = SessionContext::with_config_exon(config);
 
         let df = rt.block_on(async {
             ctx.runtime_env()

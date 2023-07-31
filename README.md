@@ -49,3 +49,18 @@ This will print:
 │ chr1    ┆ .      ┆ gene ┆ 200   ┆ … ┆ null  ┆ +      ┆ null  ┆ [{"gene_id","2"}, {"gene_name","… │
 └─────────┴────────┴──────┴───────┴───┴───────┴────────┴───────┴───────────────────────────────────┘
 ```
+
+## Performance
+
+Please see the [exon][]'s performance metrics for thorough benchmarks, but in short, biobear is generally faster than other Python libraries for reading bioinformatic file formats.
+
+For example, here's quick benchmarks for reading one FASTA file with 1 million records and reading 5 FASTA files each with 1 million records for the local file system on an M1 MacBook Pro:
+
+| Library   | 1 file (s)         | 5 files (s)         |
+|-----------|--------------------|---------------------|
+| BioBear   | 4.605 s ±  0.166 s | 6.420 s ±  0.113 s  |
+| BioPython | 6.654 s ±  0.003 s | 34.254 s ±  0.053 s |
+
+The larger difference multiple files is due to biobear's ability to read multiple files in parallel.
+
+[exon]: https://github.com/wheretrue/exon/tree/main/exon-benchmarks
