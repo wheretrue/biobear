@@ -1,3 +1,11 @@
+## v0.8.0 (2023-07-31)
+
+### Feat
+
+- update exon for faster scans (#50)
+- add conda forge to bb test (#48)
+- IC for mzml in biobear (#46)
+
 ## v0.7.4 (2023-07-13)
 
 ## v0.7.3 (2023-07-13)
