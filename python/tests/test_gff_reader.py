@@ -31,7 +31,7 @@ def test_gff_attr_struct():
     dtype = df.select(pl.col("attributes")).dtypes[0]
 
     key_field = pl.Field("key", pl.Utf8)
-    value_field = pl.Field("value", pl.Utf8)
+    value_field = pl.Field("value", pl.List(pl.Utf8))
     assert dtype == pl.List(pl.Struct([key_field, value_field]))
 
 

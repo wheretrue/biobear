@@ -26,6 +26,8 @@ from biobear.bcf_reader import BCFReader, BCFIndexedReader
 
 from biobear import compression
 
+__version__ = "0.7.4"
+
 __all__ = [
     "FastaReader",
     "FastqReader",
@@ -40,4 +42,5 @@ __all__ = [
     "GenbankReader",
     "MzMLReader",
     "compression",
+    "__version__",
 ]

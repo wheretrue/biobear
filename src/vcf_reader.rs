@@ -18,7 +18,7 @@ use datafusion::prelude::{SessionConfig, SessionContext};
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
-use exon::{context::ExonSessionExt, ffi::create_dataset_stream_from_table_provider};
+use exon::{ffi::create_dataset_stream_from_table_provider, ExonSessionExt};
 
 use std::io;
 use std::sync::Arc;
@@ -63,7 +63,7 @@ impl VCFIndexedReader {
             config = config.with_batch_size(batch_size);
         }
 
-        let ctx = SessionContext::with_config(config);
+        let ctx = SessionContext::with_config_exon(config);
 
         let df = self._runtime.block_on(async {
             match ctx.query_vcf_file(self.path.as_str(), region).await {
