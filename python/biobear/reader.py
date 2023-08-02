@@ -23,6 +23,24 @@ class Reader(ABC):
             subclass.
         """
 
+    def to_pandas(self):
+        """Convert the inner data to a Pandas DataFrame.
+
+        Returns:
+            pd.DataFrame: The converted data in a Pandas DataFrame.
+
+        Raises:
+            ImportError: If the 'pandas' package is not installed.
+        """
+        try:
+            import pandas as pd  # noqa
+
+            return self.to_arrow_scanner().to_table().to_pandas()
+        except ImportError as import_error:
+            raise ImportError(
+                "The 'pandas' package is required to use the to_pandas method."
+            ) from import_error
+
     def to_polars(self):
         """Convert the inner data to a Polars DataFrame.
 

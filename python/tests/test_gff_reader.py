@@ -21,6 +21,16 @@ def test_gff_reader_polars():
 
 
 @pytest.mark.skipif(
+    not importlib.util.find_spec("pandas"), reason="pandas not installed"
+)
+def test_gff_reader_pandas():
+    reader = GFFReader(DATA / "test.gff")
+    df = reader.to_pandas()
+
+    assert len(df) == 2
+
+
+@pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
 def test_gff_attr_struct():

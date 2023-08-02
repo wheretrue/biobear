@@ -35,6 +35,18 @@ def test_bcf_reader():
     assert len(df) == 621
 
 
+# Add test for to_pandas() method
+@pytest.mark.skipif(
+    not importlib.util.find_spec("pandas"), reason="pandas not installed"
+)
+def test_bcf_reader_to_pandas():
+    """Test the BCFReader."""
+    reader = BCFReader(DATA / "index.bcf")
+    df = reader.to_pandas()
+
+    assert len(df) == 621
+
+
 def test_bcf_reader_missing_file():
     """Test the BCFReader with a missing file."""
     with pytest.raises(OSError):

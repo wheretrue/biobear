@@ -21,6 +21,17 @@ def test_bam_reader():
     assert len(df) == 61
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("pandas"), reason="pandas not installed"
+)
+def test_bam_reader_to_pandas():
+    reader = BamReader(DATA / "bedcov.bam")
+
+    df = reader.to_pandas()
+
+    assert len(df) == 61
+
+
 def test_bam_reader_no_file():
     with pytest.raises(OSError):
         BamReader("test.bam")

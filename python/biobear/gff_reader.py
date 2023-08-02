@@ -22,7 +22,6 @@ class GFFReader(Reader):
         Args:
             path: The path to the GFF file.
         """
-
         self.compression = compression.infer_or_use(path)
 
         if self.compression == Compression.GZIP:
