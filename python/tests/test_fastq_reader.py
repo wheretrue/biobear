@@ -21,6 +21,17 @@ def test_fastq_reader():
     assert len(df) == 2
 
 
+# Add test for to_pandas() method
+@pytest.mark.skipif(
+    not importlib.util.find_spec("pandas"), reason="pandas not installed"
+)
+def test_fastq_reader_to_pandas():
+    fastq_reader = FastqReader(DATA / "test.fastq")
+    df = fastq_reader.to_pandas()
+
+    assert len(df) == 2
+
+
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )

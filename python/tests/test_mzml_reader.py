@@ -20,6 +20,16 @@ def test_mzml_reader_polars():
     assert len(df) == 2
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("pandas"), reason="pandas not installed"
+)
+def test_mzml_reader_pandas():
+    reader = MzMLReader(DATA / "test.mzML")
+    df = reader.to_pandas()
+
+    assert len(df) == 2
+
+
 def test_mzml_reader_to_scanner():
     reader = MzMLReader(DATA / "test.mzML")
     scanner = reader.to_arrow_scanner()

@@ -20,6 +20,16 @@ def test_vcf_reader():
     assert len(df) == 15
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("pandas"), reason="pandas not installed"
+)
+def test_vcf_reader_to_pandas():
+    reader = VCFReader(DATA / "vcf_file.vcf")
+    df = reader.to_pandas()
+
+    assert len(df) == 15
+
+
 def test_vcf_reader_missing_file():
     with pytest.raises(OSError):
         VCFReader("test.vcf")

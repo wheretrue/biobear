@@ -21,6 +21,16 @@ def test_gtf_reader_to_polars():
 
 
 @pytest.mark.skipif(
+    not importlib.util.find_spec("pandas"), reason="pandas not installed"
+)
+def test_gtf_reader_to_pandas():
+    reader = GTFReader(DATA / "test.gtf")
+    df = reader.to_pandas()
+
+    assert len(df) == 77
+
+
+@pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
 def test_gtf_attr_struct():
