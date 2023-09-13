@@ -16,12 +16,12 @@ use std::io;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
+use arrow::ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::pyarrow::IntoPyArrow;
 use datafusion::common::FileCompressionType;
 use datafusion::prelude::{SessionConfig, SessionContext};
 use exon::datasources::ExonFileType;
-use exon::ffi::create_dataset_stream_from_table_provider;
+use exon::ffi::DataFrameRecordBatchStream;
 use exon::{ExonRuntimeEnvExt, ExonSessionExt};
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
@@ -112,23 +112,22 @@ impl ExonReader {
 
     #[allow(clippy::wrong_self_convention)]
     fn to_pyarrow(&mut self) -> PyResult<PyObject> {
-        let stream = Arc::new(FFI_ArrowArrayStream::empty());
-        let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
+        let mut stream_ptr = FFI_ArrowArrayStream::empty();
 
         self._runtime.block_on(async {
-            create_dataset_stream_from_table_provider(
-                self.df.clone(),
-                self._runtime.clone(),
-                stream_ptr,
-            )
-            .await
-            .unwrap();
+            let stream = self.df.clone().execute_stream().await.unwrap();
+            let dataset_record_batch_stream =
+                DataFrameRecordBatchStream::new(stream, self._runtime.clone());
+
+            unsafe {
+                export_reader_into_raw(Box::new(dataset_record_batch_stream), &mut stream_ptr)
+            }
         });
 
         self.exhausted = true;
 
         Python::with_gil(|py| unsafe {
-            match ArrowArrayStreamReader::from_raw(stream_ptr) {
+            match ArrowArrayStreamReader::from_raw(&mut stream_ptr) {
                 Ok(stream_reader) => stream_reader.into_pyarrow(py),
                 Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
                     "Error converting to pyarrow: {err}"
