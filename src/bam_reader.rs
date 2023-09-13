@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use arrow::ffi_stream::export_reader_into_raw;
 use arrow::ffi_stream::ArrowArrayStreamReader;
 use arrow::ffi_stream::FFI_ArrowArrayStream;
 use arrow::pyarrow::IntoPyArrow;
 use datafusion::prelude::SessionContext;
-use exon::ffi::create_dataset_stream_from_table_provider;
+use exon::ffi::DataFrameRecordBatchStream;
 use exon::new_exon_config;
 use exon::ExonSessionExt;
 use pyo3::prelude::*;
@@ -81,22 +82,20 @@ impl BamIndexedReader {
                 )),
             }
         })?;
-
-        let stream = Arc::new(FFI_ArrowArrayStream::empty());
-        let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
+        let mut stream_ptr = FFI_ArrowArrayStream::empty();
 
         self._runtime.block_on(async {
-            create_dataset_stream_from_table_provider(
-                df.clone(),
-                self._runtime.clone(),
-                stream_ptr,
-            )
-            .await
-            .unwrap();
+            let stream = df.execute_stream().await.unwrap();
+            let dataset_record_batch_stream =
+                DataFrameRecordBatchStream::new(stream, self._runtime.clone());
+
+            unsafe {
+                export_reader_into_raw(Box::new(dataset_record_batch_stream), &mut stream_ptr)
+            }
         });
 
         Python::with_gil(|py| unsafe {
-            match ArrowArrayStreamReader::from_raw(stream_ptr) {
+            match ArrowArrayStreamReader::from_raw(&mut stream_ptr) {
                 Ok(stream_reader) => stream_reader.into_pyarrow(py),
                 Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
                     "Error converting to pyarrow: {err}"

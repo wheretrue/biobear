@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
+use arrow::ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::pyarrow::IntoPyArrow;
 use datafusion::prelude::{SessionConfig, SessionContext};
+use exon::ffi::DataFrameRecordBatchStream;
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
-use exon::{ffi::create_dataset_stream_from_table_provider, ExonSessionExt};
+use exon::ExonSessionExt;
 
 use std::io;
 use std::sync::Arc;
@@ -75,21 +76,18 @@ impl BCFIndexedReader {
             }
         })?;
 
-        let stream = Arc::new(FFI_ArrowArrayStream::empty());
-        let stream_ptr = Arc::into_raw(stream) as *mut FFI_ArrowArrayStream;
+        let mut stream_pt = FFI_ArrowArrayStream::empty();
 
         self._runtime.block_on(async {
-            create_dataset_stream_from_table_provider(
-                df.clone(),
-                self._runtime.clone(),
-                stream_ptr,
-            )
-            .await
-            .unwrap();
+            let stream = df.execute_stream().await.unwrap();
+            let dataset_record_batch_stream =
+                DataFrameRecordBatchStream::new(stream, self._runtime.clone());
+
+            unsafe { export_reader_into_raw(Box::new(dataset_record_batch_stream), &mut stream_pt) }
         });
 
         Python::with_gil(|py| unsafe {
-            match ArrowArrayStreamReader::from_raw(stream_ptr) {
+            match ArrowArrayStreamReader::from_raw(&mut stream_pt) {
                 Ok(stream_reader) => stream_reader.into_pyarrow(py),
                 Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
                     "Error converting to pyarrow: {err}"

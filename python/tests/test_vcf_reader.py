@@ -46,8 +46,7 @@ def test_vcf_indexed_reader_query_no_results():
     reader = VCFIndexedReader(DATA / "vcf_file.vcf.gz")
     rbr = reader.query("chr1")
 
-    with pytest.raises(Exception):
-        assert 0 == sum(b.num_rows for b in rbr)
+    assert 0 == sum(b.num_rows for b in rbr)
 
 
 def test_vcf_indexed_reader_query_missing_file():
