@@ -66,7 +66,12 @@ impl BamIndexedReader {
     }
 
     fn query(&mut self, region: &str) -> PyResult<PyObject> {
-        let ctx = SessionContext::new_exon();
+        let mut config = new_exon_config();
+        if let Some(batch_size) = self.batch_size {
+            config = config.with_batch_size(batch_size);
+        }
+
+        let ctx = SessionContext::with_config_exon(config);
 
         let df = self._runtime.block_on(async {
             ctx.sql(&format!(
