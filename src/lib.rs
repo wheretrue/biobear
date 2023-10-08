@@ -12,12 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use pyo3::prelude::*;
+mod runtime;
 
 mod bam_reader;
 mod bcf_reader;
 mod exon_reader;
 mod vcf_reader;
+
+mod error;
+mod session_context;
+
+use std::sync::atomic::{AtomicU64, Ordering};
+
+use pyo3::prelude::*;
+use runtime::TokioRuntime;
+use tokio::runtime::Builder;
 
 #[pymodule]
 fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
@@ -26,6 +35,20 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<bam_reader::BamIndexedReader>()?;
     m.add_class::<vcf_reader::VCFIndexedReader>()?;
     m.add_class::<bcf_reader::BCFIndexedReader>()?;
+
+    let runtime = Builder::new_multi_thread()
+        .thread_name_fn(move || {
+            static THREAD_ID: AtomicU64 = AtomicU64::new(0);
+            let id = THREAD_ID.fetch_add(1, Ordering::Relaxed);
+            format!("biobear-python-thread-{}", id)
+        })
+        .enable_all()
+        .build()
+        .unwrap();
+
+    m.add("__runtime", TokioRuntime(runtime))?;
+
+    m.add_function(wrap_pyfunction!(session_context::connect, m)?)?;
 
     Ok(())
 }
