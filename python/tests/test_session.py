@@ -14,6 +14,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from biobear import connect
 
 DATA = Path(__file__).parent / "data"
@@ -32,3 +34,12 @@ def test_connect():
     arrow_table = session.sql(query).to_arrow_table()
 
     assert len(arrow_table) == 2
+
+
+def test_with_error():
+    """Test what happens on a bad query."""
+    session = connect()
+
+    query = "SELECT * FROM gff_file"
+    with pytest.raises(Exception):
+        session.sql(query)

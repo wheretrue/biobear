@@ -6,6 +6,7 @@ use exon::ExonSessionExt;
 
 use pyo3::{prelude::*, types::PyTuple};
 
+use crate::error;
 use crate::runtime::wait_for_future;
 
 use datafusion::arrow::datatypes::Schema;
@@ -40,7 +41,8 @@ impl PyExecutionResult {
 impl PyExecutionResult {
     /// Collect the batches and return a list of pyarrow RecordBatch
     fn collect(&self, py: Python) -> PyResult<Vec<PyObject>> {
-        let batches = wait_for_future(py, self.df.as_ref().clone().collect()).unwrap();
+        let batches = wait_for_future(py, self.df.as_ref().clone().collect())
+            .map_err(error::BioBearError::from)?;
         batches.into_iter().map(|rb| rb.to_pyarrow(py)).collect()
     }
 
@@ -74,7 +76,7 @@ impl ExonSessionContext {
 
     fn sql(&mut self, query: &str, py: Python) -> PyResult<PyExecutionResult> {
         let result = self.ctx.sql(query);
-        let df = wait_for_future(py, result).unwrap();
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
         Ok(PyExecutionResult::new(df))
     }

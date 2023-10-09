@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use datafusion::error::DataFusionError;
 use pyo3::PyErr;
 
 #[derive(Debug, thiserror::Error)]
@@ -31,5 +32,11 @@ impl From<BioBearError> for PyErr {
         match value {
             BioBearError::Other(msg) => PyErr::new::<pyo3::exceptions::PyValueError, _>(msg),
         }
+    }
+}
+
+impl From<DataFusionError> for BioBearError {
+    fn from(value: DataFusionError) -> Self {
+        Self::Other(value.to_string())
     }
 }

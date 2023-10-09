@@ -19,7 +19,7 @@ mod bcf_reader;
 mod exon_reader;
 mod vcf_reader;
 
-mod error;
+pub(crate) mod error;
 mod session_context;
 
 use std::sync::atomic::{AtomicU64, Ordering};
