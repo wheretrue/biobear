@@ -74,11 +74,22 @@ impl BamIndexedReader {
         let ctx = SessionContext::with_config_exon(config);
 
         let df = self._runtime.block_on(async {
-            match ctx.query_bam_file(self.path.as_str(), region).await {
+            ctx.sql(&format!(
+                "CREATE EXTERNAL TABLE bam_file STORED AS INDEXED_BAM LOCATION '{}'",
+                self.path.as_str()
+            ))
+            .await?;
+
+            let sql = format!(
+                "SELECT * FROM bam_file WHERE bam_region_filter('{}', reference) = true",
+                region
+            );
+
+            match ctx.sql(&sql).await {
                 Ok(df) => Ok(df),
                 Err(e) => Err(io::Error::new(
                     io::ErrorKind::Other,
-                    format!("Error reading GFF file: {e}"),
+                    format!("Error reading BAM file: {e}"),
                 )),
             }
         })?;
