@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from pathlib import Path
+import importlib
 
 import pytest
 
@@ -36,6 +37,9 @@ def test_connect():
     assert len(arrow_table) == 2
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
 def test_to_polars():
     """Test converting to a polars dataframe."""
     session = connect()
