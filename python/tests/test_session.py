@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from pathlib import Path
+import importlib
 
 import pytest
 
@@ -34,6 +35,24 @@ def test_connect():
     arrow_table = session.sql(query).to_arrow_table()
 
     assert len(arrow_table) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_to_polars():
+    """Test converting to a polars dataframe."""
+    session = connect()
+
+    gff_path = DATA / "test.gff"
+
+    query = f"CREATE EXTERNAL TABLE gff_file STORED AS GFF LOCATION '{gff_path}'"
+    session.sql(query)
+
+    query = "SELECT * FROM gff_file"
+    df = session.sql(query).to_polars()
+
+    assert len(df) == 2
 
 
 def test_with_error():
