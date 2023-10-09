@@ -36,6 +36,21 @@ def test_connect():
     assert len(arrow_table) == 2
 
 
+def test_to_polars():
+    """Test converting to a polars dataframe."""
+    session = connect()
+
+    gff_path = DATA / "test.gff"
+
+    query = f"CREATE EXTERNAL TABLE gff_file STORED AS GFF LOCATION '{gff_path}'"
+    session.sql(query)
+
+    query = "SELECT * FROM gff_file"
+    df = session.sql(query).to_polars()
+
+    assert len(df) == 2
+
+
 def test_with_error():
     """Test what happens on a bad query."""
     session = connect()
