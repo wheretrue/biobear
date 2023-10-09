@@ -14,3 +14,7 @@ exon = {version = "0.3.3-beta.5", features = ["all"]}
 pyo3 = "0.19"
 thiserror = "1.0"
 tokio = {version = "1", features = ["rt"]}
+
+[profile.release]
+codegen-units = 1
+lto = true
