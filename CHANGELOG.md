@@ -1,3 +1,9 @@
+## v0.13.0 (2023-10-10)
+
+### Feat
+
+- build remove extra opt
+
 ## v0.12.0 (2023-10-10)
 
 ### Feat
