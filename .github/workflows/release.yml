@@ -4,6 +4,11 @@ on:
   push:
     tags:
     - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to run for'
+        required: true
 
 permissions:
   contents: read
@@ -16,6 +21,8 @@ jobs:
         target: [x86_64, aarch64]
     steps:
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.inputs.tag || github.ref }}
     - uses: actions/setup-python@v4
       with:
         python-version: '3.10'
@@ -42,6 +49,8 @@ jobs:
         target: [x64]
     steps:
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.inputs.tag || github.ref }}
     - uses: actions/setup-python@v4
       with:
         python-version: '3.10'
@@ -68,6 +77,8 @@ jobs:
         target: [x86_64, aarch64]
     steps:
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.inputs.tag || github.ref }}
     - uses: actions/setup-python@v4
       with:
         python-version: '3.10'
@@ -90,6 +101,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.inputs.tag || github.ref }}
     - name: Build sdist
       uses: PyO3/maturin-action@v1
       with:
