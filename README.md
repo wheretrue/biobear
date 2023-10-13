@@ -50,6 +50,43 @@ This will print:
 └─────────┴────────┴──────┴───────┴───┴───────┴────────┴───────┴───────────────────────────────────┘
 ```
 
+### Using a Session w/ Exon
+
+BioBear also exposes a session object that can be used with [exon][] to work with files directly in SQL, then eventually convert them to a DataFrame if needed.
+
+See the [BioBear Docs][documentation] for more information, but in short, you can use the session like this:
+
+```python
+import biobear as bb
+
+session = bb.connect()
+
+# If you want to read from S3, you can register an object store
+# must have proper credentials set up
+session.register_object_store_from_url('s3://BUCKET')
+
+session.sql("""
+CREATE EXTERNAL TABLE gene_annotations_s3 STORED AS GFF LOCATION 's3://BUCKET/TenflaDSM28944/IMG_Data/Ga0451106_prodigal.gff'
+""")
+
+df = session.sql("""
+    SELECT * FROM gene_annotations_s3 WHERE score > 50
+""").to_polars()
+df.head()
+# shape: (5, 9)
+# ┌──────────────┬─────────────────┬──────┬───────┬───┬────────────┬────────┬───────┬───────────────────────────────────┐
+# │ seqname      ┆ source          ┆ type ┆ start ┆ … ┆ score      ┆ strand ┆ phase ┆ attributes                        │
+# │ ---          ┆ ---             ┆ ---  ┆ ---   ┆   ┆ ---        ┆ ---    ┆ ---   ┆ ---                               │
+# │ str          ┆ str             ┆ str  ┆ i64   ┆   ┆ f32        ┆ str    ┆ str   ┆ list[struct[2]]                   │
+# ╞══════════════╪═════════════════╪══════╪═══════╪═══╪════════════╪════════╪═══════╪═══════════════════════════════════╡
+# │ Ga0451106_01 ┆ Prodigal v2.6.3 ┆ CDS  ┆ 2     ┆ … ┆ 54.5       ┆ -      ┆ 0     ┆ [{"ID",["Ga0451106_01_2_238"]}, … │
+# │ Ga0451106_01 ┆ Prodigal v2.6.3 ┆ CDS  ┆ 228   ┆ … ┆ 114.0      ┆ -      ┆ 0     ┆ [{"ID",["Ga0451106_01_228_941"]}… │
+# │ Ga0451106_01 ┆ Prodigal v2.6.3 ┆ CDS  ┆ 1097  ┆ … ┆ 224.399994 ┆ +      ┆ 0     ┆ [{"ID",["Ga0451106_01_1097_2257"… │
+# │ Ga0451106_01 ┆ Prodigal v2.6.3 ┆ CDS  ┆ 2261  ┆ … ┆ 237.699997 ┆ +      ┆ 0     ┆ [{"ID",["Ga0451106_01_2261_3787"… │
+# │ Ga0451106_01 ┆ Prodigal v2.6.3 ┆ CDS  ┆ 3784  ┆ … ┆ 114.400002 ┆ +      ┆ 0     ┆ [{"ID",["Ga0451106_01_3784_4548"… │
+# └──────────────┴─────────────────┴──────┴───────┴───┴────────────┴────────┴───────┴───────────────────────────────────┘
+```
+
 ## Performance
 
 Please see the [exon][]'s performance metrics for thorough benchmarks, but in short, biobear is generally faster than other Python libraries for reading bioinformatic file formats.
