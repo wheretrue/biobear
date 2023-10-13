@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use datafusion::prelude::SessionContext;
-use exon::ExonSessionExt;
+use exon::{ExonRuntimeEnvExt, ExonSessionExt};
 
 use pyo3::prelude::*;
 
@@ -41,11 +41,21 @@ impl ExonSessionContext {
         Ok(Self::default())
     }
 
+    /// Execute a SQL query and return the result as a [`PyExecutionResult`].
     fn sql(&mut self, query: &str, py: Python) -> PyResult<PyExecutionResult> {
         let result = self.ctx.sql(query);
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
         Ok(PyExecutionResult::new(df))
+    }
+
+    /// Register an object store with the given URI.
+    fn register_object_store_from_url(&mut self, url: &str, py: Python) -> PyResult<()> {
+        let runtime = self.ctx.runtime_env();
+        let registration = runtime.exon_register_object_store_uri(url);
+        wait_for_future(py, registration).map_err(error::BioBearError::from)?;
+
+        Ok(())
     }
 }
 

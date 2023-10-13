@@ -1,5 +1,5 @@
 build:
-	cargo build
+	cargo build --release
 	maturin develop --release
 
 test: build

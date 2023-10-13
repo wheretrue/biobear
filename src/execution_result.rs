@@ -19,7 +19,7 @@ use arrow::{
     pyarrow::{PyArrowType, ToPyArrow},
 };
 use datafusion::prelude::DataFrame;
-use pyo3::{pyclass, pymethods, types::PyTuple, IntoPy, PyObject, PyResult, Python, ToPyObject};
+use pyo3::{pyclass, pymethods, types::PyTuple, PyObject, PyResult, Python, ToPyObject};
 
 use crate::{error, runtime::wait_for_future};
 
@@ -52,12 +52,11 @@ impl PyExecutionResult {
     /// Convert to Arrow Table
     fn to_arrow_table(&self, py: Python) -> PyResult<PyObject> {
         let batches = self.collect(py)?.to_object(py);
-        let schema: PyObject = self.schema().into_py(py);
 
         Python::with_gil(|py| {
             // Instantiate pyarrow Table object and use its from_batches method
             let table_class = py.import("pyarrow")?.getattr("Table")?;
-            let args = PyTuple::new(py, &[batches, schema]);
+            let args = PyTuple::new(py, &[batches]);
             let table: PyObject = table_class.call_method1("from_batches", args)?.into();
             Ok(table)
         })
@@ -66,11 +65,10 @@ impl PyExecutionResult {
     /// Convert to a Polars DataFrame
     fn to_polars(&self, py: Python) -> PyResult<PyObject> {
         let batches = self.collect(py)?.to_object(py);
-        let schema: PyObject = self.schema().into_py(py);
 
         Python::with_gil(|py| {
             let table_class = py.import("pyarrow")?.getattr("Table")?;
-            let args = PyTuple::new(py, &[batches, schema]);
+            let args = PyTuple::new(py, &[batches]);
             let table: PyObject = table_class.call_method1("from_batches", args)?.into();
 
             let table_class = py.import("polars")?.getattr("DataFrame")?;
