@@ -11,7 +11,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = ["pyarrow>=13"]
+dependencies = ["pyarrow>=12"]
 
 license = {file = "LICENSE"}
 name = "biobear"
