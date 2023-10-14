@@ -1,3 +1,9 @@
+## v0.13.7 (2023-10-14)
+
+### Feat
+
+- update README with session example
+
 ## v0.13.6 (2023-10-13)
 
 ### Feat
