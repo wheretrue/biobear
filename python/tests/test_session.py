@@ -22,7 +22,7 @@ from biobear import connect
 DATA = Path(__file__).parent / "data"
 
 
-def test_connect():
+def test_connect_and_to_arrow():
     """Test connecting to a context."""
     session = connect()
 
@@ -32,7 +32,7 @@ def test_connect():
     session.sql(query)
 
     query = "SELECT * FROM gff_file"
-    arrow_table = session.sql(query).to_arrow_table()
+    arrow_table = session.sql(query).to_arrow()
 
     assert len(arrow_table) == 2
 

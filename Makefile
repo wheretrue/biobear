@@ -2,7 +2,9 @@ build:
 	cargo build --release
 	maturin develop --release
 
-test: build
+test:
+	cargo build
+	maturin develop
 	pytest
 
 run-benchmarks:

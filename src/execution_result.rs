@@ -50,7 +50,7 @@ impl PyExecutionResult {
     }
 
     /// Convert to Arrow Table
-    fn to_arrow_table(&self, py: Python) -> PyResult<PyObject> {
+    fn to_arrow(&self, py: Python) -> PyResult<PyObject> {
         let batches = self.collect(py)?.to_object(py);
 
         Python::with_gil(|py| {
