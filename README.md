@@ -87,6 +87,32 @@ df.head()
 # └──────────────┴─────────────────┴──────┴───────┴───┴────────────┴────────┴───────┴───────────────────────────────────┘
 ```
 
+## Using DuckDB
+
+biobear can also be used to read files into a [duckdb][] database.
+
+```python
+import biobear as bb
+import duckdb
+
+session = bb.connect()
+
+session.sql("""
+    CREATE EXTERNAL TABLE gene_annotations STORED AS GFF LOCATION 'python/tests/data/test.gff'
+""")
+
+result = session.sql("""
+    SELECT * FROM gene_annotations
+""")
+
+gff_table_arrow_table = result.to_arrow()
+
+duckdb_conn = duckdb.connect()
+
+result = duckdb_conn.execute('SELECT * FROM gff_table_arrow_table').fetchall()
+print(result)
+```
+
 ## Performance
 
 Please see the [exon][]'s performance metrics for thorough benchmarks, but in short, biobear is generally faster than other Python libraries for reading bioinformatic file formats.
@@ -101,3 +127,4 @@ For example, here's quick benchmarks for reading one FASTA file with 1 million r
 The larger difference multiple files is due to biobear's ability to read multiple files in parallel.
 
 [exon]: https://github.com/wheretrue/exon/tree/main/exon-benchmarks
+[duckdb]: https://duckdb.org/
