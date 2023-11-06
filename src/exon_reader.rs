@@ -18,7 +18,7 @@ use std::sync::Arc;
 
 use arrow::ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::pyarrow::IntoPyArrow;
-use datafusion::common::FileCompressionType;
+use datafusion::datasource::file_format::file_compression_type::FileCompressionType;
 use datafusion::prelude::{SessionConfig, SessionContext};
 use exon::datasources::ExonFileType;
 use exon::ffi::DataFrameRecordBatchStream;

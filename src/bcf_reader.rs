@@ -64,7 +64,7 @@ impl BCFIndexedReader {
             config = config.with_batch_size(batch_size);
         }
 
-        let ctx = SessionContext::with_config(config);
+        let ctx = SessionContext::new_with_config(config);
 
         let df = self._runtime.block_on(async {
             match ctx.query_bcf_file(self.path.as_str(), region).await {
