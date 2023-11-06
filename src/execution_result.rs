@@ -56,6 +56,7 @@ impl PyExecutionResult {
         Python::with_gil(|py| {
             // Instantiate pyarrow Table object and use its from_batches method
             let table_class = py.import("pyarrow")?.getattr("Table")?;
+
             let args = PyTuple::new(py, &[batches]);
             let table: PyObject = table_class.call_method1("from_batches", args)?.into();
             Ok(table)
