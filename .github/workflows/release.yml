@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [x86_64, aarch64, armv7]
+        target: [x86_64, aarch64]
     steps:
       - uses: actions/checkout@v3
         # with:
@@ -30,13 +30,25 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - name: Build wheels
+
+      - name: Build wheels (x86)
+        if: matrix.target == 'x86_64'
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter
           sccache: 'true'
           manylinux: auto
+
+      - name: Build wheels (aarch64)
+        if: matrix.target == 'aarch64'
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --find-interpreter
+          sccache: 'true'
+          manylinux: 2_28
+
       # - name: Upload wheels
       #   uses: actions/upload-artifact@v3
       #   with:
