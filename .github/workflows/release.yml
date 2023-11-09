@@ -2,13 +2,13 @@ name: Release
 
 on:
   push:
-  #   tags:
-  #   - 'v*'
-  # workflow_dispatch:
-  #   inputs:
-  #     tag:
-  #       description: 'Tag to run for'
-  #       required: true
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to run for'
+        required: true
 
 permissions:
   contents: read
@@ -22,8 +22,8 @@ jobs:
         target: [x86_64, aarch64]
     steps:
       - uses: actions/checkout@v3
-        # with:
-        #   ref: ${{ github.event.inputs.tag || github.ref }}
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
@@ -48,95 +48,94 @@ jobs:
           args: --release --out dist --find-interpreter
           sccache: 'true'
           manylinux: 2_28
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist
 
-      # - name: Upload wheels
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: wheels
-      #     path: dist
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [x64]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          architecture: ${{ matrix.target }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --find-interpreter
+          sccache: 'true'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist
 
-  # windows:
-  #   runs-on: windows-latest
-  #   strategy:
-  #     matrix:
-  #       target: [x64]
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #     with:
-  #       ref: ${{ github.event.inputs.tag || github.ref }}
-  #   - uses: actions/setup-python@v4
-  #     with:
-  #       python-version: '3.10'
-  #       architecture: ${{ matrix.target }}
-  #   - uses: actions-rs/toolchain@v1
-  #     with:
-  #       toolchain: stable
-  #   - name: Build wheels
-  #     uses: PyO3/maturin-action@v1
-  #     with:
-  #       target: ${{ matrix.target }}
-  #       args: --release --out dist --find-interpreter
-  #       sccache: 'true'
-  #   - name: Upload wheels
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: wheels
-  #       path: dist
+  macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        target: [x86_64, aarch64]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --find-interpreter
+          sccache: 'true'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist
 
-  # macos:
-  #   runs-on: macos-latest
-  #   strategy:
-  #     matrix:
-  #       target: [x86_64, aarch64]
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #     with:
-  #       ref: ${{ github.event.inputs.tag || github.ref }}
-  #   - uses: actions/setup-python@v4
-  #     with:
-  #       python-version: '3.10'
-  #   - uses: actions-rs/toolchain@v1
-  #     with:
-  #       toolchain: stable
-  #   - name: Build wheels
-  #     uses: PyO3/maturin-action@v1
-  #     with:
-  #       target: ${{ matrix.target }}
-  #       args: --release --out dist --find-interpreter
-  #       sccache: 'true'
-  #   - name: Upload wheels
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: wheels
-  #       path: dist
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - name: Upload sdist
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist
 
-  # sdist:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #     with:
-  #       ref: ${{ github.event.inputs.tag || github.ref }}
-  #   - name: Build sdist
-  #     uses: PyO3/maturin-action@v1
-  #     with:
-  #       command: sdist
-  #       args: --out dist
-  #   - name: Upload sdist
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: wheels
-  #       path: dist
-
-  # release:
-  #   name: Release
-  #   runs-on: ubuntu-latest
-  #   needs: [linux, windows, macos, sdist]
-  #   steps:
-  #   - uses: actions/download-artifact@v3
-  #     with:
-  #       name: wheels
-  #   - name: Publish to PyPI
-  #     uses: PyO3/maturin-action@v1
-  #     with:
-  #       command: upload
-  #       args: --skip-existing *
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [linux, windows, macos, sdist]
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: wheels
+      - name: Publish to PyPI
+        uses: PyO3/maturin-action@v1
+        with:
+          command: upload
+          args: --skip-existing *
