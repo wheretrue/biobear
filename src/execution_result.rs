@@ -16,10 +16,13 @@ use std::sync::Arc;
 
 use arrow::{
     datatypes::Schema,
-    pyarrow::{PyArrowType, ToPyArrow},
+    ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream},
+    pyarrow::{IntoPyArrow, PyArrowType, ToPyArrow},
 };
 use datafusion::prelude::DataFrame;
-use pyo3::{pyclass, pymethods, types::PyTuple, PyObject, PyResult, Python, ToPyObject};
+use exon::ffi::DataFrameRecordBatchStream;
+use pyo3::{pyclass, pymethods, types::PyTuple, PyErr, PyObject, PyResult, Python, ToPyObject};
+use tokio::runtime::Runtime;
 
 use crate::{error, runtime::wait_for_future};
 
@@ -47,6 +50,44 @@ impl PyExecutionResult {
     /// Returns the schema from the logical plan
     fn schema(&self) -> PyArrowType<Schema> {
         PyArrowType(self.df.schema().into())
+    }
+
+    /// Convert to an Arrow Table
+    fn to_arrow_table(&self, py: Python) -> PyResult<PyObject> {
+        let batches = self.collect(py)?.to_object(py);
+
+        Python::with_gil(|py| {
+            // Instantiate pyarrow Table object and use its from_batches method
+            let table_class = py.import("pyarrow")?.getattr("Table")?;
+
+            let args = PyTuple::new(py, &[batches]);
+            let table: PyObject = table_class.call_method1("from_batches", args)?.into();
+            Ok(table)
+        })
+    }
+
+    #[allow(clippy::wrong_self_convention)]
+    /// Convert to an Arrow RecordBatchReader
+    fn to_arrow_record_batch_reader(&mut self, py: Python) -> PyResult<PyObject> {
+        let mut stream_ptr = FFI_ArrowArrayStream::empty();
+
+        let stream = wait_for_future(py, self.df.as_ref().clone().execute_stream())
+            .map_err(error::BioBearError::from)?;
+
+        let runtime = Arc::new(Runtime::new().unwrap());
+
+        let dataframe_record_batch_stream = DataFrameRecordBatchStream::new(stream, runtime);
+
+        unsafe { export_reader_into_raw(Box::new(dataframe_record_batch_stream), &mut stream_ptr) }
+
+        Python::with_gil(|py| unsafe {
+            match ArrowArrayStreamReader::from_raw(&mut stream_ptr) {
+                Ok(stream_reader) => stream_reader.into_pyarrow(py),
+                Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Error converting to pyarrow: {err}"
+                ))),
+            }
+        })
     }
 
     /// Convert to Arrow Table
