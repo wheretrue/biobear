@@ -41,12 +41,22 @@ impl ExonSessionContext {
         Ok(Self::default())
     }
 
-    /// Execute a SQL query and return the result as a [`PyExecutionResult`].
+    /// Generate the plan from a SQL query and return the result as a [`PyExecutionResult`].
     fn sql(&mut self, query: &str, py: Python) -> PyResult<PyExecutionResult> {
         let result = self.ctx.sql(query);
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
         Ok(PyExecutionResult::new(df))
+    }
+
+    /// Execute the SQL query eagerly, but do not collect the results.
+    fn execute(&mut self, query: &str, py: Python) -> PyResult<()> {
+        let result = self.ctx.sql(query);
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+        wait_for_future(py, df.collect()).map_err(error::BioBearError::from)?;
+
+        Ok(())
     }
 
     /// Register an object store with the given URI.

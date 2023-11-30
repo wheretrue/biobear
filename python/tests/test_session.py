@@ -64,6 +64,26 @@ def test_with_error():
         session.sql(query)
 
 
+def test_execute(tmp_path):
+    """Test the execute query returns immediately."""
+
+    output_path = tmp_path / "output.parquet"
+
+    session = connect()
+
+    gff_path = DATA / "test.gff"
+
+    query = f"CREATE EXTERNAL TABLE gff_file STORED AS GFF LOCATION '{gff_path}'"
+    session.execute(query)
+
+    copy_query = (
+        f"COPY (SELECT seqname FROM gff_file) TO '{output_path}' (FORMAT PARQUET)"
+    )
+    session.execute(copy_query)
+
+    assert output_path.exists()
+
+
 def test_to_record_batch_reader():
     """Test converting to a record batch reader."""
     session = connect()
