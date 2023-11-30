@@ -62,3 +62,22 @@ def test_with_error():
     query = "SELECT * FROM gff_file"
     with pytest.raises(Exception):
         session.sql(query)
+
+
+def test_to_record_batch_reader():
+    """Test converting to a record batch reader."""
+    session = connect()
+
+    gff_path = DATA / "test.gff"
+
+    query = f"CREATE EXTERNAL TABLE gff_file STORED AS GFF LOCATION '{gff_path}'"
+    session.sql(query)
+
+    query = "SELECT * FROM gff_file"
+    reader = session.sql(query).to_arrow_record_batch_reader()
+
+    rows = 0
+    for batch in reader:
+        rows += len(batch)
+
+    assert rows == 2
