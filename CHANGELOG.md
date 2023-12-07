@@ -1,3 +1,10 @@
+## v0.13.13 (2023-12-06)
+
+### Feat
+
+- add execute method on session (#77)
+- add back record batch reader (#76)
+
 ## v0.13.12 (2023-11-29)
 
 ## v0.13.11 (2023-11-20)
