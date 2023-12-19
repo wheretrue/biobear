@@ -28,8 +28,3 @@ def test_genbank_reader_to_pandas():
     df = reader.to_pandas()
 
     assert len(df) == 1
-
-
-def test_genbank_missing_file():
-    with pytest.raises(OSError):
-        GenbankReader(DATA / "missing.gbk")

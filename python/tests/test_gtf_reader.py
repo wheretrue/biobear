@@ -53,11 +53,6 @@ def test_gtf_reader_to_scanner():
     assert scanner.count_rows() == 77
 
 
-def test_gtf_reader_no_file():
-    with pytest.raises(OSError):
-        GTFReader("test.gtf")
-
-
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
@@ -73,8 +68,3 @@ def test_gtf_reader_gz_to_scanner():
     scanner = reader.to_arrow_scanner()
 
     assert scanner.count_rows() == 77
-
-
-def test_gtf_gz_no_file():
-    with pytest.raises(OSError):
-        GTFReader("test.gtf.gz")

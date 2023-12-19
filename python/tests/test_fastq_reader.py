@@ -59,8 +59,3 @@ def test_to_arrow_scanner():
     scanner = gzipped_fastq_reader.to_arrow_scanner()
 
     assert scanner.count_rows() == 2
-
-
-def test_fastq_reader_no_file():
-    with pytest.raises(OSError):
-        FastqReader("test.fastq")

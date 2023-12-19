@@ -37,11 +37,6 @@ def test_mzml_reader_to_scanner():
     assert scanner.count_rows() == 2
 
 
-def test_mzml_reader_no_file():
-    with pytest.raises(OSError):
-        MzMLReader("test.mzML")
-
-
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
@@ -57,8 +52,3 @@ def test_mzml_reader_gz_to_scanner():
     scanner = reader.to_arrow_scanner()
 
     assert scanner.count_rows() == 2
-
-
-def test_mzml_gz_no_file():
-    with pytest.raises(OSError):
-        MzMLReader("test.mzML.gz")

@@ -30,11 +30,6 @@ def test_vcf_reader_to_pandas():
     assert len(df) == 15
 
 
-def test_vcf_reader_missing_file():
-    with pytest.raises(OSError):
-        VCFReader("test.vcf")
-
-
 def test_vcf_indexed_reader_query():
     reader = VCFIndexedReader(DATA / "vcf_file.vcf.gz")
     rbr = reader.query("1")

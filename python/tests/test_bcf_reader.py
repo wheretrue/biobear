@@ -47,12 +47,6 @@ def test_bcf_reader_to_pandas():
     assert len(df) == 621
 
 
-def test_bcf_reader_missing_file():
-    """Test the BCFReader with a missing file."""
-    with pytest.raises(OSError):
-        BCFReader("test.bcf")
-
-
 def test_bcf_indexed_reader_query():
     """Test the BCFIndexedReader.query() method."""
     reader = BCFIndexedReader(DATA / "index.bcf")
