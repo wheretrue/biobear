@@ -33,7 +33,11 @@ Then you can use biobear to read a file:
 ```python
 import biobear as bb
 
-df = bb.GFFReader("test.gff").to_polars()
+session = bb.connect()
+df = session.sql("""
+    SELECT * FROM gff_scan('test.gff')
+""").to_polars()
+
 print(df)
 ```
 

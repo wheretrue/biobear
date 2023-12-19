@@ -17,6 +17,7 @@ import functools
 
 
 def deprecated(cls):
+    """Class decorator to mark a class as deprecated."""
     orig_init = cls.__init__
 
     @functools.wraps(orig_init)
