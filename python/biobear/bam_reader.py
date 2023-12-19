@@ -19,9 +19,11 @@ import os
 import pyarrow as pa
 
 from biobear.reader import Reader
+from biobear.deprecated import deprecated
 from .biobear import _BamIndexedReader, _ExonReader
 
 
+@deprecated
 class BamReader(Reader):
     """A BAM File Reader."""
 

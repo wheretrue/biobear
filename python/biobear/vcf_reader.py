@@ -19,10 +19,12 @@ import os
 import pyarrow as pa
 
 from biobear.reader import Reader
+from biobear.deprecated import deprecated
 
 from .biobear import _ExonReader, _VCFIndexedReader
 
 
+@deprecated
 class VCFReader(Reader):
     """A VCF File Reader.
 
@@ -44,6 +46,7 @@ class VCFReader(Reader):
         return self._vcf_reader
 
 
+@deprecated
 class VCFIndexedReader(Reader):
     """An Indexed VCF File Reader.
 

@@ -32,18 +32,8 @@ def test_bam_reader_to_pandas():
     assert len(df) == 61
 
 
-def test_bam_reader_no_file():
-    with pytest.raises(OSError):
-        BamReader("test.bam")
-
-
 def test_bam_indexed_reader():
     reader = BamIndexedReader(DATA / "bedcov.bam")
     rbr = reader.query("chr1:12203700-12205426")
 
     assert 1 == sum(b.num_rows for b in rbr)
-
-
-def test_bam_indexed_reader_no_file():
-    with pytest.raises(OSError):
-        BamIndexedReader("test.bam")

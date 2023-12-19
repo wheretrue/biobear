@@ -7,10 +7,12 @@ import pyarrow.dataset as ds
 
 from biobear.compression import Compression
 from biobear.reader import Reader
+from biobear.deprecated import deprecated
 
 from .biobear import _ExonReader
 
 
+@deprecated
 class GFFReader(Reader):
     """A GFF File Reader."""
 

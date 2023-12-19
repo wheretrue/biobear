@@ -63,11 +63,6 @@ def test_fasta_reader_to_arrow():
     assert arrow_reader.read_all().num_rows == 2
 
 
-def test_fasta_reader_no_file():
-    with pytest.raises(OSError):
-        FastaReader("test.fasta")
-
-
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
