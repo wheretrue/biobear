@@ -56,7 +56,7 @@ This will print:
 
 ### Using a Session w/ Exon
 
-BioBear also exposes a session object that can be used with [exon][] to work with files directly in SQL, then eventually convert them to a DataFrame if needed.
+BioBear exposes a session object that can be used with [exon][] to work with files directly in SQL, then eventually convert them to a DataFrame if needed.
 
 See the [BioBear Docs][documentation] for more information, but in short, you can use the session like this:
 
