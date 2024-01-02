@@ -22,11 +22,10 @@ def deprecated(cls):
 
     @functools.wraps(orig_init)
     def new_init(self, *args, **kwargs):
-        warnings.warn(
-            f"{cls.__name__} is deprecated, use a table function via the session",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
+        # pylint: disable=line-too-long
+        error_msg = f"{cls.__name__} is being deprecated, use a table function via the session.\nSee https://www.wheretrue.dev/docs/exon/exondb/api-reference/table-functions for more info."
+
+        warnings.warn(error_msg, category=DeprecationWarning, stacklevel=2)
         orig_init(self, *args, **kwargs)
 
     cls.__init__ = new_init
