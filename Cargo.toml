@@ -10,7 +10,7 @@ name = "biobear"
 [dependencies]
 arrow = {version = "49.0.0", features = ["pyarrow"]}
 datafusion = "34"
-exon = {version = "0.5.5", features = ["all"]}
+exon = {version = "0.6.0", features = ["all"]}
 pyo3 = "0.20"
 thiserror = "1.0"
 tokio = {version = "1", features = ["rt"]}
