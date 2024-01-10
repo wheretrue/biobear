@@ -34,13 +34,13 @@ fi
 # Setup
 echo "Setting up..."
 
-trap teardown EXIT
-
 # Start the localstack container.
 docker run -d -p 4566:4566 $DOCKER_IMAGE
 
 # Wait for the stack to start.
 sleep 2
+
+trap teardown EXIT
 
 # Create the test bucket.
 aws --endpoint-url=http://localhost:4566 s3 mb s3://test-bucket

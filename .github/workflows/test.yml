@@ -45,12 +45,7 @@ jobs:
           cargo build
 
           # Develop and test w/o extras
-          maturin develop
+          maturin develop --extras polars
 
           # Run tests
           bash bin/test.sh
-
-          # Develop and test with extras
-          maturin develop --extras polars
-          pip install -e ".[polars]"
-          pytest
