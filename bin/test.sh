@@ -1,6 +1,8 @@
 set -e
 
-DOCKER_IMAGE="ghcr.io/wheretrue/exon/localstack:latest"
+DOCKER_IMAGE="public.ecr.aws/localstack/localstack:latest"
+
+source venv/bin/activate
 
 # Setup the trap.
 function teardown {
@@ -49,5 +51,4 @@ aws --endpoint-url=http://localhost:4566 s3api put-object --bucket test-bucket -
 # Make the bucket public.
 aws --endpoint-url=http://localhost:4566 s3api put-bucket-acl --bucket test-bucket --acl public-read
 
-source venv/bin/activate
 pytest
