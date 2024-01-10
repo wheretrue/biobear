@@ -65,10 +65,6 @@ import biobear as bb
 
 session = bb.connect()
 
-# If you want to read from S3, you can register an object store
-# must have proper credentials set up
-session.register_object_store_from_url('s3://BUCKET')
-
 session.sql("""
 CREATE EXTERNAL TABLE gene_annotations_s3 STORED AS GFF LOCATION 's3://BUCKET/TenflaDSM28944/IMG_Data/Ga0451106_prodigal.gff'
 """)

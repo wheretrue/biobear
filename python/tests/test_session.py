@@ -101,3 +101,13 @@ def test_to_record_batch_reader():
         rows += len(batch)
 
     assert rows == 2
+
+
+def test_read_from_s3():
+    """Test reading from s3."""
+    session = connect()
+
+    query = "SELECT * FROM fasta_scan('s3://test-bucket/test.fasta')"
+    arrow_table = session.sql(query).to_arrow()
+
+    assert len(arrow_table) == 2
