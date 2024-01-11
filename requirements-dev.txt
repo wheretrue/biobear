@@ -1,3 +1,6 @@
 maturin
 pytest
 ruff
+awscli
+awscli-local
+polars
