@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img src=".github/biobear.svg" width="400px" alt="biobear" />
+    <img src="https://raw.githubusercontent.com/wheretrue/biobear/main/.github/biobear.svg" width="400px" alt="biobear" />
 </h1>
 
 biobear is a Python library designed for reading and searching bioinformatic file formats, using Rust as its backend and producing Arrow Batch Readers and other downstream formats (like polars or duckdb).
