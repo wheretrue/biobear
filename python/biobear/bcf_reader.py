@@ -21,12 +21,10 @@ import pyarrow as pa
 
 
 from biobear.reader import Reader
-from biobear.deprecated import deprecated
 
 from .biobear import _ExonReader, _BCFIndexedReader
 
 
-@deprecated
 class BCFReader(Reader):
     """A BCF File Reader.
 
@@ -48,7 +46,6 @@ class BCFReader(Reader):
         return self._bcf_reader
 
 
-@deprecated
 class BCFIndexedReader(Reader):
     """An Indexed BCF File Reader.
 
