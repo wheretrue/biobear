@@ -17,12 +17,10 @@ import os
 
 from biobear.reader import Reader
 from biobear.compression import Compression
-from biobear.deprecated import deprecated
 
 from .biobear import _ExonReader
 
 
-@deprecated
 class FastaReader(Reader):
     """FASTA file reader."""
 

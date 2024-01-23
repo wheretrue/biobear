@@ -4,12 +4,10 @@ import os
 
 from biobear.compression import Compression
 from biobear.reader import Reader
-from biobear.deprecated import deprecated
 
 from .biobear import _ExonReader
 
 
-@deprecated
 class MzMLReader(Reader):
     """A MzML File Reader."""
 
