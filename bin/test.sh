@@ -2,7 +2,13 @@ set -e
 
 DOCKER_IMAGE="public.ecr.aws/localstack/localstack:latest"
 
-source venv/bin/activate
+# if venv exists source it, otherwise warn an continue
+if [ -d "venv" ]; then
+    echo "venv exists, sourcing..."
+    source venv/bin/activate
+else
+    echo "venv does not exist, continuing..."
+fi
 
 # Setup the trap.
 function teardown {
