@@ -57,4 +57,10 @@ aws --endpoint-url=http://localhost:4566 s3api put-object --bucket test-bucket -
 # Make the bucket public.
 aws --endpoint-url=http://localhost:4566 s3api put-bucket-acl --bucket test-bucket --acl public-read
 
+# Create the parquet-bucket.
+aws --endpoint-url=http://localhost:4566 s3 mb s3://parquet-bucket
+
+# Make the bucket public.
+aws --endpoint-url=http://localhost:4566 s3api put-bucket-acl --bucket parquet-bucket --acl public-read
+
 pytest
