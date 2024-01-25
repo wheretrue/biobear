@@ -111,3 +111,18 @@ def test_read_from_s3():
     arrow_table = session.sql(query).to_arrow()
 
     assert len(arrow_table) == 2
+
+
+def test_copy_to_s3():
+    """Test copying to s3."""
+    session = connect()
+
+    s3_input_path = "s3://test-bucket/test.fasta"
+    parquet_output = "s3://parquet-bucket/test.parquet"
+
+    query = f"COPY (SELECT * FROM fasta_scan('{s3_input_path}')) TO '{parquet_output}' (FORMAT PARQUET)"
+
+    session.register_object_store_from_url(parquet_output)
+
+    # Should not raise an exception
+    session.execute(query)
