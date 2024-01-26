@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use arrow::ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream};
+use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::pyarrow::IntoPyArrow;
 use datafusion::prelude::{SessionConfig, SessionContext};
 use exon::ffi::DataFrameRecordBatchStream;
@@ -76,16 +76,12 @@ impl VCFIndexedReader {
             }
         })?;
 
-        let mut stream_ptr = FFI_ArrowArrayStream::empty();
-
-        self._runtime.block_on(async {
+        let mut stream_ptr = self._runtime.block_on(async {
             let stream = df.execute_stream().await.unwrap();
             let dataset_record_batch_stream =
                 DataFrameRecordBatchStream::new(stream, self._runtime.clone());
 
-            unsafe {
-                export_reader_into_raw(Box::new(dataset_record_batch_stream), &mut stream_ptr)
-            }
+            FFI_ArrowArrayStream::new(Box::new(dataset_record_batch_stream))
         });
 
         Python::with_gil(|py| unsafe {

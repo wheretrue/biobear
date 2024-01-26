@@ -16,7 +16,7 @@ use std::io;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use arrow::ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream};
+use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::pyarrow::IntoPyArrow;
 use datafusion::datasource::file_format::file_compression_type::FileCompressionType;
 use datafusion::prelude::{SessionConfig, SessionContext};
@@ -112,16 +112,12 @@ impl ExonReader {
 
     #[allow(clippy::wrong_self_convention)]
     fn to_pyarrow(&mut self) -> PyResult<PyObject> {
-        let mut stream_ptr = FFI_ArrowArrayStream::empty();
-
-        self._runtime.block_on(async {
+        let mut stream_ptr = self._runtime.block_on(async {
             let stream = self.df.clone().execute_stream().await.unwrap();
             let dataset_record_batch_stream =
                 DataFrameRecordBatchStream::new(stream, self._runtime.clone());
 
-            unsafe {
-                export_reader_into_raw(Box::new(dataset_record_batch_stream), &mut stream_ptr)
-            }
+            FFI_ArrowArrayStream::new(Box::new(dataset_record_batch_stream))
         });
 
         self.exhausted = true;
