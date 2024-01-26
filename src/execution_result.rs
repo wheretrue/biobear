@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 use arrow::{
     datatypes::Schema,
-    ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream},
+    ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream},
     pyarrow::{IntoPyArrow, PyArrowType, ToPyArrow},
 };
 use datafusion::prelude::DataFrame;
@@ -69,8 +69,6 @@ impl PyExecutionResult {
     #[allow(clippy::wrong_self_convention)]
     /// Convert to an Arrow RecordBatchReader
     fn to_arrow_record_batch_reader(&mut self, py: Python) -> PyResult<PyObject> {
-        let mut stream_ptr = FFI_ArrowArrayStream::empty();
-
         let stream = wait_for_future(py, self.df.as_ref().clone().execute_stream())
             .map_err(error::BioBearError::from)?;
 
@@ -78,10 +76,10 @@ impl PyExecutionResult {
 
         let dataframe_record_batch_stream = DataFrameRecordBatchStream::new(stream, runtime);
 
-        unsafe { export_reader_into_raw(Box::new(dataframe_record_batch_stream), &mut stream_ptr) }
+        let mut stream = FFI_ArrowArrayStream::new(Box::new(dataframe_record_batch_stream));
 
         Python::with_gil(|py| unsafe {
-            match ArrowArrayStreamReader::from_raw(&mut stream_ptr) {
+            match ArrowArrayStreamReader::from_raw(&mut stream) {
                 Ok(stream_reader) => stream_reader.into_pyarrow(py),
                 Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
                     "Error converting to pyarrow: {err}"

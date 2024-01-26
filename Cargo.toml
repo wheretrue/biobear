@@ -8,9 +8,9 @@ crate-type = ["cdylib"]
 name = "biobear"
 
 [dependencies]
-arrow = {version = "49.0.0", features = ["pyarrow"]}
-datafusion = "34"
-exon = {version = "0.7.1", features = ["all"]}
+arrow = {version = "50.0.0", features = ["pyarrow"]}
+datafusion = "35"
+exon = {version = "0.8.2", features = ["all"]}
 pyo3 = "0.20"
 thiserror = "1.0"
 tokio = {version = "1", features = ["rt"]}
