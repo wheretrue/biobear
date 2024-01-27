@@ -6,7 +6,7 @@ import importlib
 import pytest
 
 from biobear import FastqReader
-from biobear.compression import Compression
+from biobear import Compression
 
 DATA = Path(__file__).parent / "data"
 
@@ -31,6 +31,14 @@ def test_fastq_reader_to_pandas():
 
     assert len(df) == 2
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_fastq_bgzip_reader():
+    fastq_reader = FastqReader(DATA / "fake_fastq_file.fastq.gz", compression=Compression.GZIP)
+    df = fastq_reader.to_polars()
+
+    assert len(df) == 2
 
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"

@@ -22,7 +22,7 @@ use datafusion::datasource::file_format::file_compression_type::FileCompressionT
 use datafusion::prelude::{SessionConfig, SessionContext};
 use exon::datasources::ExonFileType;
 use exon::ffi::DataFrameRecordBatchStream;
-use exon::{ExonRuntimeEnvExt, ExonSessionExt};
+use exon::{new_exon_config, ExonRuntimeEnvExt, ExonSessionExt};
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
@@ -42,7 +42,8 @@ impl ExonReader {
     ) -> io::Result<Self> {
         let rt = Arc::new(Runtime::new().unwrap());
 
-        let mut config = SessionConfig::new();
+        let mut config = new_exon_config();
+
         if let Some(batch_size) = batch_size {
             config = config.with_batch_size(batch_size);
         }
