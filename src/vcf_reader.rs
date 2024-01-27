@@ -14,12 +14,12 @@
 
 use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::pyarrow::IntoPyArrow;
-use datafusion::prelude::{SessionConfig, SessionContext};
+use datafusion::prelude::SessionContext;
 use exon::ffi::DataFrameRecordBatchStream;
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
-use exon::ExonSessionExt;
+use exon::{new_exon_config, ExonSessionExt};
 
 use std::io;
 use std::sync::Arc;
@@ -59,7 +59,7 @@ impl VCFIndexedReader {
     }
 
     fn query(&mut self, region: &str) -> PyResult<PyObject> {
-        let mut config = SessionConfig::new();
+        let mut config = new_exon_config();
         if let Some(batch_size) = self.batch_size {
             config = config.with_batch_size(batch_size);
         }

@@ -26,6 +26,7 @@ from biobear.bcf_reader import BCFReader, BCFIndexedReader
 from biobear.session import connect
 
 from biobear import compression
+from biobear.compression import Compression
 
 from .biobear import __runtime
 
@@ -45,6 +46,7 @@ __all__ = [
     "GenbankReader",
     "MzMLReader",
     "compression",
+    "Compression",
     "__version__",
     "connect",
     "__runtime",
