@@ -14,7 +14,7 @@
 
 use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::pyarrow::IntoPyArrow;
-use datafusion::prelude::{SessionConfig, SessionContext};
+use datafusion::prelude::SessionContext;
 use exon::ffi::DataFrameRecordBatchStream;
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
