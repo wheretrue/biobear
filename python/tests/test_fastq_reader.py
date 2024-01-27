@@ -38,7 +38,7 @@ def test_fastq_bgzip_reader():
     fastq_reader = FastqReader(DATA / "fake_fastq_file.fastq.gz", compression=Compression.GZIP)
     df = fastq_reader.to_polars()
 
-    assert len(df) == 2
+    assert len(df) == 20_000
 
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
