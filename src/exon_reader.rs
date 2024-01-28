@@ -26,6 +26,8 @@ use exon::{new_exon_config, ExonRuntimeEnvExt, ExonSessionExt};
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
+use crate::error::BioBearError;
+
 #[pyclass(name = "_ExonReader")]
 pub struct ExonReader {
     df: datafusion::dataframe::DataFrame,
@@ -40,7 +42,7 @@ impl ExonReader {
         compression: Option<FileCompressionType>,
         batch_size: Option<usize>,
     ) -> io::Result<Self> {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Arc::new(Runtime::new()?);
 
         let mut config = new_exon_config();
 
@@ -53,13 +55,19 @@ impl ExonReader {
         let df = rt.block_on(async {
             ctx.runtime_env()
                 .exon_register_object_store_uri(path)
-                .await?;
+                .await
+                .map_err(|e| {
+                    io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("Error registering object store: {e}"),
+                    )
+                })?;
 
             match ctx.read_exon_table(path, file_type, compression).await {
                 Ok(df) => Ok(df),
                 Err(e) => Err(io::Error::new(
                     io::ErrorKind::Other,
-                    format!("Error reading GFF file: {e}"),
+                    format!("Error reading file: {e}"),
                 )),
             }
         });
@@ -114,12 +122,20 @@ impl ExonReader {
     #[allow(clippy::wrong_self_convention)]
     fn to_pyarrow(&mut self) -> PyResult<PyObject> {
         let mut stream_ptr = self._runtime.block_on(async {
-            let stream = self.df.clone().execute_stream().await.unwrap();
+            let stream = self
+                .df
+                .clone()
+                .execute_stream()
+                .await
+                .map_err::<BioBearError, _>(|e| e.into())?;
+
             let dataset_record_batch_stream =
                 DataFrameRecordBatchStream::new(stream, self._runtime.clone());
 
-            FFI_ArrowArrayStream::new(Box::new(dataset_record_batch_stream))
-        });
+            Ok::<FFI_ArrowArrayStream, PyErr>(FFI_ArrowArrayStream::new(Box::new(
+                dataset_record_batch_stream,
+            )))
+        })?;
 
         self.exhausted = true;
 

@@ -72,7 +72,7 @@ impl PyExecutionResult {
         let stream = wait_for_future(py, self.df.as_ref().clone().execute_stream())
             .map_err(error::BioBearError::from)?;
 
-        let runtime = Arc::new(Runtime::new().unwrap());
+        let runtime = Arc::new(Runtime::new()?);
 
         let dataframe_record_batch_stream = DataFrameRecordBatchStream::new(stream, runtime);
 

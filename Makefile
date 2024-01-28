@@ -1,11 +1,6 @@
 build:
-	cargo build --release
-	maturin develop --release
-
-test:
 	cargo build
 	maturin develop
-	pytest
 
 run-benchmarks:
 	hyperfine --runs 2 \

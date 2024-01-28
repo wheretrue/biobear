@@ -15,9 +15,9 @@
 use datafusion::error::DataFusionError;
 use pyo3::PyErr;
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum BioBearError {
-    #[error("{0}")]
+    IOError(String),
     Other(String),
 }
 
@@ -30,6 +30,7 @@ impl BioBearError {
 impl From<BioBearError> for PyErr {
     fn from(value: BioBearError) -> Self {
         match value {
+            BioBearError::IOError(msg) => PyErr::new::<pyo3::exceptions::PyIOError, _>(msg),
             BioBearError::Other(msg) => PyErr::new::<pyo3::exceptions::PyValueError, _>(msg),
         }
     }
@@ -38,5 +39,11 @@ impl From<BioBearError> for PyErr {
 impl From<DataFusionError> for BioBearError {
     fn from(value: DataFusionError) -> Self {
         Self::Other(value.to_string())
+    }
+}
+
+impl From<std::io::Error> for BioBearError {
+    fn from(value: std::io::Error) -> Self {
+        Self::IOError(value.to_string())
     }
 }
