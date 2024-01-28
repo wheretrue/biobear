@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::io;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -41,7 +40,7 @@ impl ExonReader {
         file_type: ExonFileType,
         compression: Option<FileCompressionType>,
         batch_size: Option<usize>,
-    ) -> io::Result<Self> {
+    ) -> Result<Self, BioBearError> {
         let rt = Arc::new(Runtime::new()?);
 
         let mut config = new_exon_config();
@@ -56,30 +55,21 @@ impl ExonReader {
             ctx.runtime_env()
                 .exon_register_object_store_uri(path)
                 .await
-                .map_err(|e| {
-                    io::Error::new(
-                        io::ErrorKind::Other,
-                        format!("Error registering object store: {e}"),
-                    )
-                })?;
+                .map_err(BioBearError::from)?;
 
-            match ctx.read_exon_table(path, file_type, compression).await {
-                Ok(df) => Ok(df),
-                Err(e) => Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    format!("Error reading file: {e}"),
-                )),
-            }
-        });
+            let df = ctx
+                .read_exon_table(path, file_type, compression)
+                .await
+                .map_err(BioBearError::from)?;
 
-        match df {
-            Ok(df) => Ok(Self {
-                df,
-                _runtime: rt,
-                exhausted: false,
-            }),
-            Err(e) => Err(e),
-        }
+            Ok::<_, BioBearError>(df)
+        })?;
+
+        Ok(Self {
+            df,
+            _runtime: rt,
+            exhausted: false,
+        })
     }
 }
 
@@ -92,27 +82,17 @@ impl ExonReader {
         compression: Option<&str>,
         batch_size: Option<usize>,
     ) -> PyResult<Self> {
-        let exon_file_type = ExonFileType::from_str(file_type).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                "Error reading file type: {e:?}"
-            ))
-        })?;
+        let exon_file_type = ExonFileType::from_str(file_type).map_err(BioBearError::from)?;
 
-        let file_compression_type =
-            compression.map(
-                |compression| match FileCompressionType::from_str(compression) {
-                    Ok(compression_type) => Ok(compression_type),
-                    Err(e) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                        "Error reading compression type: {e:?}"
-                    ))),
-                },
-            );
+        let file_compression_type = compression
+            .map(FileCompressionType::from_str)
+            .transpose()
+            .map_err(BioBearError::from)?;
 
-        let file_compression_type = file_compression_type.transpose()?;
+        let open = Self::open(path, exon_file_type, file_compression_type, batch_size)
+            .map_err(BioBearError::from)?;
 
-        Self::open(path, exon_file_type, file_compression_type, batch_size).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Error opening file {path}: {e}"))
-        })
+        Ok(open)
     }
 
     fn is_exhausted(&self) -> bool {
@@ -140,12 +120,9 @@ impl ExonReader {
         self.exhausted = true;
 
         Python::with_gil(|py| unsafe {
-            match ArrowArrayStreamReader::from_raw(&mut stream_ptr) {
-                Ok(stream_reader) => stream_reader.into_pyarrow(py),
-                Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Error converting to pyarrow: {err}"
-                ))),
-            }
+            ArrowArrayStreamReader::from_raw(&mut stream_ptr)
+                .map_err(BioBearError::from)?
+                .into_pyarrow(py)
         })
     }
 }

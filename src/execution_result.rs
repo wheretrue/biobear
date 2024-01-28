@@ -21,10 +21,13 @@ use arrow::{
 };
 use datafusion::prelude::DataFrame;
 use exon::ffi::DataFrameRecordBatchStream;
-use pyo3::{pyclass, pymethods, types::PyTuple, PyErr, PyObject, PyResult, Python, ToPyObject};
+use pyo3::{pyclass, pymethods, types::PyTuple, IntoPy, PyObject, PyResult, Python, ToPyObject};
 use tokio::runtime::Runtime;
 
-use crate::{error, runtime::wait_for_future};
+use crate::{
+    error::{self, BioBearError},
+    runtime::wait_for_future,
+};
 
 #[pyclass(name = "ExecutionResult", subclass)]
 #[derive(Clone)]
@@ -79,24 +82,23 @@ impl PyExecutionResult {
         let mut stream = FFI_ArrowArrayStream::new(Box::new(dataframe_record_batch_stream));
 
         Python::with_gil(|py| unsafe {
-            match ArrowArrayStreamReader::from_raw(&mut stream) {
-                Ok(stream_reader) => stream_reader.into_pyarrow(py),
-                Err(err) => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                    "Error converting to pyarrow: {err}"
-                ))),
-            }
+            let stream_reader =
+                ArrowArrayStreamReader::from_raw(&mut stream).map_err(BioBearError::from)?;
+
+            stream_reader.into_pyarrow(py)
         })
     }
 
     /// Convert to Arrow Table
     fn to_arrow(&self, py: Python) -> PyResult<PyObject> {
         let batches = self.collect(py)?.to_object(py);
+        let schema = self.schema().into_py(py);
 
         Python::with_gil(|py| {
             // Instantiate pyarrow Table object and use its from_batches method
             let table_class = py.import("pyarrow")?.getattr("Table")?;
 
-            let args = PyTuple::new(py, &[batches]);
+            let args = PyTuple::new(py, &[batches, schema]);
             let table: PyObject = table_class.call_method1("from_batches", args)?.into();
             Ok(table)
         })
@@ -105,15 +107,19 @@ impl PyExecutionResult {
     /// Convert to a Polars DataFrame
     fn to_polars(&self, py: Python) -> PyResult<PyObject> {
         let batches = self.collect(py)?.to_object(py);
+        let schema = self.schema();
+
+        let schema = schema.into_py(py);
 
         Python::with_gil(|py| {
             let table_class = py.import("pyarrow")?.getattr("Table")?;
-            let args = PyTuple::new(py, &[batches]);
+            let args = (batches, schema);
             let table: PyObject = table_class.call_method1("from_batches", args)?.into();
 
-            let table_class = py.import("polars")?.getattr("DataFrame")?;
-            let args = PyTuple::new(py, &[table]);
-            let result = table_class.call1(args)?.into();
+            let dataframe_class = py.import("polars")?.getattr("DataFrame")?;
+            let args = (table,);
+            let result = dataframe_class.call_method1("from_arrow", args)?.into();
+
             Ok(result)
         })
     }

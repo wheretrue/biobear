@@ -23,6 +23,9 @@ function teardown {
     echo "Teardown completed."
 }
 
+# Build the code
+cargo build
+
 # check docker and aws cli are installed
 if ! command -v docker &> /dev/null
 then
@@ -62,7 +65,5 @@ aws --endpoint-url=http://localhost:4566 s3 mb s3://parquet-bucket
 
 # Make the bucket public.
 aws --endpoint-url=http://localhost:4566 s3api put-bucket-acl --bucket parquet-bucket --acl public-read
-
-cargo build
 
 pytest

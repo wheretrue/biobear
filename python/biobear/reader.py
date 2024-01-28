@@ -60,8 +60,10 @@ class Reader(ABC):
                 "The 'polars' package is required to use the to_polars method."
             ) from import_error
 
-        pydict = self.to_arrow_scanner().to_table().to_pydict()
-        return pl.from_dict(pydict)
+        arrow_record = self.to_arrow()
+        table = pa.Table.from_batches(arrow_record, schema=arrow_record.schema)
+
+        return pl.from_arrow(table)
 
     def to_arrow_scanner(self) -> ds.Scanner:
         """Convert the inner data to an Arrow scanner.
