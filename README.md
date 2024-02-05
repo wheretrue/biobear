@@ -107,9 +107,7 @@ df = session.sql("""
 
 #### Known Issues
 
-There are a few file types where the naive `SELECT *` will cause an error, because Polars doesn't support all Arrow types -- `Map` being the most common. In these cases, select the fields from the map individually - `SELECT . Alternatively, you can first convert the table to a Pandas DataFrame.
-
-The file types that can cause this issue are GenBanks and MZMLs.
+For GenBank and mzML, the naive `SELECT *` will cause an error, because Polars doesn't support all Arrow types -- `Map` being the specific offender here. In these cases, select the fields from the map individually. Alternatively, you can first convert the table to a Pandas DataFrame.
 
 ### DuckDB
 
