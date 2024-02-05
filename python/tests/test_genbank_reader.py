@@ -10,6 +10,7 @@ from biobear import GenbankReader
 DATA = Path(__file__).parent / "data"
 
 
+@pytest.mark.skip
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )

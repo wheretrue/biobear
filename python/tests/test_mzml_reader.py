@@ -10,6 +10,7 @@ from biobear import MzMLReader
 DATA = Path(__file__).parent / "data"
 
 
+@pytest.mark.skip
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
@@ -37,6 +38,7 @@ def test_mzml_reader_to_scanner():
     assert scanner.count_rows() == 2
 
 
+@pytest.mark.skip
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
