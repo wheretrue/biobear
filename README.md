@@ -87,9 +87,31 @@ df.head()
 # └──────────────┴─────────────────┴──────┴───────┴───┴────────────┴────────┴───────┴───────────────────────────────────┘
 ```
 
-## Using DuckDB
+## Ecosystem
 
-biobear can also be used to read files into a [duckdb][] database.
+BioBear aims to make it simple to move easily to and from different prominent data tools in Python. Generally, if the tool can read Arrow, it can read BioBear's output. To call out a few examples here:
+
+### Polars
+
+The session results and Reader objects can be converted to a Polars DataFrame.
+
+```python
+import biobear as bb
+
+session = bb.connect()
+
+df = session.sql("""
+    SELECT * FROM gff_scan('test.gff')
+""").to_polars()
+```
+
+#### Known Issues
+
+For GenBank and mzML, the naive `SELECT *` will cause an error, because Polars doesn't support all Arrow types -- `Map` being the specific offender here. In these cases, select the fields from the map individually. Alternatively, you can first convert the table to a Pandas DataFrame.
+
+### DuckDB
+
+BioBear can also be used to read files into a [duckdb][] database.
 
 ```python
 import biobear as bb

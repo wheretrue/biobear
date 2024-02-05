@@ -21,6 +21,15 @@ def test_fasta_reader():
     assert len(df) == 2
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_fasta_reader_missing_file():
+    with pytest.raises(OSError):
+        fasta_reader = FastaReader(DATA / "does-not-exist.fasta")
+        fasta_reader.to_polars()
+
+
 # Add test for to_pandas() method
 @pytest.mark.skipif(
     not importlib.util.find_spec("pandas"), reason="pandas not installed"

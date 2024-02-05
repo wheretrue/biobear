@@ -55,6 +55,22 @@ def test_to_polars():
     assert len(df) == 2
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_to_polars_empty():
+    """Test converting to a polars dataframe when the query is empty."""
+
+    session = connect()
+
+    fasta_file = DATA / "test.fasta"
+    query = f"SELECT * FROM fasta_scan('{fasta_file}') WHERE id = 'not found'"
+
+    results = session.sql(query)
+    df = results.to_polars()
+    assert len(df) == 0
+
+
 def test_with_error():
     """Test what happens on a bad query."""
     session = connect()

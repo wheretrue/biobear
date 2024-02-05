@@ -44,8 +44,7 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
             format!("biobear-python-thread-{}", id)
         })
         .enable_all()
-        .build()
-        .unwrap();
+        .build()?;
 
     m.add("__runtime", TokioRuntime(runtime))?;
 

@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use arrow::error::ArrowError;
 use datafusion::error::DataFusionError;
+use exon::error::ExonError;
 use pyo3::PyErr;
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum BioBearError {
-    #[error("{0}")]
+    IOError(String),
     Other(String),
 }
 
@@ -30,13 +32,39 @@ impl BioBearError {
 impl From<BioBearError> for PyErr {
     fn from(value: BioBearError) -> Self {
         match value {
-            BioBearError::Other(msg) => PyErr::new::<pyo3::exceptions::PyValueError, _>(msg),
+            BioBearError::IOError(msg) => PyErr::new::<pyo3::exceptions::PyIOError, _>(msg),
+            BioBearError::Other(msg) => PyErr::new::<pyo3::exceptions::PyIOError, _>(msg),
         }
     }
 }
 
 impl From<DataFusionError> for BioBearError {
     fn from(value: DataFusionError) -> Self {
+        match value {
+            DataFusionError::IoError(msg) => Self::IOError(msg.to_string()),
+            DataFusionError::ObjectStore(err) => Self::IOError(err.to_string()),
+            _ => Self::Other(value.to_string()),
+        }
+    }
+}
+
+impl From<ExonError> for BioBearError {
+    fn from(value: ExonError) -> Self {
+        match value {
+            ExonError::IOError(e) => BioBearError::IOError(e.to_string()),
+            _ => BioBearError::Other("Other Error".to_string()),
+        }
+    }
+}
+
+impl From<ArrowError> for BioBearError {
+    fn from(value: ArrowError) -> Self {
         Self::Other(value.to_string())
+    }
+}
+
+impl From<std::io::Error> for BioBearError {
+    fn from(value: std::io::Error) -> Self {
+        Self::IOError(value.to_string())
     }
 }

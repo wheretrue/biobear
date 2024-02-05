@@ -24,6 +24,8 @@ use exon::{new_exon_config, ExonSessionExt};
 use std::io;
 use std::sync::Arc;
 
+use crate::error::BioBearError;
+
 #[pyclass(name = "_VCFIndexedReader")]
 pub struct VCFIndexedReader {
     path: String,
@@ -41,7 +43,7 @@ impl VCFIndexedReader {
             ));
         }
 
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Arc::new(Runtime::new()?);
 
         Ok(Self {
             path: path.to_string(),
@@ -77,12 +79,14 @@ impl VCFIndexedReader {
         })?;
 
         let mut stream_ptr = self._runtime.block_on(async {
-            let stream = df.execute_stream().await.unwrap();
+            let stream = df.execute_stream().await?;
             let dataset_record_batch_stream =
                 DataFrameRecordBatchStream::new(stream, self._runtime.clone());
 
-            FFI_ArrowArrayStream::new(Box::new(dataset_record_batch_stream))
-        });
+            Ok::<_, BioBearError>(FFI_ArrowArrayStream::new(Box::new(
+                dataset_record_batch_stream,
+            )))
+        })?;
 
         Python::with_gil(|py| unsafe {
             match ArrowArrayStreamReader::from_raw(&mut stream_ptr) {
