@@ -107,7 +107,7 @@ impl PyExecutionResult {
     /// Convert to a Polars DataFrame
     fn to_polars(&self, py: Python) -> PyResult<PyObject> {
         let batches = self.collect(py)?.to_object(py);
-        let schema = self.schema();
+        let schema = self.schema().into_py(py);
 
         let schema = schema.into_py(py);
 
@@ -116,9 +116,9 @@ impl PyExecutionResult {
             let args = (batches, schema);
             let table: PyObject = table_class.call_method1("from_batches", args)?.into();
 
-            let dataframe_class = py.import("polars")?.getattr("DataFrame")?;
+            let module = py.import("polars")?;
             let args = (table,);
-            let result = dataframe_class.call_method1("from_arrow", args)?.into();
+            let result = module.call_method1("from_arrow", args)?.into();
 
             Ok(result)
         })

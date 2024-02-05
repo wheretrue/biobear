@@ -67,11 +67,8 @@ def test_to_polars_empty():
     query = f"SELECT * FROM fasta_scan('{fasta_file}') WHERE id = 'not found'"
 
     results = session.sql(query)
-
-    table = results.to_arrow()
-    print(table.schema)
-
-    # assert len(df) == 0
+    df = results.to_polars()
+    assert len(df) == 0
 
 
 def test_with_error():
