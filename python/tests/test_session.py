@@ -71,6 +71,23 @@ def test_to_polars_empty():
     assert len(df) == 0
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_indexed_scan():
+    """Test an indexed fasta can works."""
+
+    session = connect()
+
+    fasta_file = DATA / "test.fasta"
+    query = f"SELECT * FROM fasta_indexed_scan('{fasta_file}', 'a:1-2')"
+
+    results = session.sql(query)
+    df = results.to_polars()
+
+    assert len(df) == 1, df
+
+
 def test_with_error():
     """Test what happens on a bad query."""
     session = connect()
