@@ -25,10 +25,6 @@ jobs:
         with:
           ref: ${{ github.event.inputs.tag || github.ref }}
 
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -38,7 +34,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --out dist -i python3.10
           sccache: 'true'
           manylinux: auto
 
@@ -47,7 +43,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --out dist -i python3.10
           sccache: 'true'
           manylinux: 2_28
 
