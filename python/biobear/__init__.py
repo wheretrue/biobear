@@ -30,7 +30,7 @@ from biobear.compression import Compression
 
 from .biobear import __runtime
 
-__version__ = "0.15.2"
+__version__ = "0.15.3"
 
 __all__ = [
     "FastaReader",
