@@ -1,3 +1,9 @@
+## v0.15.0 (2024-02-25)
+
+### Feat
+
+- fix value error for missing file (#92)
+
 ## v0.14.6 (2024-01-28)
 
 ### Fix
