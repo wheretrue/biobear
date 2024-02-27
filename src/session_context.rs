@@ -59,7 +59,7 @@ impl ExonSessionContext {
         Ok(())
     }
 
-    /// Register an object store with the given URI.
+    /// Register an object store with the given URL.
     fn register_object_store_from_url(&mut self, url: &str, py: Python) -> PyResult<()> {
         let runtime = self.ctx.runtime_env();
         let registration = runtime.exon_register_object_store_uri(url);
