@@ -43,6 +43,7 @@ impl ExonSessionContext {
     }
 
     /// Read a fastq file from the given path.
+    #[pyo3(signature = (file_path, *, options=None))]
     fn read_fastq_file(
         &mut self,
         file_path: &str,
