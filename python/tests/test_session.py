@@ -17,7 +17,7 @@ import importlib
 
 import pytest
 
-from biobear import connect
+from biobear import connect, FASTQReadOptions
 
 DATA = Path(__file__).parent / "data"
 
@@ -35,6 +35,21 @@ def test_connect_and_to_arrow():
     arrow_table = session.sql(query).to_arrow()
 
     assert len(arrow_table) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_read_fastq():
+    """Test reading a fastq file."""
+    session = connect()
+
+    fastq_path = DATA / "test.fastq"
+    options = FASTQReadOptions(".fq", "gzip")
+
+    df = session.read_fastq_file(str(fastq_path), options).to_polars()
+
+    assert len(df) == 2
 
 
 @pytest.mark.skipif(

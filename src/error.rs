@@ -68,3 +68,5 @@ impl From<std::io::Error> for BioBearError {
         Self::IOError(value.to_string())
     }
 }
+
+pub type BioBearResult<T> = std::result::Result<T, BioBearError>;

@@ -16,8 +16,13 @@ mod runtime;
 
 mod bam_reader;
 mod bcf_reader;
+mod datasources;
 mod exon_reader;
 mod vcf_reader;
+
+mod file_compression_type;
+
+pub use file_compression_type::FileCompressionType;
 
 pub(crate) mod error;
 mod execution_result;
@@ -36,6 +41,8 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<bam_reader::BamIndexedReader>()?;
     m.add_class::<vcf_reader::VCFIndexedReader>()?;
     m.add_class::<bcf_reader::BCFIndexedReader>()?;
+    m.add_class::<file_compression_type::FileCompressionType>()?;
+    m.add_class::<datasources::fastq::FASTQReadOptions>()?;
 
     let runtime = Builder::new_multi_thread()
         .thread_name_fn(move || {
