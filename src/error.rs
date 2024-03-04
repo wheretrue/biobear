@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use arrow::error::ArrowError;
-use datafusion::error::DataFusionError;
+use datafusion::{error::DataFusionError, sql::sqlparser::parser::ParserError};
 use exon::error::ExonError;
 use pyo3::PyErr;
 
@@ -21,6 +21,8 @@ use pyo3::PyErr;
 pub enum BioBearError {
     IOError(String),
     Other(String),
+    InvalidCompressionType(String),
+    ParserError(String),
 }
 
 impl BioBearError {
@@ -34,6 +36,10 @@ impl From<BioBearError> for PyErr {
         match value {
             BioBearError::IOError(msg) => PyErr::new::<pyo3::exceptions::PyIOError, _>(msg),
             BioBearError::Other(msg) => PyErr::new::<pyo3::exceptions::PyIOError, _>(msg),
+            BioBearError::InvalidCompressionType(msg) => {
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(msg)
+            }
+            BioBearError::ParserError(msg) => PyErr::new::<pyo3::exceptions::PyValueError, _>(msg),
         }
     }
 }
@@ -54,6 +60,12 @@ impl From<ExonError> for BioBearError {
             ExonError::IOError(e) => BioBearError::IOError(e.to_string()),
             _ => BioBearError::Other("Other Error".to_string()),
         }
+    }
+}
+
+impl From<ParserError> for BioBearError {
+    fn from(value: ParserError) -> Self {
+        Self::ParserError(value.to_string())
     }
 }
 

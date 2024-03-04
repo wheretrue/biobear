@@ -36,14 +36,6 @@ use tokio::runtime::Builder;
 
 #[pymodule]
 fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<exon_reader::ExonReader>()?;
-
-    m.add_class::<bam_reader::BamIndexedReader>()?;
-    m.add_class::<vcf_reader::VCFIndexedReader>()?;
-    m.add_class::<bcf_reader::BCFIndexedReader>()?;
-    m.add_class::<file_compression_type::FileCompressionType>()?;
-    m.add_class::<datasources::fastq::FASTQReadOptions>()?;
-
     let runtime = Builder::new_multi_thread()
         .thread_name_fn(move || {
             static THREAD_ID: AtomicU64 = AtomicU64::new(0);
@@ -54,6 +46,15 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
         .build()?;
 
     m.add("__runtime", TokioRuntime(runtime))?;
+
+    m.add_class::<exon_reader::ExonReader>()?;
+
+    m.add_class::<bam_reader::BamIndexedReader>()?;
+    m.add_class::<vcf_reader::VCFIndexedReader>()?;
+    m.add_class::<bcf_reader::BCFIndexedReader>()?;
+    m.add_class::<file_compression_type::FileCompressionType>()?;
+    m.add_class::<datasources::fastq::FASTQReadOptions>()?;
+    m.add_class::<datasources::fasta::FASTAReadOptions>()?;
 
     m.add_function(wrap_pyfunction!(session_context::connect, m)?)?;
 

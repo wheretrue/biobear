@@ -14,65 +14,65 @@
 
 use crate::{error::BioBearResult, file_compression_type::FileCompressionType};
 use datafusion::datasource::file_format::file_compression_type::FileCompressionType as DFFileCompressionType;
-use exon::datasources::fastq::table_provider::ListingFASTQTableOptions;
+use exon::datasources::fasta::table_provider::ListingFASTATableOptions;
 use pyo3::{pyclass, pymethods};
 
-const DEFAULT_FASTQ_FILE_EXTENSION: &str = "fastq";
+const DEFAULT_FASTA_FILE_EXTENSION: &str = "fasta";
 
 #[pyclass]
 #[derive(Debug, Clone)]
-/// Options for reading FASTQ files.
+/// Options for reading FASTA files.
 ///
 /// When using from Python, the arguments are optional, but if passed, must be passed as kwargs.
 ///
 /// ```python
-/// from exon import FASTQReadOptions
+/// from exon import FASTAReadOptions
 ///
-/// # Create a new FASTQReadOptions instance with the default values.
-/// options = FASTQReadOptions()
+/// # Create a new FASTAReadOptions instance with the default values.
+/// options = FASTAReadOptions()
 ///
-/// # Create a new FASTQReadOptions instance with the given file extension and file compression type.
-/// options = FASTQReadOptions(file_extension="fq", file_compression_type=FileCompressionType.GZIP)
+/// # Create a new FASTAReadOptions instance with the given file extension and file compression type.
+/// options = FASTAReadOptions(file_extension="fa", file_compression_type=FileCompressionType.GZIP)
 /// ```
 ///
 /// # Examples
 ///
-/// Create a new FASTQReadOptions instance with the default values.
+/// Create a new FASTAReadOptions instance with the default values.
 ///
 /// ```rust
-/// use exon::datasources::fastq::FASTQReadOptions;
+/// use exon::datasources::fasta::FASTAReadOptions;
 ///
-/// let options = FASTQReadOptions::default();
-/// assert_eq!(options.file_extension, "fastq");
+/// let options = FASTAReadOptions::default();
+/// assert_eq!(options.file_extension, "fasta");
 /// ```
-pub struct FASTQReadOptions {
+pub struct FASTAReadOptions {
     file_extension: String,
     file_compression_type: DFFileCompressionType,
 }
 
-impl Default for FASTQReadOptions {
+impl Default for FASTAReadOptions {
     fn default() -> Self {
         Self {
-            file_extension: DEFAULT_FASTQ_FILE_EXTENSION.to_string(),
+            file_extension: String::from(DEFAULT_FASTA_FILE_EXTENSION),
             file_compression_type: DFFileCompressionType::UNCOMPRESSED,
         }
     }
 }
 
 #[pymethods]
-impl FASTQReadOptions {
+impl FASTAReadOptions {
     #[new]
     #[pyo3(signature = (*, file_extension=None, file_compression_type=None))]
-    /// Create a new FASTQReadOptions instance.
+    /// Create a new FASTAReadOptions instance.
     ///
     /// # Arguments
     ///
-    /// * `file_extension` - The file extension to use for the FASTQ file.
-    /// * `file_compression_type` - The file compression type to use for the FASTQ file.
+    /// * `file_extension` - The file extension to use for the FASTA file.
+    /// * `file_compression_type` - The file compression type to use for the FASTA file.
     ///
     /// # Returns
     ///
-    /// A new FASTQReadOptions instance.
+    /// A new FASTAReadOptions instance.
     ///
     /// # Note
     ///
@@ -81,26 +81,20 @@ impl FASTQReadOptions {
         file_extension: Option<String>,
         file_compression_type: Option<FileCompressionType>,
     ) -> BioBearResult<Self> {
-        let file_compression_type = file_compression_type
+        let df_compression = file_compression_type
             .unwrap_or(FileCompressionType::UNCOMPRESSED)
             .try_into()?;
 
-        let file_extension = file_extension.unwrap_or(DEFAULT_FASTQ_FILE_EXTENSION.to_string());
-
         Ok(Self {
-            file_extension,
-            file_compression_type,
+            file_compression_type: df_compression,
+            file_extension: file_extension.unwrap_or(DEFAULT_FASTA_FILE_EXTENSION.to_string()),
         })
-    }
-
-    fn __repr__(&self) -> String {
-        format!("{:?}", self)
     }
 }
 
-impl Into<ListingFASTQTableOptions> for FASTQReadOptions {
-    fn into(self) -> ListingFASTQTableOptions {
-        ListingFASTQTableOptions::new(self.file_compression_type)
+impl Into<ListingFASTATableOptions> for FASTAReadOptions {
+    fn into(self) -> ListingFASTATableOptions {
+        ListingFASTATableOptions::new(self.file_compression_type)
             .with_file_extension(self.file_extension)
     }
 }

@@ -12,38 +12,94 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
-use datafusion::datasource::file_format::file_compression_type::FileCompressionType as DFFileCompressionType;
-use pyo3::{pyclass, pymethods};
+use datafusion::{
+    common::parsers::CompressionTypeVariant,
+    datasource::file_format::file_compression_type::FileCompressionType as DFFileCompressionType,
+};
+use pyo3::prelude::*;
 
-use crate::error::{BioBearError, BioBearResult};
+use crate::error::BioBearError;
 
 #[pyclass]
 #[derive(Debug, Clone)]
-pub struct FileCompressionType {
-    inner: DFFileCompressionType,
+pub enum FileCompressionType {
+    GZIP,
+    ZSTD,
+    UNCOMPRESSED,
 }
 
 #[pymethods]
 impl FileCompressionType {
     #[new]
-    fn from_str(compression_string: &str) -> BioBearResult<Self> {
-        let inner = DFFileCompressionType::from_str(compression_string)
-            .map_err(|e| BioBearError::new(&format!("Invalid compression type: {}", e)))?;
+    fn new(s: &str) -> PyResult<Self> {
+        let s = FileCompressionType::from_str(s)?;
 
-        Ok(Self { inner })
+        Ok(s)
+    }
+
+    fn __repr__(&self) -> String {
+        format!("{:?}", self)
     }
 }
 
-impl From<DFFileCompressionType> for FileCompressionType {
-    fn from(inner: DFFileCompressionType) -> Self {
-        Self { inner }
+impl Display for FileCompressionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::GZIP => write!(f, "GZIP"),
+            Self::ZSTD => write!(f, "ZSTD"),
+            Self::UNCOMPRESSED => write!(f, "UNCOMPRESSED"),
+        }
     }
 }
 
-impl Into<DFFileCompressionType> for FileCompressionType {
-    fn into(self) -> DFFileCompressionType {
-        self.inner
+impl TryInto<DFFileCompressionType> for FileCompressionType {
+    type Error = BioBearError;
+
+    fn try_into(self) -> Result<DFFileCompressionType, Self::Error> {
+        match self {
+            Self::GZIP => Ok(DFFileCompressionType::GZIP),
+            Self::ZSTD => Ok(DFFileCompressionType::ZSTD),
+            Self::UNCOMPRESSED => Ok(DFFileCompressionType::UNCOMPRESSED),
+        }
+    }
+}
+
+impl TryFrom<CompressionTypeVariant> for FileCompressionType {
+    type Error = BioBearError;
+
+    fn try_from(value: CompressionTypeVariant) -> Result<Self, Self::Error> {
+        match value {
+            CompressionTypeVariant::GZIP => Ok(Self::GZIP),
+            CompressionTypeVariant::ZSTD => Ok(Self::ZSTD),
+            CompressionTypeVariant::UNCOMPRESSED => Ok(Self::UNCOMPRESSED),
+            _ => Err(BioBearError::InvalidCompressionType(value.to_string())),
+        }
+    }
+}
+
+impl TryFrom<DFFileCompressionType> for FileCompressionType {
+    type Error = BioBearError;
+
+    fn try_from(value: DFFileCompressionType) -> Result<Self, Self::Error> {
+        match value {
+            DFFileCompressionType::GZIP => Ok(Self::GZIP),
+            DFFileCompressionType::ZSTD => Ok(Self::ZSTD),
+            DFFileCompressionType::UNCOMPRESSED => Ok(Self::UNCOMPRESSED),
+            _ => Err(BioBearError::InvalidCompressionType(
+                "Invalid compression type".to_string(),
+            )),
+        }
+    }
+}
+
+impl FromStr for FileCompressionType {
+    type Err = BioBearError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let v = CompressionTypeVariant::from_str(s)?;
+
+        Self::try_from(v)
     }
 }
