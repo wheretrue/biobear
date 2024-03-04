@@ -17,6 +17,8 @@ use exon::{ExonRuntimeEnvExt, ExonSessionExt};
 
 use pyo3::prelude::*;
 
+use crate::datasources::fasta::FASTAReadOptions;
+use crate::datasources::fastq::FASTQReadOptions;
 use crate::error;
 use crate::execution_result::PyExecutionResult;
 use crate::runtime::wait_for_future;
@@ -39,6 +41,38 @@ impl ExonSessionContext {
     #[new]
     fn new() -> PyResult<Self> {
         Ok(Self::default())
+    }
+
+    /// Read a fastq file from the given path.
+    #[pyo3(signature = (file_path, *, options=None))]
+    fn read_fastq_file(
+        &mut self,
+        file_path: &str,
+        options: Option<FASTQReadOptions>,
+        py: Python,
+    ) -> PyResult<PyExecutionResult> {
+        let options = options.map(|o| o.into());
+
+        let result = self.ctx.read_fastq(file_path, options);
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+        Ok(PyExecutionResult::new(df))
+    }
+
+    /// Read a fasta file from the given path.
+    #[pyo3(signature = (file_path, *, options=None))]
+    fn read_fasta_file(
+        &mut self,
+        file_path: &str,
+        options: Option<FASTAReadOptions>,
+        py: Python,
+    ) -> PyResult<PyExecutionResult> {
+        let options = options.map(|o| o.into());
+
+        let result = self.ctx.read_fasta(file_path, options);
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+        Ok(PyExecutionResult::new(df))
     }
 
     /// Generate the plan from a SQL query and return the result as a [`PyExecutionResult`].

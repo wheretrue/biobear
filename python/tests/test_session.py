@@ -17,7 +17,7 @@ import importlib
 
 import pytest
 
-from biobear import connect
+from biobear import connect, FASTQReadOptions, FASTAReadOptions, FileCompressionType
 
 DATA = Path(__file__).parent / "data"
 
@@ -35,6 +35,76 @@ def test_connect_and_to_arrow():
     arrow_table = session.sql(query).to_arrow()
 
     assert len(arrow_table) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_read_fastq():
+    """Test reading a fastq file."""
+    session = connect()
+
+    fastq_path = DATA / "test.fq.gz"
+    options = FASTQReadOptions(
+        file_extension="fq", file_compression_type=FileCompressionType.GZIP
+    )
+
+    df = session.read_fastq_file(str(fastq_path), options=options).to_polars()
+
+    assert len(df) == 2
+
+    fastq_path = DATA / "test.fq"
+    options = FASTQReadOptions(file_extension="fq")
+
+    df = session.read_fastq_file(str(fastq_path), options=options).to_polars()
+
+    assert len(df) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_read_fasta():
+    """Test reading a fasta file."""
+    session = connect()
+
+    fasta_path = DATA / "test.fasta"
+
+    df = session.read_fasta_file(str(fasta_path)).to_polars()
+
+    assert len(df) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_read_fasta_fa():
+    """Test reading a fasta file."""
+    session = connect()
+
+    fasta_path = DATA / "test.fa"
+
+    options = FASTAReadOptions(file_extension="fa")
+    df = session.read_fasta_file(str(fasta_path), options=options).to_polars()
+
+    assert len(df) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_read_fasta_gz():
+    """Test reading a fasta file."""
+    session = connect()
+
+    fasta_path = DATA / "test.fa.gz"
+
+    options = FASTAReadOptions(
+        file_extension="fa.gz", file_compression_type=FileCompressionType.GZIP
+    )
+    df = session.read_fasta_file(str(fasta_path), options=options).to_polars()
+
+    assert len(df) == 2
 
 
 @pytest.mark.skipif(
