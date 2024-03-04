@@ -92,9 +92,9 @@ impl FASTAReadOptions {
     }
 }
 
-impl Into<ListingFASTATableOptions> for FASTAReadOptions {
-    fn into(self) -> ListingFASTATableOptions {
-        ListingFASTATableOptions::new(self.file_compression_type)
-            .with_file_extension(self.file_extension)
+impl From<FASTAReadOptions> for ListingFASTATableOptions {
+    fn from(options: FASTAReadOptions) -> Self {
+        ListingFASTATableOptions::new(options.file_compression_type)
+            .with_file_extension(options.file_extension)
     }
 }

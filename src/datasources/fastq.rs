@@ -98,9 +98,9 @@ impl FASTQReadOptions {
     }
 }
 
-impl Into<ListingFASTQTableOptions> for FASTQReadOptions {
-    fn into(self) -> ListingFASTQTableOptions {
-        ListingFASTQTableOptions::new(self.file_compression_type)
-            .with_file_extension(self.file_extension)
+impl From<FASTQReadOptions> for ListingFASTQTableOptions {
+    fn from(options: FASTQReadOptions) -> Self {
+        ListingFASTQTableOptions::new(options.file_compression_type)
+            .with_file_extension(options.file_extension)
     }
 }
