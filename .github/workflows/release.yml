@@ -44,7 +44,7 @@ jobs:
             source /opt/rh/llvm-toolset-7/enable
 
             # Update gcc to 13
-            yum groupinstall "Development Tools"
+            yum groupinstall -y "Development Tools"
             gcc --version
 
       - name: Build wheels (aarch64)
