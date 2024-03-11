@@ -41,7 +41,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist -i python3.10
+          args: --release --out dist -i python3.10 -mavx512f -mavx512bw
           sccache: 'true'
           manylinux: auto
 
