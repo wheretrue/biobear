@@ -40,6 +40,54 @@ def test_connect_and_to_arrow():
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
+def test_read_fastq_with_qs_to_list():
+    """Test quality scores to list."""
+    session = connect()
+    fastq_path = DATA / "test.fastq.gz"
+
+    df = session.sql(
+        f"""
+        SELECT quality_scores_to_list(quality_scores) quality_score_list
+        FROM fastq_scan('{fastq_path}')
+        """
+    ).to_polars()
+
+    assert len(df) == 2
+    assert df.get_column("quality_score_list").to_list()[0][:5] == [0, 6, 6, 9, 7]
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_alignment_score():
+    """Test reading a fastq file."""
+    session = connect()
+
+    df = session.sql(
+        """
+        SELECT s1, s2, alignment_score(s1, s2) score
+        FROM (
+            SELECT 'ACGT' s1, 'ACGT' s2
+            UNION ALL
+            SELECT 'ACG' s1, 'ACGT' s2
+            UNION ALL
+            SELECT 'ACGT' s1, 'ACGTT' s2
+            UNION ALL
+            SELECT 'ACCT' s1, 'ACGT' s2
+        ) t
+        ORDER BY s1, s2, score
+        """
+    ).to_polars()
+    assert len(df) == 4
+
+    # expected score
+    score = [2, 3, 4, 4]
+    assert df.get_column("score").to_list() == score
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
 def test_read_fastq():
     """Test reading a fastq file."""
     session = connect()
