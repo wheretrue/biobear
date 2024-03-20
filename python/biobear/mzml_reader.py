@@ -27,6 +27,13 @@ class MzMLReader(Reader):
         else:
             self._reader = _ExonReader(str(path), "MZML", None)
 
+    def to_polars(self):
+        """Read the MZML file and return a polars DataFrame."""
+        raise RuntimeError(
+            "The polars library is not yet supported for MzML files. "
+            "Consider using the session to select the fields you need."
+        )
+
     @property
     def inner(self):
         """Return the inner reader."""

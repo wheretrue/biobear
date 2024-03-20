@@ -3,22 +3,19 @@ build-backend = "maturin"
 requires = ["maturin>=1.3.0"]
 
 [project]
-authors = [
-  {name = "WHERE TRUE devs", email = "thauck+biobear@wheretrue.com"},
-]
+authors = [{ name = "WHERE TRUE devs", email = "thauck+biobear@wheretrue.com" }]
 classifiers = [
   "Programming Language :: Rust",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = ["pyarrow>=15"]
-
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 name = "biobear"
 readme = "README.md"
-requires-python = ">=3.9"
-
-description = "A Python package for working with Bioinformatics data with SQL and Arrow"
+requires-python = ">=3.8"
+description = "A package for working with Bioinformatics data with SQL and Arrow"
+version = "0.17.13"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]

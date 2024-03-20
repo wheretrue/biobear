@@ -11,16 +11,6 @@ DATA = Path(__file__).parent / "data"
 
 
 @pytest.mark.skipif(
-    not importlib.util.find_spec("polars"), reason="polars not installed"
-)
-def test_mzml_reader_polars():
-    reader = MzMLReader(DATA / "test.mzML")
-    df = reader.to_polars()
-
-    assert len(df) == 2
-
-
-@pytest.mark.skipif(
     not importlib.util.find_spec("pandas"), reason="pandas not installed"
 )
 def test_mzml_reader_pandas():
@@ -35,16 +25,6 @@ def test_mzml_reader_to_scanner():
     scanner = reader.to_arrow_scanner()
 
     assert scanner.count_rows() == 2
-
-
-@pytest.mark.skipif(
-    not importlib.util.find_spec("polars"), reason="polars not installed"
-)
-def test_mzml_reader_gz():
-    reader = MzMLReader(DATA / "test.mzML.gz")
-    df = reader.to_polars()
-
-    assert len(df) == 2
 
 
 def test_mzml_reader_gz_to_scanner():

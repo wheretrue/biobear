@@ -6,7 +6,8 @@
     "version_files": [
       "Cargo.toml",
       "README.md",
-      "python/biobear/__init__.py"
+      "python/biobear/__init__.py",
+      "pyproject.toml"
     ],
     "update_changelog_on_bump": true
   }
