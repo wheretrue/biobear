@@ -34,7 +34,7 @@ from .biobear import FileCompressionType
 from .biobear import FASTQReadOptions
 from .biobear import FASTAReadOptions
 
-__version__ = "0.17.11"
+__version__ = "0.17.12"
 
 __all__ = [
     "FastaReader",
