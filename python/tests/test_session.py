@@ -47,13 +47,25 @@ def test_read_fastq_with_qs_to_list():
 
     df = session.sql(
         f"""
-        SELECT quality_scores_to_list(quality_scores) quality_score_list
+        SELECT quality_scores_to_list(quality_scores) quality_score_list, locate_regex(sequence, '[AC]AT') locate
         FROM fastq_scan('{fastq_path}')
         """
     ).to_polars()
 
     assert len(df) == 2
     assert df.get_column("quality_score_list").to_list()[0][:5] == [0, 6, 6, 9, 7]
+    assert df.get_column("locate").to_list() == [
+        [
+            {"start": 29, "end": 32, "match": "AAT"},
+            {"start": 36, "end": 39, "match": "AAT"},
+            {"start": 40, "end": 43, "match": "CAT"},
+        ],
+        [
+            {"start": 29, "end": 32, "match": "AAT"},
+            {"start": 36, "end": 39, "match": "AAT"},
+            {"start": 40, "end": 43, "match": "CAT"},
+        ],
+    ]
 
 
 @pytest.mark.skipif(
