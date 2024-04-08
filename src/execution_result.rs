@@ -81,12 +81,10 @@ impl PyExecutionResult {
 
         let mut stream = FFI_ArrowArrayStream::new(Box::new(dataframe_record_batch_stream));
 
-        Python::with_gil(|py| unsafe {
-            let stream_reader =
-                ArrowArrayStreamReader::from_raw(&mut stream).map_err(BioBearError::from)?;
+        let stream_reader =
+            unsafe { ArrowArrayStreamReader::from_raw(&mut stream).map_err(BioBearError::from) }?;
 
-            stream_reader.into_pyarrow(py)
-        })
+        stream_reader.into_pyarrow(py)
     }
 
     /// Convert to Arrow Table
@@ -94,14 +92,12 @@ impl PyExecutionResult {
         let batches = self.collect(py)?.to_object(py);
         let schema = self.schema().into_py(py);
 
-        Python::with_gil(|py| {
-            // Instantiate pyarrow Table object and use its from_batches method
-            let table_class = py.import("pyarrow")?.getattr("Table")?;
+        // Instantiate pyarrow Table object and use its from_batches method
+        let table_class = py.import("pyarrow")?.getattr("Table")?;
 
-            let args = PyTuple::new(py, &[batches, schema]);
-            let table: PyObject = table_class.call_method1("from_batches", args)?.into();
-            Ok(table)
-        })
+        let args = PyTuple::new(py, &[batches, schema]);
+        let table: PyObject = table_class.call_method1("from_batches", args)?.into();
+        Ok(table)
     }
 
     /// Convert to a Polars DataFrame
@@ -111,16 +107,14 @@ impl PyExecutionResult {
 
         let schema = schema.into_py(py);
 
-        Python::with_gil(|py| {
-            let table_class = py.import("pyarrow")?.getattr("Table")?;
-            let args = (batches, schema);
-            let table: PyObject = table_class.call_method1("from_batches", args)?.into();
+        let table_class = py.import("pyarrow")?.getattr("Table")?;
+        let args = (batches, schema);
+        let table: PyObject = table_class.call_method1("from_batches", args)?.into();
 
-            let module = py.import("polars")?;
-            let args = (table,);
-            let result = module.call_method1("from_arrow", args)?.into();
+        let module = py.import("polars")?;
+        let args = (table,);
+        let result = module.call_method1("from_arrow", args)?.into();
 
-            Ok(result)
-        })
+        Ok(result)
     }
 }
