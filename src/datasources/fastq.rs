@@ -101,6 +101,6 @@ impl FASTQReadOptions {
 impl From<FASTQReadOptions> for ListingFASTQTableOptions {
     fn from(options: FASTQReadOptions) -> Self {
         ListingFASTQTableOptions::new(options.file_compression_type)
-            .with_file_extension(options.file_extension)
+            .with_some_file_extension(Some(&options.file_extension))
     }
 }

@@ -14,14 +14,18 @@
 
 use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::pyarrow::IntoPyArrow;
+use datafusion::datasource::file_format::file_compression_type::FileCompressionType;
 use datafusion::prelude::SessionContext;
+use exon::datasources::vcf::ListingVCFTableOptions;
 use exon::ffi::DataFrameRecordBatchStream;
+use noodles::core::Region;
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
 use exon::{new_exon_config, ExonSessionExt};
 
 use std::io;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::error::BioBearError;
@@ -68,8 +72,18 @@ impl VCFIndexedReader {
 
         let ctx = SessionContext::with_config_exon(config);
 
+        let region = Region::from_str(region).map_err(|e| {
+            io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!("Error parsing region: {e}"),
+            )
+        })?;
+
+        let options =
+            ListingVCFTableOptions::new(FileCompressionType::GZIP, true).with_regions(vec![region]);
+
         let df = self._runtime.block_on(async {
-            match ctx.query_vcf_file(self.path.as_str(), region).await {
+            match ctx.read_vcf(self.path.as_str(), options).await {
                 Ok(df) => Ok(df),
                 Err(e) => Err(io::Error::new(
                     io::ErrorKind::Other,

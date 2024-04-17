@@ -15,13 +15,16 @@
 use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::pyarrow::IntoPyArrow;
 use datafusion::prelude::{SessionConfig, SessionContext};
+use exon::datasources::bcf::table_provider::ListingBCFTableOptions;
 use exon::ffi::DataFrameRecordBatchStream;
+use noodles::core::Region;
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
 use exon::ExonSessionExt;
 
 use std::io;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::error::BioBearError;
@@ -68,8 +71,14 @@ impl BCFIndexedReader {
 
         let ctx = SessionContext::new_with_config(config);
 
+        let region = Region::from_str(region).map_err(|e| {
+            io::Error::new(io::ErrorKind::Other, format!("Error parsing region: {e}"))
+        })?;
+
+        let options = ListingBCFTableOptions::default().with_regions(vec![region]);
+
         let df = self._runtime.block_on(async {
-            match ctx.query_bcf_file(self.path.as_str(), region).await {
+            match ctx.read_bcf(self.path.as_str(), options).await {
                 Ok(df) => Ok(df),
                 Err(e) => Err(io::Error::new(
                     io::ErrorKind::Other,

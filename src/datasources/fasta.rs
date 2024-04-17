@@ -95,6 +95,6 @@ impl FASTAReadOptions {
 impl From<FASTAReadOptions> for ListingFASTATableOptions {
     fn from(options: FASTAReadOptions) -> Self {
         ListingFASTATableOptions::new(options.file_compression_type)
-            .with_file_extension(options.file_extension)
+            .with_some_file_extension(Some(&options.file_extension))
     }
 }
