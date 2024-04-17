@@ -14,7 +14,7 @@
 
 use arrow::error::ArrowError;
 use datafusion::{error::DataFusionError, sql::sqlparser::parser::ParserError};
-use exon::error::ExonError;
+use exon::ExonError;
 use pyo3::PyErr;
 
 #[derive(Debug)]
