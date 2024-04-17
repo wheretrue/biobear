@@ -239,9 +239,7 @@ def test_execute(tmp_path):
     query = f"CREATE EXTERNAL TABLE gff_file STORED AS GFF LOCATION '{gff_path}'"
     session.execute(query)
 
-    copy_query = (
-        f"COPY (SELECT seqname FROM gff_file) TO '{output_path}' (FORMAT PARQUET)"
-    )
+    copy_query = f"COPY (SELECT seqname FROM gff_file) TO '{output_path}'"
     session.execute(copy_query)
 
     assert output_path.exists()
@@ -283,7 +281,7 @@ def test_copy_to_s3():
     s3_input_path = "s3://test-bucket/test.fasta"
     parquet_output = "s3://parquet-bucket/test.parquet"
 
-    query = f"COPY (SELECT * FROM fasta_scan('{s3_input_path}')) TO '{parquet_output}' (FORMAT PARQUET)"
+    query = f"COPY (SELECT * FROM fasta_scan('{s3_input_path}')) TO '{parquet_output}'"
 
     session.register_object_store_from_url(parquet_output)
 
