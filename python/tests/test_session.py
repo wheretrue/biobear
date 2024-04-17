@@ -17,7 +17,13 @@ import importlib
 
 import pytest
 
-from biobear import connect, FASTQReadOptions, FASTAReadOptions, FileCompressionType
+from biobear.biobear import (
+    connect,
+    FASTQReadOptions,
+    FASTAReadOptions,
+    FileCompressionType,
+    BCFReadOptions,
+)
 
 DATA = Path(__file__).parent / "data"
 
@@ -160,7 +166,7 @@ def test_read_fasta_gz():
     fasta_path = DATA / "test.fa.gz"
 
     options = FASTAReadOptions(
-        file_extension="fa.gz", file_compression_type=FileCompressionType.GZIP
+        file_extension="fa", file_compression_type=FileCompressionType.GZIP
     )
     df = session.read_fasta_file(str(fasta_path), options=options).to_polars()
 
@@ -287,3 +293,29 @@ def test_copy_to_s3():
 
     # Should not raise an exception
     session.execute(query)
+
+
+def test_read_bcf_file():
+    """Test reading a BCF file."""
+    session = connect()
+
+    bcf_path = DATA / "index.bcf"
+
+    arrow_table = session.read_bcf_file(bcf_path.as_posix()).to_arrow()
+
+    assert len(arrow_table) == 621
+
+
+@pytest.mark.skip("Not implemented yet")
+def test_bcf_indexed_reader_query():
+    """Test the BCFIndexedReader.query() method."""
+    session = connect()
+    options = BCFReadOptions(region="1")
+
+    bcf_path = DATA / "index.bcf"
+
+    rbr = session.read_bcf_file(
+        bcf_path.as_posix(), options=options
+    ).to_arrow_record_batch_reader()
+
+    assert 191 == sum(b.num_rows for b in rbr)

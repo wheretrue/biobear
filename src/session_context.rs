@@ -17,6 +17,7 @@ use exon::{ExonRuntimeEnvExt, ExonSessionExt};
 
 use pyo3::prelude::*;
 
+use crate::datasources::bcf::BCFReadOptions;
 use crate::datasources::fasta::FASTAReadOptions;
 use crate::datasources::fastq::FASTQReadOptions;
 use crate::error;
@@ -54,6 +55,22 @@ impl ExonSessionContext {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_fastq(file_path, options.into());
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+        Ok(PyExecutionResult::new(df))
+    }
+
+    /// Read a BCF file from the given path.
+    #[pyo3(signature = (file_path, *, options=None))]
+    fn read_bcf_file(
+        &mut self,
+        file_path: &str,
+        options: Option<BCFReadOptions>,
+        py: Python,
+    ) -> PyResult<PyExecutionResult> {
+        let options = options.unwrap_or_default();
+
+        let result = self.ctx.read_bcf(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
         Ok(PyExecutionResult::new(df))
@@ -105,5 +122,10 @@ impl ExonSessionContext {
 
 #[pyfunction]
 pub fn connect() -> PyResult<ExonSessionContext> {
+    Ok(ExonSessionContext::default())
+}
+
+#[pyfunction]
+pub fn new_context() -> PyResult<ExonSessionContext> {
     Ok(ExonSessionContext::default())
 }

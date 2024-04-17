@@ -19,10 +19,11 @@ import os
 
 import pyarrow as pa
 
-
 from biobear.reader import Reader
 
 from .biobear import _ExonReader, _BCFIndexedReader
+
+from warnings import warn
 
 
 class BCFReader(Reader):
@@ -38,6 +39,13 @@ class BCFReader(Reader):
             path (Path): Path to the BCF file.
 
         """
+
+        # show a warning that this is deprecated
+        warn(
+            "BCFReader is deprecated, use ExonSessionContext instead",
+            DeprecationWarning,
+        )
+
         self._bcf_reader = _ExonReader(str(path), "BCF", None)
 
     @property
