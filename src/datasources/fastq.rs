@@ -62,7 +62,7 @@ impl Default for FASTQReadOptions {
 #[pymethods]
 impl FASTQReadOptions {
     #[new]
-    #[pyo3(signature = (*, file_extension=None, file_compression_type=None))]
+    #[pyo3(signature = (/, file_extension=None, file_compression_type=None))]
     /// Create a new FASTQReadOptions instance.
     ///
     /// # Arguments
