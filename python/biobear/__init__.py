@@ -23,8 +23,16 @@ from biobear.gff_reader import GFFReader
 from biobear.mzml_reader import MzMLReader
 from biobear.genbank_reader import GenbankReader
 from biobear.bcf_reader import BCFReader, BCFIndexedReader
+from biobear import compression
+from biobear.compression import Compression
 
-from .biobear import *
+from .biobear import FileCompressionType
+from .biobear import FASTQReadOptions
+from .biobear import FASTAReadOptions
+from .biobear import connect
+from .biobear import new_session
+from .biobear import __runtime
+
 
 __version__ = "0.18.0"
 
@@ -48,5 +56,6 @@ __all__ = [
     "FASTAReadOptions",
     "__version__",
     "connect",
+    "new_session",
     "__runtime",
 ]
