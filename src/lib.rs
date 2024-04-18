@@ -58,7 +58,7 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<datasources::bcf::BCFReadOptions>()?;
 
     m.add_function(wrap_pyfunction!(session_context::connect, m)?)?;
-    m.add_function(wrap_pyfunction!(session_context::new_context, m)?)?;
+    m.add_function(wrap_pyfunction!(session_context::new_session, m)?)?;
 
     Ok(())
 }

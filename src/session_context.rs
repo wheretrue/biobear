@@ -25,11 +25,11 @@ use crate::execution_result::PyExecutionResult;
 use crate::runtime::wait_for_future;
 
 #[pyclass]
-pub struct ExonSessionContext {
+pub struct BioBearSessionContext {
     ctx: SessionContext,
 }
 
-impl Default for ExonSessionContext {
+impl Default for BioBearSessionContext {
     fn default() -> Self {
         Self {
             ctx: SessionContext::new_exon(),
@@ -38,7 +38,7 @@ impl Default for ExonSessionContext {
 }
 
 #[pymethods]
-impl ExonSessionContext {
+impl BioBearSessionContext {
     #[new]
     fn new() -> PyResult<Self> {
         Ok(Self::default())
@@ -121,11 +121,11 @@ impl ExonSessionContext {
 }
 
 #[pyfunction]
-pub fn connect() -> PyResult<ExonSessionContext> {
-    Ok(ExonSessionContext::default())
+pub fn connect() -> PyResult<BioBearSessionContext> {
+    Ok(BioBearSessionContext::default())
 }
 
 #[pyfunction]
-pub fn new_context() -> PyResult<ExonSessionContext> {
-    Ok(ExonSessionContext::default())
+pub fn new_session() -> PyResult<BioBearSessionContext> {
+    Ok(BioBearSessionContext::default())
 }
