@@ -54,14 +54,12 @@ impl Display for FileCompressionType {
     }
 }
 
-impl TryInto<DFFileCompressionType> for FileCompressionType {
-    type Error = BioBearError;
-
-    fn try_into(self) -> Result<DFFileCompressionType, Self::Error> {
-        match self {
-            Self::GZIP => Ok(DFFileCompressionType::GZIP),
-            Self::ZSTD => Ok(DFFileCompressionType::ZSTD),
-            Self::UNCOMPRESSED => Ok(DFFileCompressionType::UNCOMPRESSED),
+impl From<FileCompressionType> for DFFileCompressionType {
+    fn from(value: FileCompressionType) -> Self {
+        match value {
+            FileCompressionType::GZIP => DFFileCompressionType::GZIP,
+            FileCompressionType::ZSTD => DFFileCompressionType::ZSTD,
+            FileCompressionType::UNCOMPRESSED => DFFileCompressionType::UNCOMPRESSED,
         }
     }
 }

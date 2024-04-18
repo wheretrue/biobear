@@ -15,6 +15,7 @@
 """VCF File Readers."""
 
 import os
+import warnings
 
 import pyarrow as pa
 
@@ -36,6 +37,11 @@ class VCFReader(Reader):
             path (Path): Path to the VCF file.
 
         """
+        warnings.warn(
+            "The VCFReader class is deprecated and will be removed in a future release. "
+            "Please use BioBearSessionContext.read_vcf_file instead.",
+            DeprecationWarning,
+        )
         self._vcf_reader = _ExonReader(str(path), "VCF", None)
 
     @property

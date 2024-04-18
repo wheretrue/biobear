@@ -15,3 +15,4 @@
 pub mod bcf;
 pub mod fasta;
 pub mod fastq;
+pub mod vcf;

@@ -44,6 +44,22 @@ impl BioBearSessionContext {
         Ok(Self::default())
     }
 
+    /// Read one or more VCF files from the given path.
+    #[pyo3(signature = (file_path, *, options=None))]
+    fn read_vcf_file(
+        &mut self,
+        file_path: &str,
+        options: Option<crate::datasources::vcf::VCFReadOptions>,
+        py: Python,
+    ) -> PyResult<PyExecutionResult> {
+        let options = options.unwrap_or_default();
+
+        let result = self.ctx.read_vcf(file_path, options.into());
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+        Ok(PyExecutionResult::new(df))
+    }
+
     /// Read a fastq file from the given path.
     #[pyo3(signature = (file_path, *, options=None))]
     fn read_fastq_file(

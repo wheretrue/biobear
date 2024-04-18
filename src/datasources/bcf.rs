@@ -29,7 +29,7 @@ pub struct BCFReadOptions {
 #[pymethods]
 impl BCFReadOptions {
     #[new]
-    #[pyo3(signature = (/, region))]
+    #[pyo3(signature = (/, region = None))]
     fn try_new(region: Option<String>) -> BioBearResult<Self> {
         let region = region
             .map(|r| Region::from_str(&r))

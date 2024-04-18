@@ -15,6 +15,8 @@
 """FASTA file reader."""
 import os
 
+import warnings
+
 from biobear.reader import Reader
 from biobear.compression import Compression
 
@@ -37,6 +39,11 @@ class FastaReader(Reader):
                 Compression.INFERRED.
 
         """
+        warnings.warn(
+            "The FastaReader class is deprecated and will be removed in a future release. "
+            "Please use BioBearSessionContext.read_fasta instead.",
+            DeprecationWarning,
+        )
         self.compression = compression.infer_or_use(path)
 
         if self.compression == Compression.GZIP:
