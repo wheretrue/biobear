@@ -31,6 +31,10 @@ from .biobear import FASTQReadOptions
 from .biobear import FASTAReadOptions
 from .biobear import VCFReadOptions
 from .biobear import BCFReadOptions
+from .biobear import BEDReadOptions
+from .biobear import BigWigReadOptions
+from .biobear import SAMReadOptions
+from .biobear import BAMReadOptions
 from .biobear import connect
 from .biobear import new_session
 from .biobear import __runtime
@@ -58,6 +62,10 @@ __all__ = [
     "FASTAReadOptions",
     "BCFReadOptions",
     "VCFReadOptions",
+    "BEDReadOptions",
+    "BigWigReadOptions",
+    "SAMReadOptions",
+    "BAMReadOptions",
     "__version__",
     "connect",
     "new_session",

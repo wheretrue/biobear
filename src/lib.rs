@@ -60,6 +60,7 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<datasources::bam::BAMReadOptions>()?;
     m.add_class::<datasources::sam::SAMReadOptions>()?;
     m.add_class::<datasources::bed::BEDReadOptions>()?;
+    m.add_class::<datasources::bigwig::BigWigReadOptions>()?;
 
     m.add_function(wrap_pyfunction!(session_context::connect, m)?)?;
     m.add_function(wrap_pyfunction!(session_context::new_session, m)?)?;
