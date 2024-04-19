@@ -56,6 +56,7 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<datasources::fastq::FASTQReadOptions>()?;
     m.add_class::<datasources::fasta::FASTAReadOptions>()?;
     m.add_class::<datasources::bcf::BCFReadOptions>()?;
+    m.add_class::<datasources::vcf::VCFReadOptions>()?;
 
     m.add_function(wrap_pyfunction!(session_context::connect, m)?)?;
     m.add_function(wrap_pyfunction!(session_context::new_session, m)?)?;

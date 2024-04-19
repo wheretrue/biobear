@@ -29,6 +29,8 @@ from biobear.compression import Compression
 from .biobear import FileCompressionType
 from .biobear import FASTQReadOptions
 from .biobear import FASTAReadOptions
+from .biobear import VCFReadOptions
+from .biobear import BCFReadOptions
 from .biobear import connect
 from .biobear import new_session
 from .biobear import __runtime
@@ -54,6 +56,8 @@ __all__ = [
     "FileCompressionType",
     "FASTQReadOptions",
     "FASTAReadOptions",
+    "BCFReadOptions",
+    "VCFReadOptions",
     "__version__",
     "connect",
     "new_session",

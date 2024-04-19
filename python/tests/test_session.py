@@ -23,6 +23,7 @@ from biobear.biobear import (
     FASTAReadOptions,
     FileCompressionType,
     BCFReadOptions,
+    VCFReadOptions,
 )
 
 DATA = Path(__file__).parent / "data"
@@ -319,3 +320,38 @@ def test_bcf_indexed_reader_query():
     ).to_arrow_record_batch_reader()
 
     assert 191 == sum(b.num_rows for b in rbr)
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_vcf_reader():
+    session = connect()
+    options = VCFReadOptions()
+
+    df = session.read_vcf_file(
+        (DATA / "vcf_file.vcf").as_posix(), options=options
+    ).to_polars()
+
+    assert len(df) == 15
+
+
+def test_vcf_query():
+    session = connect()
+    options = VCFReadOptions(region="1", file_compression_type=FileCompressionType.GZIP)
+
+    rbr = session.read_vcf_file(
+        (DATA / "vcf_file.vcf.gz").as_posix(), options=options
+    ).to_arrow_record_batch_reader()
+
+    assert 11 == sum(b.num_rows for b in rbr)
+
+    options = VCFReadOptions(
+        region="chr1", file_compression_type=FileCompressionType.GZIP
+    )
+
+    rbr = session.read_vcf_file(
+        (DATA / "vcf_file.vcf.gz").as_posix(), options=options
+    ).to_arrow_record_batch_reader()
+
+    assert 0 == sum(b.num_rows for b in rbr)
