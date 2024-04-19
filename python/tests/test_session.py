@@ -24,6 +24,7 @@ from biobear.biobear import (
     FASTAReadOptions,
     FileCompressionType,
     BCFReadOptions,
+    GFFReadOptions,
     VCFReadOptions,
     new_session,
 )
@@ -379,3 +380,44 @@ def test_bam_indexed_reader():
     ).to_arrow_record_batch_reader()
 
     assert 1 == sum(b.num_rows for b in rbr)
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_gff_reader_polars():
+    session = new_session()
+    df = session.read_gff_file((DATA / "test.gff").as_posix()).to_polars()
+
+    assert len(df) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_gff_attr_struct():
+    import polars as pl
+
+    session = new_session()
+
+    reader = session.read_gff_file((DATA / "test.gff").as_posix())
+    df = reader.to_polars()
+    dtype = df.select(pl.col("attributes")).dtypes[0]
+
+    key_field = pl.Field("key", pl.Utf8)
+    value_field = pl.Field("value", pl.List(pl.Utf8))
+    assert dtype == pl.List(pl.Struct([key_field, value_field]))
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_gff_reader_gz():
+    session = new_session()
+
+    options = GFFReadOptions(file_compression_type=FileCompressionType.GZIP)
+
+    reader = session.read_gff_file((DATA / "test.gff.gz").as_posix(), options=options)
+    df = reader.to_polars()
+
+    assert len(df) == 2

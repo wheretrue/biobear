@@ -12,11 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::str::FromStr;
+
+use noodles::core::Region;
+
+use crate::error::BioBearResult;
+
 pub mod bam;
 pub mod bcf;
 pub mod bed;
 pub mod bigwig;
 pub mod fasta;
 pub mod fastq;
+pub mod gff;
+pub mod gtf;
 pub mod sam;
 pub mod vcf;
+
+pub(crate) fn parse_region(region: Option<String>) -> BioBearResult<Option<noodles::core::Region>> {
+    let region = region
+        .map(|r| Region::from_str(&r))
+        .transpose()
+        .map_err(|e| {
+            crate::error::BioBearError::ParserError(format!("Couldn\'t parse region error {}", e))
+        })?;
+
+    Ok(region)
+}

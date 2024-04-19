@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::str::FromStr;
-
 use exon::datasources::vcf::ListingVCFTableOptions;
 use noodles::core::Region;
 use pyo3::{pyclass, pymethods, PyResult};
 
 use crate::FileCompressionType;
+
+use super::parse_region;
 
 #[pyclass]
 #[derive(Debug, Clone)]
@@ -45,15 +45,7 @@ impl VCFReadOptions {
         region: Option<String>,
         file_compression_type: Option<FileCompressionType>,
     ) -> PyResult<Self> {
-        let region = region
-            .map(|r| Region::from_str(&r))
-            .transpose()
-            .map_err(|e| {
-                crate::error::BioBearError::ParserError(format!(
-                    "Couldn\'t parse region error {}",
-                    e
-                ))
-            })?;
+        let region = parse_region(region)?;
 
         let file_compression_type =
             file_compression_type.unwrap_or(FileCompressionType::UNCOMPRESSED);

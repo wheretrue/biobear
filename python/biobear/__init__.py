@@ -35,6 +35,7 @@ from .biobear import BEDReadOptions
 from .biobear import BigWigReadOptions
 from .biobear import SAMReadOptions
 from .biobear import BAMReadOptions
+from .biobear import GFFReadOptions
 from .biobear import connect
 from .biobear import new_session
 from .biobear import __runtime
@@ -66,6 +67,7 @@ __all__ = [
     "BigWigReadOptions",
     "SAMReadOptions",
     "BAMReadOptions",
+    "GFFReadOptions",
     "__version__",
     "connect",
     "new_session",

@@ -91,6 +91,22 @@ impl BioBearSessionContext {
         }
     }
 
+    /// Read a gff file from the given path.
+    #[pyo3(signature = (file_path, *, options=None))]
+    fn read_gff_file(
+        &mut self,
+        file_path: &str,
+        options: Option<crate::datasources::gff::GFFReadOptions>,
+        py: Python,
+    ) -> PyResult<PyExecutionResult> {
+        let options = options.unwrap_or_default();
+
+        let result = self.ctx.read_gff(file_path, options.into());
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+        Ok(PyExecutionResult::new(df))
+    }
+
     /// Read a fastq file from the given path.
     #[pyo3(signature = (file_path, *, options=None))]
     fn read_fastq_file(
@@ -101,9 +117,6 @@ impl BioBearSessionContext {
     ) -> PyResult<PyExecutionResult> {
         let options = options.unwrap_or_default();
 
-        // bigwig_view
-        // bigwig_zoom
-        // bed
         // genbank
         // gff
         // gtf
