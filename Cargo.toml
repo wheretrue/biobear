@@ -18,3 +18,7 @@ noodles = "0.69"
 [profile.release]
 codegen-units = 1
 lto = true
+
+
+[patch.crates-io]
+exon = { git = "https://github.com/wheretrue/exon.git", branch = "16-fixes" }
