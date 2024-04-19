@@ -108,6 +108,38 @@ impl BioBearSessionContext {
         Ok(PyExecutionResult::new(df))
     }
 
+    /// Read a BAM file from the given path.
+    #[pyo3(signature = (file_path, *, options=None))]
+    fn read_bam_file(
+        &mut self,
+        file_path: &str,
+        options: Option<crate::datasources::bam::BAMReadOptions>,
+        py: Python,
+    ) -> PyResult<PyExecutionResult> {
+        let options = options.unwrap_or_default();
+
+        let result = self.ctx.read_bam(file_path, options.into());
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+        Ok(PyExecutionResult::new(df))
+    }
+
+    /// Read a SAM file from the given path.
+    #[pyo3(signature = (file_path, *, options=None))]
+    fn read_sam_file(
+        &mut self,
+        file_path: &str,
+        options: Option<crate::datasources::sam::SAMReadOptions>,
+        py: Python,
+    ) -> PyResult<PyExecutionResult> {
+        let options = options.unwrap_or_default();
+
+        let result = self.ctx.read_sam(file_path, options.into());
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+        Ok(PyExecutionResult::new(df))
+    }
+
     /// Generate the plan from a SQL query and return the result as a [`PyExecutionResult`].
     fn sql(&mut self, query: &str, py: Python) -> PyResult<PyExecutionResult> {
         let result = self.ctx.sql(query);

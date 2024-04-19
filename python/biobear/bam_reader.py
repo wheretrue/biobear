@@ -17,6 +17,7 @@
 import os
 
 import pyarrow as pa
+import warnings
 
 from biobear.reader import Reader
 from .biobear import _BamIndexedReader, _ExonReader
@@ -32,6 +33,11 @@ class BamReader(Reader):
             path (Path): Path to the BAM file.
 
         """
+        warnings.warn(
+            "The BamReader class is deprecated and will be removed in a future release. "
+            "Please use BioBearSessionContext.read_bam_file instead.",
+            DeprecationWarning,
+        )
         self._bam_reader = _ExonReader(str(path), "BAM", None)
 
     @property
@@ -51,6 +57,11 @@ class BamIndexedReader(Reader):
             index (Path): Path to the BAM index file.
 
         """
+        warnings.warn(
+            "The BamIndexedReader class is deprecated and will be removed in a future release. "
+            "Please use BioBearSessionContext.read_bam_file instead.",
+            DeprecationWarning,
+        )
         self._bam_reader = _BamIndexedReader(str(path))
 
     @property

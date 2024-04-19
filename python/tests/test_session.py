@@ -18,12 +18,14 @@ import importlib
 import pytest
 
 from biobear.biobear import (
+    BAMReadOptions,
     connect,
     FASTQReadOptions,
     FASTAReadOptions,
     FileCompressionType,
     BCFReadOptions,
     VCFReadOptions,
+    new_session,
 )
 
 DATA = Path(__file__).parent / "data"
@@ -355,3 +357,25 @@ def test_vcf_query():
     ).to_arrow_record_batch_reader()
 
     assert 0 == sum(b.num_rows for b in rbr)
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_read_bam():
+    session = new_session()
+
+    df = session.read_bam_file((DATA / "bedcov.bam").as_posix()).to_polars()
+
+    assert len(df) == 61
+
+
+def test_bam_indexed_reader():
+    session = new_session()
+    options = BAMReadOptions(region="chr1:12203700-12205426")
+
+    rbr = session.read_bam_file(
+        (DATA / "bedcov.bam").as_posix(), options=options
+    ).to_arrow_record_batch_reader()
+
+    assert 1 == sum(b.num_rows for b in rbr)

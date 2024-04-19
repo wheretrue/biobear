@@ -12,9 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod bam;
-pub mod bcf;
-pub mod fasta;
-pub mod fastq;
-pub mod sam;
-pub mod vcf;
+use exon::datasources::sam::table_provider::ListingSAMTableOptions;
+use pyo3::{pyclass, pymethods};
+
+#[pyclass]
+#[derive(Debug, Clone, Default)]
+/// Options for reading BAM files.
+pub struct SAMReadOptions {}
+
+#[pymethods]
+impl SAMReadOptions {
+    #[new]
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl From<SAMReadOptions> for ListingSAMTableOptions {
+    fn from(_options: SAMReadOptions) -> Self {
+        ListingSAMTableOptions::default()
+    }
+}
