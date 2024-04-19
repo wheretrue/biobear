@@ -13,11 +13,13 @@
 // limitations under the License.
 
 use datafusion::prelude::SessionContext;
+use exon::datasources::bigwig;
 use exon::{ExonRuntimeEnvExt, ExonSessionExt};
 
 use pyo3::prelude::*;
 
 use crate::datasources::bcf::BCFReadOptions;
+use crate::datasources::bigwig::BigWigReadOptions;
 use crate::datasources::fasta::FASTAReadOptions;
 use crate::datasources::fastq::FASTQReadOptions;
 use crate::error;
@@ -60,6 +62,35 @@ impl BioBearSessionContext {
         Ok(PyExecutionResult::new(df))
     }
 
+    /// Read a bigwig file from the given path.
+    #[pyo3(signature = (file_path, *, options=None))]
+    fn read_bigwig_file(
+        &mut self,
+        file_path: &str,
+        options: Option<BigWigReadOptions>,
+        py: Python,
+    ) -> PyResult<PyExecutionResult> {
+        let options = options.unwrap_or_default();
+
+        match options.zoom() {
+            Some(_) => {
+                let options = bigwig::zoom::ListingTableOptions::try_from(options)?;
+                let result = self.ctx.read_bigwig_zoom(file_path, options);
+                let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+                Ok(PyExecutionResult::new(df))
+            }
+            None => {
+                let options = bigwig::value::ListingTableOptions::try_from(options)?;
+
+                let result = self.ctx.read_bigwig_view(file_path, options);
+                let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+                Ok(PyExecutionResult::new(df))
+            }
+        }
+    }
+
     /// Read a fastq file from the given path.
     #[pyo3(signature = (file_path, *, options=None))]
     fn read_fastq_file(
@@ -69,6 +100,15 @@ impl BioBearSessionContext {
         py: Python,
     ) -> PyResult<PyExecutionResult> {
         let options = options.unwrap_or_default();
+
+        // bigwig_view
+        // bigwig_zoom
+        // bed
+        // genbank
+        // gff
+        // gtf
+        // hmm_dom_tab
+        // mzml
 
         let result = self.ctx.read_fastq(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
@@ -103,6 +143,22 @@ impl BioBearSessionContext {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_fasta(file_path, options.into());
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+        Ok(PyExecutionResult::new(df))
+    }
+
+    /// Read a BED file from the given path.
+    #[pyo3(signature = (file_path, *, options=None))]
+    fn read_bed_file(
+        &mut self,
+        file_path: &str,
+        options: Option<crate::datasources::bed::BEDReadOptions>,
+        py: Python,
+    ) -> PyResult<PyExecutionResult> {
+        let options = options.unwrap_or_default();
+
+        let result = self.ctx.read_bed(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
         Ok(PyExecutionResult::new(df))

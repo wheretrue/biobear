@@ -14,6 +14,8 @@
 
 pub mod bam;
 pub mod bcf;
+pub mod bed;
+pub mod bigwig;
 pub mod fasta;
 pub mod fastq;
 pub mod sam;
