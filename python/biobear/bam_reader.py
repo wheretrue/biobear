@@ -34,8 +34,8 @@ class BamReader(Reader):
 
         """
         warnings.warn(
-            "The VCFReader class is deprecated and will be removed in a future release. "
-            "Please use BioBearSessionContext.read_vcf_file instead.",
+            "The BamReader class is deprecated and will be removed in a future release. "
+            "Please use BioBearSessionContext.read_bam_file instead.",
             DeprecationWarning,
         )
         self._bam_reader = _ExonReader(str(path), "BAM", None)
@@ -58,8 +58,8 @@ class BamIndexedReader(Reader):
 
         """
         warnings.warn(
-            "The VCFReader class is deprecated and will be removed in a future release. "
-            "Please use BioBearSessionContext.read_vcf_file instead.",
+            "The BamIndexedReader class is deprecated and will be removed in a future release. "
+            "Please use BioBearSessionContext.read_bam_file instead.",
             DeprecationWarning,
         )
         self._bam_reader = _BamIndexedReader(str(path))
