@@ -63,6 +63,7 @@ fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<datasources::gff::GFFReadOptions>()?;
     m.add_class::<datasources::gtf::GTFReadOptions>()?;
     m.add_class::<datasources::bigwig::BigWigReadOptions>()?;
+    m.add_class::<datasources::mzml::MzMLReadOptions>()?;
 
     m.add_function(wrap_pyfunction!(session_context::connect, m)?)?;
     m.add_function(wrap_pyfunction!(session_context::new_session, m)?)?;

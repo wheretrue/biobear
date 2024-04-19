@@ -26,6 +26,7 @@ pub mod fasta;
 pub mod fastq;
 pub mod gff;
 pub mod gtf;
+pub mod mzml;
 pub mod sam;
 pub mod vcf;
 

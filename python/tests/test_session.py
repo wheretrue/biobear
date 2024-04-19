@@ -17,7 +17,7 @@ import importlib
 
 import pytest
 
-from biobear.biobear import (
+from biobear import (
     BAMReadOptions,
     connect,
     FASTQReadOptions,
@@ -27,6 +27,7 @@ from biobear.biobear import (
     GFFReadOptions,
     VCFReadOptions,
     GTFReadOptions,
+    MzMLReadOptions,
     new_session,
 )
 
@@ -453,6 +454,9 @@ def test_gtf_attr_struct():
     assert dtype == pl.List(pl.Struct([key_field, value_field]))
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
 def test_gtf_reader_gz_to_polars():
     session = new_session()
     options = GTFReadOptions(file_compression_type=FileCompressionType.GZIP)
@@ -460,3 +464,26 @@ def test_gtf_reader_gz_to_polars():
     result = session.read_gtf_file((DATA / "test.gtf.gz").as_posix(), options=options)
 
     assert len(result.to_polars()) == 77
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_read_mzml_file():
+    session = new_session()
+
+    reader = session.read_mzml_file((DATA / "test.mzML").as_posix())
+
+    assert len(reader.to_polars()) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_mzml_reader_gz():
+    session = new_session()
+
+    options = MzMLReadOptions(file_compression_type=FileCompressionType.GZIP)
+    df = session.read_mzml_file((DATA / "test.mzML.gz").as_posix(), options=options)
+
+    assert len(df.to_polars()) == 2

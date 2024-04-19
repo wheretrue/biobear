@@ -15,6 +15,13 @@ class FileCompressionType(enum.Enum):
     BGZIP = 1
     NONE = 2
 
+class MzMLReadOptions:
+    def __init__(
+        self,
+        /,
+        file_compression_type: Optional[FileCompressionType] = None,
+    ) -> None: ...
+
 class GTFReadOptions:
     def __init__(
         self,
@@ -126,6 +133,9 @@ class BioBearSessionContext:
     ) -> ExecutionResult: ...
     def read_gtf_file(
         self, file_path: str, /, options: Optional[GTFReadOptions]
+    ) -> ExecutionResult: ...
+    def read_mzml_file(
+        self, file_path: str, /, options: Optional[MzMLReadOptions]
     ) -> ExecutionResult: ...
     def sql(self, query: str) -> ExecutionResult: ...
     def execute(self, query: str) -> None: ...
