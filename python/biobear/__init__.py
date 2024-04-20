@@ -37,6 +37,7 @@ from .biobear import SAMReadOptions
 from .biobear import BAMReadOptions
 from .biobear import GFFReadOptions
 from .biobear import GTFReadOptions
+from .biobear import HMMDomTabReadOptions
 from .biobear import MzMLReadOptions
 from .biobear import GenBankReadOptions
 from .biobear import connect
@@ -74,6 +75,7 @@ __all__ = [
     "GFFReadOptions",
     "GTFReadOptions",
     "MzMLReadOptions",
+    "HMMDomTabReadOptions",
     "__version__",
     "connect",
     "new_session",

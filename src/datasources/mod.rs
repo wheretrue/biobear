@@ -27,6 +27,7 @@ pub mod fastq;
 pub mod genbank;
 pub mod gff;
 pub mod gtf;
+pub mod hmm_dom_tab;
 pub mod mzml;
 pub mod sam;
 pub mod vcf;

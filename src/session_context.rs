@@ -22,6 +22,7 @@ use crate::datasources::bcf::BCFReadOptions;
 use crate::datasources::bigwig::BigWigReadOptions;
 use crate::datasources::fasta::FASTAReadOptions;
 use crate::datasources::fastq::FASTQReadOptions;
+use crate::datasources::hmm_dom_tab::HMMDomTabReadOptions;
 use crate::datasources::mzml::MzMLReadOptions;
 use crate::error;
 use crate::execution_result::PyExecutionResult;
@@ -58,6 +59,22 @@ impl BioBearSessionContext {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_vcf(file_path, options.into());
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+        Ok(PyExecutionResult::new(df))
+    }
+
+    /// Read a HMM Dom Tab file from the given path.
+    #[pyo3(signature = (file_path, /, options=None))]
+    fn read_hmm_dom_tab_file(
+        &mut self,
+        file_path: &str,
+        options: Option<HMMDomTabReadOptions>,
+        py: Python,
+    ) -> PyResult<PyExecutionResult> {
+        let options = options.unwrap_or_default();
+
+        let result = self.ctx.read_hmm_dom_tab(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
         Ok(PyExecutionResult::new(df))
@@ -117,10 +134,6 @@ impl BioBearSessionContext {
         py: Python,
     ) -> PyResult<PyExecutionResult> {
         let options = options.unwrap_or_default();
-
-        // genbank
-        // hmm_dom_tab
-        // mzml
 
         let result = self.ctx.read_fastq(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;

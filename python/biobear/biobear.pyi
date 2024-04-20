@@ -15,6 +15,13 @@ class FileCompressionType(enum.Enum):
     BGZIP = 1
     NONE = 2
 
+class HMMDomTabReadOptions:
+    def __init__(
+        self,
+        /,
+        file_compression_type: Optional[FileCompressionType] = None,
+    ) -> None: ...
+
 class MzMLReadOptions:
     def __init__(
         self,
