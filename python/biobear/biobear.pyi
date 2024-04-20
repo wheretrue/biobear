@@ -22,6 +22,13 @@ class MzMLReadOptions:
         file_compression_type: Optional[FileCompressionType] = None,
     ) -> None: ...
 
+class GenBankReadOptions:
+    def __init__(
+        self,
+        /,
+        file_compression_type: Optional[FileCompressionType] = None,
+    ) -> None: ...
+
 class GTFReadOptions:
     def __init__(
         self,
@@ -136,6 +143,9 @@ class BioBearSessionContext:
     ) -> ExecutionResult: ...
     def read_mzml_file(
         self, file_path: str, /, options: Optional[MzMLReadOptions]
+    ) -> ExecutionResult: ...
+    def read_genbank_file(
+        self, file_path: str, /, options: Optional[GenBankReadOptions]
     ) -> ExecutionResult: ...
     def sql(self, query: str) -> ExecutionResult: ...
     def execute(self, query: str) -> None: ...

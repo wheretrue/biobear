@@ -38,6 +38,7 @@ from .biobear import BAMReadOptions
 from .biobear import GFFReadOptions
 from .biobear import GTFReadOptions
 from .biobear import MzMLReadOptions
+from .biobear import GenBankReadOptions
 from .biobear import connect
 from .biobear import new_session
 from .biobear import __runtime
@@ -69,6 +70,7 @@ __all__ = [
     "BigWigReadOptions",
     "SAMReadOptions",
     "BAMReadOptions",
+    "GenBankReadOptions",
     "GFFReadOptions",
     "GTFReadOptions",
     "MzMLReadOptions",

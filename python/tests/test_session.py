@@ -487,3 +487,15 @@ def test_mzml_reader_gz():
     df = session.read_mzml_file((DATA / "test.mzML.gz").as_posix(), options=options)
 
     assert len(df.to_polars()) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_genbank_reader():
+    session = new_session()
+
+    result = session.read_genbank_file((DATA / "BGC0000404.gbk").as_posix())
+    df = result.to_polars()
+
+    assert len(df) == 1

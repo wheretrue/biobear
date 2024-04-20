@@ -24,6 +24,7 @@ pub mod bed;
 pub mod bigwig;
 pub mod fasta;
 pub mod fastq;
+pub mod genbank;
 pub mod gff;
 pub mod gtf;
 pub mod mzml;

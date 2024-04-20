@@ -128,6 +128,22 @@ impl BioBearSessionContext {
         Ok(PyExecutionResult::new(df))
     }
 
+    /// Read a genbank file from the given path.
+    #[pyo3(signature = (file_path, /, options=None))]
+    fn read_genbank_file(
+        &mut self,
+        file_path: &str,
+        options: Option<crate::datasources::genbank::GenBankReadOptions>,
+        py: Python,
+    ) -> PyResult<PyExecutionResult> {
+        let options = options.unwrap_or_default();
+
+        let result = self.ctx.read_genbank(file_path, options.into());
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+        Ok(PyExecutionResult::new(df))
+    }
+
     /// Read a mzml file from the given path.
     #[pyo3(signature = (file_path, /, options=None))]
     fn read_mzml_file(
