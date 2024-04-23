@@ -15,6 +15,21 @@ class FileCompressionType(enum.Enum):
     BGZIP = 1
     NONE = 2
 
+class CRAMReadOptions:
+    def __init__(
+        self,
+        /,
+        region: Optional[str] = None,
+        fasta_reference: Optional[str] = None,
+    ) -> None: ...
+
+class FCSReadOptions:
+    def __init__(
+        self,
+        /,
+        file_compression_type: Optional[FileCompressionType] = None,
+    ) -> None: ...
+
 class HMMDomTabReadOptions:
     def __init__(
         self,
@@ -90,6 +105,8 @@ class BAMReadOptions:
 class BEDReadOptions:
     def __init__(
         self,
+        /,
+        file_compression_type: Optional[FileCompressionType] = None,
     ) -> None: ...
 
 class BigWigReadOptions:
@@ -153,6 +170,12 @@ class BioBearSessionContext:
     ) -> ExecutionResult: ...
     def read_genbank_file(
         self, file_path: str, /, options: Optional[GenBankReadOptions]
+    ) -> ExecutionResult: ...
+    def read_cram_file(
+        self, file_path: str, /, options: Optional[CRAMReadOptions]
+    ) -> ExecutionResult: ...
+    def read_fcs_file(
+        self, file_path: str, /, options: Optional[FCSReadOptions]
     ) -> ExecutionResult: ...
     def sql(self, query: str) -> ExecutionResult: ...
     def execute(self, query: str) -> None: ...
