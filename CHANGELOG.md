@@ -1,3 +1,17 @@
+## v0.19.0 (2024-04-23)
+
+### Feat
+
+- add cram and fcs (#127)
+- add bed and bigwig (#124)
+- add bam and sam reader methods (#123)
+- add vcf read (#121)
+- add type annotations (#120)
+
+### Refactor
+
+- better obj creation (#117)
+
 ## v0.18.0 (2024-03-27)
 
 ## v0.17.16 (2024-03-21)
