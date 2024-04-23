@@ -30,6 +30,12 @@ pub enum FileCompressionType {
     UNCOMPRESSED,
 }
 
+impl Default for FileCompressionType {
+    fn default() -> Self {
+        Self::UNCOMPRESSED
+    }
+}
+
 #[pymethods]
 impl FileCompressionType {
     #[new]

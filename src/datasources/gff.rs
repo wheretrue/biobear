@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use exon::datasources::vcf::ListingVCFTableOptions;
+use exon::datasources::gff::table_provider::ListingGFFTableOptions;
 use noodles::core::Region;
 use pyo3::{pyclass, pymethods, PyResult};
 
@@ -22,13 +22,12 @@ use super::parse_region;
 
 #[pyclass]
 #[derive(Debug, Clone)]
-/// Options for reading VCF files.
-pub struct VCFReadOptions {
+pub struct GFFReadOptions {
     region: Option<Region>,
     file_compression_type: FileCompressionType,
 }
 
-impl Default for VCFReadOptions {
+impl Default for GFFReadOptions {
     fn default() -> Self {
         Self {
             region: None,
@@ -38,7 +37,7 @@ impl Default for VCFReadOptions {
 }
 
 #[pymethods]
-impl VCFReadOptions {
+impl GFFReadOptions {
     #[new]
     #[pyo3(signature = (/, region = None, file_compression_type = None))]
     fn try_new(
@@ -46,27 +45,22 @@ impl VCFReadOptions {
         file_compression_type: Option<FileCompressionType>,
     ) -> PyResult<Self> {
         let region = parse_region(region)?;
-
-        let file_compression_type =
-            file_compression_type.unwrap_or(FileCompressionType::UNCOMPRESSED);
-
         Ok(Self {
             region,
-            file_compression_type,
+            file_compression_type: file_compression_type
+                .unwrap_or(FileCompressionType::UNCOMPRESSED),
         })
     }
 }
 
-impl From<VCFReadOptions> for ListingVCFTableOptions {
-    fn from(options: VCFReadOptions) -> Self {
-        let regions = options.region.map(|r| vec![r]).unwrap_or_default();
+impl From<GFFReadOptions> for ListingGFFTableOptions {
+    fn from(options: GFFReadOptions) -> Self {
+        let mut o = ListingGFFTableOptions::new(options.file_compression_type.into());
 
-        let mut t = ListingVCFTableOptions::new(options.file_compression_type.into(), false);
-
-        if !regions.is_empty() {
-            t = t.with_regions(regions);
+        if let Some(region) = options.region {
+            o = o.with_region(region);
         }
 
-        t
+        o
     }
 }
