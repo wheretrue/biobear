@@ -40,6 +40,8 @@ from .biobear import GTFReadOptions
 from .biobear import HMMDomTabReadOptions
 from .biobear import MzMLReadOptions
 from .biobear import GenBankReadOptions
+from .biobear import FCSReadOptions
+from .biobear import CRAMReadOptions
 from .biobear import connect
 from .biobear import new_session
 from .biobear import __runtime
@@ -68,6 +70,8 @@ __all__ = [
     "BCFReadOptions",
     "VCFReadOptions",
     "BEDReadOptions",
+    "FCSReadOptions",
+    "CRAMReadOptions",
     "BigWigReadOptions",
     "SAMReadOptions",
     "BAMReadOptions",

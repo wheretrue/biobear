@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use exon::datasources::bam::table_provider::ListingBAMTableOptions;
+use exon::datasources::cram;
 use noodles::core::Region;
 use pyo3::{pyclass, pymethods, PyResult};
 
@@ -20,28 +20,31 @@ use super::parse_region;
 
 #[pyclass]
 #[derive(Debug, Clone, Default)]
-pub struct BAMReadOptions {
+pub struct CRAMReadOptions {
     region: Option<Region>,
+    fasta_reference: Option<String>,
 }
 
 #[pymethods]
-impl BAMReadOptions {
+impl CRAMReadOptions {
     #[new]
-    pub fn try_new(region: Option<String>) -> PyResult<Self> {
+    pub fn try_new(region: Option<String>, fasta_reference: Option<String>) -> PyResult<Self> {
         let region = parse_region(region)?;
 
-        Ok(Self { region })
+        Ok(Self {
+            region,
+            fasta_reference,
+        })
     }
 }
 
-impl From<BAMReadOptions> for ListingBAMTableOptions {
-    fn from(options: BAMReadOptions) -> Self {
-        let regions = options.region.map(|r| vec![r]).unwrap_or_default();
+impl From<CRAMReadOptions> for cram::table_provider::ListingCRAMTableOptions {
+    fn from(options: CRAMReadOptions) -> Self {
+        let mut t = cram::table_provider::ListingCRAMTableOptions::default()
+            .with_fasta_reference(options.fasta_reference);
 
-        let mut t = ListingBAMTableOptions::default();
-
-        if !regions.is_empty() {
-            t = t.with_regions(regions);
+        if let Some(region) = options.region {
+            t = t.with_region(Some(region)).with_indexed(true);
         }
 
         t

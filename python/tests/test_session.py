@@ -28,6 +28,7 @@ from biobear import (
     VCFReadOptions,
     GTFReadOptions,
     MzMLReadOptions,
+    CRAMReadOptions,
     new_session,
 )
 
@@ -499,3 +500,31 @@ def test_genbank_reader():
     df = result.to_polars()
 
     assert len(df) == 1
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_cram_reader():
+    session = new_session()
+
+    result = session.read_cram_file((DATA / "cram" / "test_input_1_a.cram").as_posix())
+
+    assert len(result.to_polars()) == 15
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_cram_reader():
+    session = new_session()
+
+    fasta_reference = (DATA / "two-cram" / "rand1k.fa").as_posix()
+    options = CRAMReadOptions(region="1", fasta_reference=fasta_reference)
+
+    result = session.read_cram_file(
+        (DATA / "two-cram" / "twolib.sorted.cram").as_posix(),
+        options=options,
+    )
+
+    assert len(result.to_polars()) == 0
