@@ -516,7 +516,7 @@ def test_cram_reader():
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
-def test_cram_reader():
+def test_cram_reader_with_region():
     session = new_session()
 
     fasta_reference = (DATA / "two-cram" / "rand1k.fa").as_posix()
