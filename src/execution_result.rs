@@ -31,18 +31,18 @@ use crate::{
 
 #[pyclass(name = "ExecutionResult", subclass)]
 #[derive(Clone)]
-pub(crate) struct PyExecutionResult {
+pub(crate) struct ExecutionResult {
     df: Arc<DataFrame>,
 }
 
-impl PyExecutionResult {
+impl ExecutionResult {
     pub(crate) fn new(df: DataFrame) -> Self {
         Self { df: Arc::new(df) }
     }
 }
 
 #[pymethods]
-impl PyExecutionResult {
+impl ExecutionResult {
     /// Collect the batches and return a list of pyarrow RecordBatch
     fn collect(&self, py: Python) -> PyResult<Vec<PyObject>> {
         let batches = wait_for_future(py, self.df.as_ref().clone().collect())

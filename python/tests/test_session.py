@@ -313,7 +313,6 @@ def test_read_bcf_file():
     assert len(arrow_table) == 621
 
 
-@pytest.mark.skip("Not implemented yet")
 def test_bcf_indexed_reader_query():
     """Test the BCFIndexedReader.query() method."""
     session = connect()

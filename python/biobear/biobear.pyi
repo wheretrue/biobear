@@ -1,3 +1,17 @@
+# Copyright 2024 WHERE TRUE Technologies.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from pyarrow import Table, RecordBatchStreamReader
 from typing import Optional
 import enum
@@ -11,11 +25,14 @@ except ImportError:
     pass
 
 class FileCompressionType(enum.Enum):
+    """The type of compression used for a file."""
+
     GZIP = 0
     BGZIP = 1
     NONE = 2
 
 class CRAMReadOptions:
+    """Options for reading CRAM data."""
     def __init__(
         self,
         /,
@@ -24,6 +41,7 @@ class CRAMReadOptions:
     ) -> None: ...
 
 class FCSReadOptions:
+    """Options for reading FCS data."""
     def __init__(
         self,
         /,
@@ -31,6 +49,7 @@ class FCSReadOptions:
     ) -> None: ...
 
 class HMMDomTabReadOptions:
+    """Options for reading HMM DomTab data."""
     def __init__(
         self,
         /,
@@ -38,6 +57,7 @@ class HMMDomTabReadOptions:
     ) -> None: ...
 
 class MzMLReadOptions:
+    """Options for reading mzML data."""
     def __init__(
         self,
         /,
@@ -45,6 +65,7 @@ class MzMLReadOptions:
     ) -> None: ...
 
 class GenBankReadOptions:
+    """Options for reading GenBank data."""
     def __init__(
         self,
         /,
@@ -52,6 +73,7 @@ class GenBankReadOptions:
     ) -> None: ...
 
 class GTFReadOptions:
+    """Options for reading GTF data."""
     def __init__(
         self,
         /,
@@ -59,6 +81,7 @@ class GTFReadOptions:
     ) -> None: ...
 
 class FASTAReadOptions:
+    """Options for reading FASTA data."""
     def __init__(
         self,
         /,
@@ -67,6 +90,7 @@ class FASTAReadOptions:
     ) -> None: ...
 
 class FASTQReadOptions:
+    """Options for reading FASTQ data."""
     def __init__(
         self,
         /,
@@ -75,6 +99,7 @@ class FASTQReadOptions:
     ) -> None: ...
 
 class VCFReadOptions:
+    """Options for reading VCF data."""
     def __init__(
         self,
         /,
@@ -84,6 +109,7 @@ class VCFReadOptions:
     ) -> None: ...
 
 class BCFReadOptions:
+    """Options for reading BCF data."""
     def __init__(
         self,
         /,
@@ -91,11 +117,13 @@ class BCFReadOptions:
     ) -> None: ...
 
 class SAMReadOptions:
+    """Options for reading SAM data."""
     def __init__(
         self,
     ) -> None: ...
 
 class BAMReadOptions:
+    """Options for reading BAM data."""
     def __init__(
         self,
         /,
@@ -103,6 +131,7 @@ class BAMReadOptions:
     ) -> None: ...
 
 class BEDReadOptions:
+    """Options for reading BED data."""
     def __init__(
         self,
         /,
@@ -110,6 +139,7 @@ class BEDReadOptions:
     ) -> None: ...
 
 class BigWigReadOptions:
+    """Options for reading BigWig data."""
     def __init__(
         self,
         /,
@@ -118,6 +148,7 @@ class BigWigReadOptions:
     ) -> None: ...
 
 class GFFReadOptions:
+    """Options for reading GFF data."""
     def __init__(
         self,
         /,
@@ -127,58 +158,94 @@ class GFFReadOptions:
     ) -> None: ...
 
 class ExecutionResult:
-    def to_arrow(self) -> Table: ...
-    def to_arrow_record_batch_reader(self) -> RecordBatchStreamReader: ...
+    """The result of an execution."""
+    def to_arrow(self) -> Table:
+        """Converts the result to an Arrow Table."""
+    def to_arrow_record_batch_reader(self) -> RecordBatchStreamReader:
+        """Converts the result to an Arrow RecordBatchStreamReader."""
 
     if POLARS_INSTALLED:
-        def to_polars(self) -> pl.DataFrame: ...
+        def to_polars(self) -> pl.DataFrame:
+            """Converts the result to a Polars DataFrame."""
 
 class BioBearSessionContext:
     def __init__(self) -> None: ...
     def read_fastq_file(
-        self, file_path: str, /, options: Optional[FASTQReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[FASTQReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads one or more FASTQ files and returns an ExecutionResult."""
     def read_fasta_file(
-        self, file_path: str, /, options: Optional[FASTAReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[FASTAReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads one or more FASTA files and returns an ExecutionResult."""
     def read_vcf_file(
-        self, file_path: str, /, options: Optional[VCFReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[VCFReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads one or more VCF files and returns an ExecutionResult."""
     def read_bcf_file(
-        self, file_path: str, /, options: Optional[BCFReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[BCFReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads one or more BCF files and returns an ExecutionResult."""
     def read_sam_file(
-        self, file_path: str, /, options: Optional[SAMReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[SAMReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads a SAM file and returns an ExecutionResult."""
     def read_bam_file(
-        self, file_path: str, /, options: Optional[BAMReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[BAMReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads a BAM file and returns an ExecutionResult."""
     def read_bed_file(
-        self, file_path: str, /, options: Optional[BEDReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[BEDReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads a BED file and returns an ExecutionResult."""
     def read_bigwig_file(
-        self, file_path: str, /, options: Optional[BigWigReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[BigWigReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads a BigWig file and returns an ExecutionResult."""
     def read_gff_file(
-        self, file_path: str, /, options: Optional[GFFReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[GFFReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads a GFF file and returns an ExecutionResult."""
     def read_gtf_file(
-        self, file_path: str, /, options: Optional[GTFReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[GTFReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads a GTF file and returns an ExecutionResult."""
     def read_mzml_file(
-        self, file_path: str, /, options: Optional[MzMLReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[MzMLReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads a mzML file and returns an ExecutionResult."""
     def read_genbank_file(
-        self, file_path: str, /, options: Optional[GenBankReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[GenBankReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads a GenBank file and returns an ExecutionResult."""
     def read_cram_file(
-        self, file_path: str, /, options: Optional[CRAMReadOptions]
-    ) -> ExecutionResult: ...
+        self, file_path: str, *, options: Optional[CRAMReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads a CRAM file and returns an ExecutionResult."""
     def read_fcs_file(
-        self, file_path: str, /, options: Optional[FCSReadOptions]
-    ) -> ExecutionResult: ...
-    def sql(self, query: str) -> ExecutionResult: ...
-    def execute(self, query: str) -> None: ...
+        self, file_path: str, *, options: Optional[FCSReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads a FCS file and returns an ExecutionResult."""
+    def sql(self, query: str) -> ExecutionResult:
+        """Executes a SQL query and returns an ExecutionResult."""
+    def execute(self, query: str) -> None:
+        """Executes a SQL query."""
 
-def connect() -> BioBearSessionContext: ...
-def new_session() -> BioBearSessionContext: ...
+def connect() -> BioBearSessionContext:
+    """Connect to the BioBear server and return a session context.
+
+    Note:
+        This function is deprecated. Use `new_session` instead.
+
+    Returns:
+        BioBearSessionContext: A session context for interacting with the BioBear server.
+
+    """
+
+def new_session() -> BioBearSessionContext:
+    """Create a new session context for interacting with the BioBear server.
+
+    Returns:
+        BioBearSessionContext: A session context for interacting with the BioBear server.
+
+    """

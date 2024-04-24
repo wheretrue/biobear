@@ -25,7 +25,7 @@ use crate::datasources::fastq::FASTQReadOptions;
 use crate::datasources::hmm_dom_tab::HMMDomTabReadOptions;
 use crate::datasources::mzml::MzMLReadOptions;
 use crate::error;
-use crate::execution_result::PyExecutionResult;
+use crate::execution_result::ExecutionResult;
 use crate::runtime::wait_for_future;
 
 #[pyclass]
@@ -49,45 +49,42 @@ impl BioBearSessionContext {
     }
 
     /// Read one or more VCF files from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_vcf_file(
         &mut self,
         file_path: &str,
         options: Option<crate::datasources::vcf::VCFReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_vcf(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Read a HMM Dom Tab file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_hmm_dom_tab_file(
         &mut self,
         file_path: &str,
         options: Option<HMMDomTabReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_hmm_dom_tab(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Read a bigwig file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_bigwig_file(
         &mut self,
         file_path: &str,
         options: Option<BigWigReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         match options.zoom() {
@@ -96,7 +93,7 @@ impl BioBearSessionContext {
                 let result = self.ctx.read_bigwig_zoom(file_path, options);
                 let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-                Ok(PyExecutionResult::new(df))
+                Ok(ExecutionResult::new(df))
             }
             None => {
                 let options = bigwig::value::ListingTableOptions::try_from(options)?;
@@ -104,193 +101,182 @@ impl BioBearSessionContext {
                 let result = self.ctx.read_bigwig_view(file_path, options);
                 let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-                Ok(PyExecutionResult::new(df))
+                Ok(ExecutionResult::new(df))
             }
         }
     }
 
     /// Read a gff file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_gff_file(
         &mut self,
         file_path: &str,
         options: Option<crate::datasources::gff::GFFReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_gff(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Read a fastq file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_fastq_file(
         &mut self,
         file_path: &str,
         options: Option<FASTQReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_fastq(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Read a genbank file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_genbank_file(
         &mut self,
         file_path: &str,
         options: Option<crate::datasources::genbank::GenBankReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_genbank(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Read a CRAM file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_cram_file(
         &mut self,
         file_path: &str,
         options: Option<crate::datasources::cram::CRAMReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_cram(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Read a mzml file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_mzml_file(
         &mut self,
         file_path: &str,
         options: Option<MzMLReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_mzml(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Read a GTF file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_gtf_file(
         &mut self,
         file_path: &str,
         options: Option<crate::datasources::gtf::GTFReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_gtf(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Read a BCF file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_bcf_file(
         &mut self,
         file_path: &str,
         options: Option<BCFReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_bcf(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Read a fasta file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_fasta_file(
         &mut self,
         file_path: &str,
         options: Option<FASTAReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_fasta(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Read a BED file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_bed_file(
         &mut self,
         file_path: &str,
         options: Option<crate::datasources::bed::BEDReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_bed(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Read a BAM file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_bam_file(
         &mut self,
         file_path: &str,
         options: Option<crate::datasources::bam::BAMReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_bam(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Read a SAM file from the given path.
-    #[pyo3(signature = (file_path, /, options=None))]
     fn read_sam_file(
         &mut self,
         file_path: &str,
         options: Option<crate::datasources::sam::SAMReadOptions>,
         py: Python,
-    ) -> PyResult<PyExecutionResult> {
+    ) -> PyResult<ExecutionResult> {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_sam(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Generate the plan from a SQL query and return the result as a [`PyExecutionResult`].
-    fn sql(&mut self, query: &str, py: Python) -> PyResult<PyExecutionResult> {
+    fn sql(&mut self, query: &str, py: Python) -> PyResult<ExecutionResult> {
         let result = self.ctx.sql(query);
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
-        Ok(PyExecutionResult::new(df))
+        Ok(ExecutionResult::new(df))
     }
 
     /// Execute the SQL query eagerly, but do not collect the results.
