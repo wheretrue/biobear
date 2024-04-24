@@ -4,6 +4,8 @@ name: Smoke Test
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
 
 jobs:
   test-package-conda:
@@ -18,10 +20,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }}
           channels: conda-forge
+          miniconda-version: 'latest'
           activate-environment: biobear
 
       - name: Read example fasta file
