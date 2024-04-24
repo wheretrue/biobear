@@ -104,8 +104,10 @@ class VCFReadOptions:
         self,
         /,
         region: Optional[str] = None,
-        file_extension: Optional[str] = None,
         file_compression_type: Optional[FileCompressionType] = None,
+        parse_info: bool = False,
+        parse_formats: bool = False,
+        partition_cols: list[str | None] = None,
     ) -> None: ...
 
 class BCFReadOptions:
