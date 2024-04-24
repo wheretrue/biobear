@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "biobear"
-version = "0.19.1"
+version = "0.19.2"
 
 [lib]
 crate-type = ["cdylib"]
@@ -10,7 +10,7 @@ name = "biobear"
 [dependencies]
 arrow = { version = "51.0.0", features = ["pyarrow"] }
 datafusion = "37"
-exon = { version = "0.19.1", features = ["default"] }
+exon = { version = "0.19.2", features = ["default"] }
 pyo3 = "0.20"
 tokio = { version = "1", features = ["rt"] }
 noodles = { version = "0.70", features = ["core"] }
