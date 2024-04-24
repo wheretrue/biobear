@@ -1,3 +1,9 @@
+## v0.19.1 (2024-04-23)
+
+### Fix
+
+- update python versions
+
 ## v0.19.0 (2024-04-23)
 
 ### Feat
