@@ -32,7 +32,7 @@ use crate::{
 #[pyclass(name = "ExecutionResult", subclass)]
 #[derive(Clone)]
 pub(crate) struct ExecutionResult {
-    df: Arc<DataFrame>,
+    pub(super) df: Arc<DataFrame>,
 }
 
 impl ExecutionResult {

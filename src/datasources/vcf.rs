@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use arrow::datatypes::{DataType, Field};
 use exon::datasources::vcf::ListingVCFTableOptions;
 use noodles::core::Region;
 use pyo3::{pyclass, pymethods, PyResult};
@@ -21,29 +22,31 @@ use crate::FileCompressionType;
 use super::parse_region;
 
 #[pyclass]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 /// Options for reading VCF files.
 pub struct VCFReadOptions {
+    /// The region to read.
     region: Option<Region>,
+    /// The file compression type.
     file_compression_type: FileCompressionType,
-}
-
-impl Default for VCFReadOptions {
-    fn default() -> Self {
-        Self {
-            region: None,
-            file_compression_type: FileCompressionType::UNCOMPRESSED,
-        }
-    }
+    /// True if the INFO column should be parsed.
+    parse_info: bool,
+    /// True if the FORMAT column should be parsed.
+    parse_formats: bool,
+    /// The partition fields.
+    partition_cols: Option<Vec<String>>,
 }
 
 #[pymethods]
 impl VCFReadOptions {
     #[new]
-    #[pyo3(signature = (/, region = None, file_compression_type = None))]
+    #[pyo3(signature = (*, region = None, file_compression_type = None, parse_info = false, parse_formats = false, partition_cols = None))]
     fn try_new(
         region: Option<String>,
         file_compression_type: Option<FileCompressionType>,
+        parse_info: bool,
+        parse_formats: bool,
+        partition_cols: Option<Vec<String>>,
     ) -> PyResult<Self> {
         let region = parse_region(region)?;
 
@@ -53,20 +56,33 @@ impl VCFReadOptions {
         Ok(Self {
             region,
             file_compression_type,
+            parse_info,
+            parse_formats,
+            partition_cols,
         })
     }
 }
 
 impl From<VCFReadOptions> for ListingVCFTableOptions {
     fn from(options: VCFReadOptions) -> Self {
+        let mut o = ListingVCFTableOptions::new(options.file_compression_type.into(), false)
+            .with_parse_info(options.parse_info)
+            .with_parse_formats(options.parse_formats);
+
         let regions = options.region.map(|r| vec![r]).unwrap_or_default();
-
-        let mut t = ListingVCFTableOptions::new(options.file_compression_type.into(), false);
-
         if !regions.is_empty() {
-            t = t.with_regions(regions);
+            o = o.with_regions(regions);
         }
 
-        t
+        if let Some(partition_cols) = options.partition_cols {
+            let partition_fields = partition_cols
+                .iter()
+                .map(|s| Field::new(s, DataType::Utf8, false))
+                .collect::<Vec<_>>();
+
+            o = o.with_table_partition_cols(partition_fields);
+        }
+
+        o
     }
 }

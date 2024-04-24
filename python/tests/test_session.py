@@ -341,6 +341,56 @@ def test_vcf_reader():
     assert len(df) == 15
 
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_vcf_reader_with_parsing():
+    session = new_session()
+    options = VCFReadOptions(parse_formats=True, parse_info=True)
+
+    df = session.read_vcf_file(
+        (DATA / "vcf_file.vcf").as_posix(), options=options
+    ).to_polars()
+
+    # Check that this is a struct, with three fields
+    assert len(df.get_column("info").dtype.fields) == 6
+    assert len(df) == 15
+
+
+def test_vcf_query_with_region_and_partition():
+    session = connect()
+    options = VCFReadOptions(
+        region="1",
+        file_compression_type=FileCompressionType.GZIP,
+        parse_formats=True,
+        parse_info=True,
+        partition_cols=["sample"],
+    )
+
+    rbr = session.read_vcf_file(
+        (DATA / "vcf-partition").as_posix(), options=options
+    ).to_arrow_record_batch_reader()
+
+    batch = next(rbr)
+
+    assert batch.column_names == [
+        "chrom",
+        "pos",
+        "id",
+        "ref",
+        "alt",
+        "qual",
+        "filter",
+        "info",
+        "formats",
+        "sample",
+    ]
+
+    batch.schema.field("sample")
+
+    assert 11 == batch.num_rows
+
+
 def test_vcf_query():
     session = connect()
     options = VCFReadOptions(region="1", file_compression_type=FileCompressionType.GZIP)
