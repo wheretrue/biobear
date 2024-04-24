@@ -1,3 +1,9 @@
+## v0.19.5 (2024-04-23)
+
+### Fix
+
+- update other parts of build
+
 ## v0.19.4 (2024-04-23)
 
 ### Fix
