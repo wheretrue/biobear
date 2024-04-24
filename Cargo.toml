@@ -11,7 +11,7 @@ name = "biobear"
 arrow = { version = "51.0.0", features = ["pyarrow"] }
 datafusion = "37"
 exon = { version = "0.20", features = ["default"] }
-pyo3 = "0.20"
+pyo3 = "0.21"
 tokio = { version = "1", features = ["rt"] }
 noodles = { version = "0.70", features = ["core"] }
 
