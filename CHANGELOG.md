@@ -1,3 +1,9 @@
+## v0.20.0 (2024-04-24)
+
+### Feat
+
+- improve vcf table options (#128)
+
 ## v0.19.6 (2024-04-24)
 
 ### Fix
