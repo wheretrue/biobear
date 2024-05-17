@@ -58,7 +58,7 @@ impl From<ExonError> for BioBearError {
     fn from(value: ExonError) -> Self {
         match value {
             ExonError::IOError(e) => BioBearError::IOError(e.to_string()),
-            _ => BioBearError::Other("Other Error".to_string()),
+            e => BioBearError::Other(e.to_string()),
         }
     }
 }
