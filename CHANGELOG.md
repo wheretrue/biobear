@@ -1,3 +1,9 @@
+## v0.20.2 (2024-05-21)
+
+### Fix
+
+- new exon to fix overflow (#135)
+
 ## v0.20.1 (2024-05-16)
 
 ### Refactor
