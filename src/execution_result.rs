@@ -102,10 +102,21 @@ impl ExecutionResult {
 
     /// Convert to a Polars DataFrame
     fn to_polars(&self, py: Python) -> PyResult<PyObject> {
-        let batches = self.collect(py)?.to_object(py);
-        let schema = self.schema().into_py(py);
+        let stream = wait_for_future(py, self.df.as_ref().clone().execute_stream())
+            .map_err(error::BioBearError::from)?;
 
-        let schema = schema.into_py(py);
+        let runtime = Arc::new(Runtime::new()?);
+
+        let dataframe_record_batch_stream = DataFrameRecordBatchStream::new(stream, runtime);
+
+        let mut stream = FFI_ArrowArrayStream::new(Box::new(dataframe_record_batch_stream));
+
+        let batches =
+            unsafe { ArrowArrayStreamReader::from_raw(&mut stream).map_err(BioBearError::from) }?;
+
+        let batches = batches.into_pyarrow(py)?;
+
+        let schema = self.schema().into_py(py);
 
         let table_class = py.import("pyarrow")?.getattr("Table")?;
         let args = (batches, schema);
