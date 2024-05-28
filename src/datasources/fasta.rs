@@ -18,6 +18,15 @@ use pyo3::{pyclass, pymethods};
 
 const DEFAULT_FASTA_FILE_EXTENSION: &str = "fasta";
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum FastaSequenceDataType {
+    Utf8,
+    LargeUtf8,
+    IntegerEncodeDNA,
+    IntegerEncodeProtein,
+}
+
 #[pyclass]
 #[derive(Debug, Clone)]
 /// Options for reading FASTA files.
@@ -47,6 +56,7 @@ const DEFAULT_FASTA_FILE_EXTENSION: &str = "fasta";
 pub struct FASTAReadOptions {
     file_extension: String,
     file_compression_type: FileCompressionType,
+    fasta_sequence_data_type: FastaSequenceDataType,
 }
 
 impl Default for FASTAReadOptions {
@@ -54,6 +64,7 @@ impl Default for FASTAReadOptions {
         Self {
             file_extension: String::from(DEFAULT_FASTA_FILE_EXTENSION),
             file_compression_type: FileCompressionType::UNCOMPRESSED,
+            fasta_sequence_data_type: FastaSequenceDataType::Utf8,
         }
     }
 }
@@ -61,7 +72,7 @@ impl Default for FASTAReadOptions {
 #[pymethods]
 impl FASTAReadOptions {
     #[new]
-    #[pyo3(signature = (/, file_extension=None, file_compression_type=None))]
+    #[pyo3(signature = (/, file_extension=None, file_compression_type=None, fasta_sequence_data_type=None))]
     /// Create a new FASTAReadOptions instance.
     ///
     /// # Arguments
@@ -79,13 +90,18 @@ impl FASTAReadOptions {
     pub fn new(
         file_extension: Option<String>,
         file_compression_type: Option<FileCompressionType>,
+        fasta_sequence_data_type: Option<FastaSequenceDataType>,
     ) -> BioBearResult<Self> {
         let file_compression_type =
             file_compression_type.unwrap_or(FileCompressionType::UNCOMPRESSED);
 
+        let fasta_sequence_data_type =
+            fasta_sequence_data_type.unwrap_or(FastaSequenceDataType::Utf8);
+
         Ok(Self {
             file_compression_type,
             file_extension: file_extension.unwrap_or(DEFAULT_FASTA_FILE_EXTENSION.to_string()),
+            fasta_sequence_data_type,
         })
     }
 }
@@ -93,6 +109,7 @@ impl FASTAReadOptions {
 impl From<FASTAReadOptions> for ListingFASTATableOptions {
     fn from(options: FASTAReadOptions) -> Self {
         ListingFASTATableOptions::new(options.file_compression_type.into())
+            .with_sequence_data_type(options.fasta_sequence_data_type.into())
             .with_some_file_extension(Some(&options.file_extension))
     }
 }

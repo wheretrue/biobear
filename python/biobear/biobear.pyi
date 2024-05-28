@@ -31,6 +31,14 @@ class FileCompressionType(enum.Enum):
     BGZIP = 1
     NONE = 2
 
+class FastaSequenceDataType(enum.Enum):
+    """How to treat the sequence data in a FASTA file."""
+
+    UTF8 = 0
+    LARGE_UTF8 = 1
+    INTEGER_ENCODE_DNA = 2
+    INTEGER_ENCODE_PROTEIN = 3
+
 class CRAMReadOptions:
     """Options for reading CRAM data."""
     def __init__(
@@ -87,6 +95,7 @@ class FASTAReadOptions:
         /,
         file_extension: Optional[str] = None,
         file_compression_type: Optional[FileCompressionType] = None,
+        fasta_sequence_data_type: Optional[FastaSequenceDataType] = None,
     ) -> None: ...
 
 class FASTQReadOptions:
@@ -173,59 +182,59 @@ class ExecutionResult:
 class BioBearSessionContext:
     def __init__(self) -> None: ...
     def read_fastq_file(
-        self, file_path: str, *, options: Optional[FASTQReadOptions] = None
+        self, file_path: str, /, options: Optional[FASTQReadOptions] = None
     ) -> ExecutionResult:
         """Reads one or more FASTQ files and returns an ExecutionResult."""
     def read_fasta_file(
-        self, file_path: str, *, options: Optional[FASTAReadOptions] = None
+        self, file_path: str, /, options: Optional[FASTAReadOptions] = None
     ) -> ExecutionResult:
         """Reads one or more FASTA files and returns an ExecutionResult."""
     def read_vcf_file(
-        self, file_path: str, *, options: Optional[VCFReadOptions] = None
+        self, file_path: str, /, options: Optional[VCFReadOptions] = None
     ) -> ExecutionResult:
         """Reads one or more VCF files and returns an ExecutionResult."""
     def read_bcf_file(
-        self, file_path: str, *, options: Optional[BCFReadOptions] = None
+        self, file_path: str, /, options: Optional[BCFReadOptions] = None
     ) -> ExecutionResult:
         """Reads one or more BCF files and returns an ExecutionResult."""
     def read_sam_file(
-        self, file_path: str, *, options: Optional[SAMReadOptions] = None
+        self, file_path: str, /, options: Optional[SAMReadOptions] = None
     ) -> ExecutionResult:
         """Reads a SAM file and returns an ExecutionResult."""
     def read_bam_file(
-        self, file_path: str, *, options: Optional[BAMReadOptions] = None
+        self, file_path: str, /, options: Optional[BAMReadOptions] = None
     ) -> ExecutionResult:
         """Reads a BAM file and returns an ExecutionResult."""
     def read_bed_file(
-        self, file_path: str, *, options: Optional[BEDReadOptions] = None
+        self, file_path: str, /, options: Optional[BEDReadOptions] = None
     ) -> ExecutionResult:
         """Reads a BED file and returns an ExecutionResult."""
     def read_bigwig_file(
-        self, file_path: str, *, options: Optional[BigWigReadOptions] = None
+        self, file_path: str, /, options: Optional[BigWigReadOptions] = None
     ) -> ExecutionResult:
         """Reads a BigWig file and returns an ExecutionResult."""
     def read_gff_file(
-        self, file_path: str, *, options: Optional[GFFReadOptions] = None
+        self, file_path: str, /, options: Optional[GFFReadOptions] = None
     ) -> ExecutionResult:
         """Reads a GFF file and returns an ExecutionResult."""
     def read_gtf_file(
-        self, file_path: str, *, options: Optional[GTFReadOptions] = None
+        self, file_path: str, /, options: Optional[GTFReadOptions] = None
     ) -> ExecutionResult:
         """Reads a GTF file and returns an ExecutionResult."""
     def read_mzml_file(
-        self, file_path: str, *, options: Optional[MzMLReadOptions] = None
+        self, file_path: str, /, options: Optional[MzMLReadOptions] = None
     ) -> ExecutionResult:
         """Reads a mzML file and returns an ExecutionResult."""
     def read_genbank_file(
-        self, file_path: str, *, options: Optional[GenBankReadOptions] = None
+        self, file_path: str, /, options: Optional[GenBankReadOptions] = None
     ) -> ExecutionResult:
         """Reads a GenBank file and returns an ExecutionResult."""
     def read_cram_file(
-        self, file_path: str, *, options: Optional[CRAMReadOptions] = None
+        self, file_path: str, /, options: Optional[CRAMReadOptions] = None
     ) -> ExecutionResult:
         """Reads a CRAM file and returns an ExecutionResult."""
     def read_fcs_file(
-        self, file_path: str, *, options: Optional[FCSReadOptions] = None
+        self, file_path: str, /, options: Optional[FCSReadOptions] = None
     ) -> ExecutionResult:
         """Reads a FCS file and returns an ExecutionResult."""
     def sql(self, query: str) -> ExecutionResult:
