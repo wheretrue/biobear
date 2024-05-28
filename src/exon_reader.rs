@@ -18,10 +18,9 @@ use std::sync::Arc;
 use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::pyarrow::IntoPyArrow;
 use datafusion::datasource::file_format::file_compression_type::FileCompressionType;
-use datafusion::prelude::SessionContext;
 use exon::datasources::ExonFileType;
 use exon::ffi::DataFrameRecordBatchStream;
-use exon::{new_exon_config, ExonRuntimeEnvExt, ExonSessionExt};
+use exon::{new_exon_config, ExonRuntimeEnvExt, ExonSession};
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
@@ -49,10 +48,11 @@ impl ExonReader {
             config = config.with_batch_size(batch_size);
         }
 
-        let ctx = SessionContext::with_config_exon(config);
+        let ctx = ExonSession::with_config_exon(config);
 
         let df = rt.block_on(async {
-            ctx.runtime_env()
+            ctx.session
+                .runtime_env()
                 .exon_register_object_store_uri(path)
                 .await
                 .map_err(BioBearError::from)?;

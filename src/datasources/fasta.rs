@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{error::BioBearResult, file_compression_type::FileCompressionType};
-use exon::datasources::fasta::table_provider::ListingFASTATableOptions;
+use exon::datasources::fasta::{table_provider::ListingFASTATableOptions, SequenceDataType};
 use pyo3::{pyclass, pymethods};
 
 const DEFAULT_FASTA_FILE_EXTENSION: &str = "fasta";
@@ -25,6 +25,17 @@ pub enum FastaSequenceDataType {
     LargeUtf8,
     IntegerEncodeDNA,
     IntegerEncodeProtein,
+}
+
+impl From<FastaSequenceDataType> for SequenceDataType {
+    fn from(data_type: FastaSequenceDataType) -> Self {
+        match data_type {
+            FastaSequenceDataType::Utf8 => SequenceDataType::Utf8,
+            FastaSequenceDataType::LargeUtf8 => SequenceDataType::LargeUtf8,
+            FastaSequenceDataType::IntegerEncodeDNA => SequenceDataType::IntegerEncodeDNA,
+            FastaSequenceDataType::IntegerEncodeProtein => SequenceDataType::IntegerEncodeProtein,
+        }
+    }
 }
 
 #[pyclass]

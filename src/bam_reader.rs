@@ -15,10 +15,9 @@
 use arrow::ffi_stream::ArrowArrayStreamReader;
 use arrow::ffi_stream::FFI_ArrowArrayStream;
 use arrow::pyarrow::IntoPyArrow;
-use datafusion::prelude::SessionContext;
 use exon::ffi::DataFrameRecordBatchStream;
 use exon::new_exon_config;
-use exon::ExonSessionExt;
+use exon::ExonSession;
 use pyo3::prelude::*;
 
 use tokio::runtime::Runtime;
@@ -72,7 +71,7 @@ impl BamIndexedReader {
             config = config.with_batch_size(batch_size);
         }
 
-        let ctx = SessionContext::with_config_exon(config);
+        let ctx = ExonSession::with_config_exon(config);
 
         let df = self._runtime.block_on(async {
             ctx.sql(&format!(
