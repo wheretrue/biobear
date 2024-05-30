@@ -14,6 +14,8 @@
 
 from pathlib import Path
 import importlib
+import tempfile
+import polars as pl
 
 import pytest
 
@@ -146,6 +148,49 @@ def test_read_fasta():
     df = session.read_fasta_file(str(fasta_path)).to_polars()
 
     assert len(df) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_fasta_roundtrip():
+    """Test reading a fasta file."""
+
+    session = connect()
+
+    fasta_path = DATA / "test.fasta"
+
+    session.execute(
+        f"CREATE EXTERNAL TABLE fasta_file STORED AS FASTA LOCATION '{fasta_path}'"
+    )
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        session.execute(f"COPY fasta_file TO '{tmpdir}/test.fasta' STORED AS FASTA")
+
+        df = session.read_fasta_file(f"{tmpdir}/test.fasta").to_polars()
+
+        assert len(df) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_fasta_sequence_type():
+    """Test reading a fasta file."""
+    session = connect()
+
+    session.execute(
+        f"""
+   CREATE EXTERNAL TABLE one_hot_fasta
+   STORED AS FASTA
+   OPTIONS (fasta_sequence_data_type 'integer_encode_dna')
+   LOCATION '{DATA / "test.fasta"}'
+   """
+    )
+
+    df = session.sql("SELECT * FROM one_hot_fasta").to_polars()
+
+    assert df.get_column("sequence").dtype == pl.List(pl.Int8)
 
 
 @pytest.mark.skipif(

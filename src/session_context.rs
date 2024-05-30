@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use datafusion::prelude::SessionContext;
 use exon::datasources::bigwig;
-use exon::{ExonRuntimeEnvExt, ExonSessionExt};
+use exon::{ExonRuntimeEnvExt, ExonSession};
 
 use pyo3::prelude::*;
 
@@ -30,13 +29,13 @@ use crate::runtime::wait_for_future;
 
 #[pyclass]
 pub struct BioBearSessionContext {
-    ctx: SessionContext,
+    ctx: ExonSession,
 }
 
 impl Default for BioBearSessionContext {
     fn default() -> Self {
         Self {
-            ctx: SessionContext::new_exon(),
+            ctx: ExonSession::new_exon(),
         }
     }
 }
@@ -291,7 +290,7 @@ impl BioBearSessionContext {
 
     /// Register an object store with the given URL.
     fn register_object_store_from_url(&mut self, url: &str, py: Python) -> PyResult<()> {
-        let runtime = self.ctx.runtime_env();
+        let runtime = self.ctx.session.runtime_env();
         let registration = runtime.exon_register_object_store_uri(url);
         wait_for_future(py, registration).map_err(error::BioBearError::from)?;
 

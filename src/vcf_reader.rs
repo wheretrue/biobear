@@ -15,14 +15,13 @@
 use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::pyarrow::IntoPyArrow;
 use datafusion::datasource::file_format::file_compression_type::FileCompressionType;
-use datafusion::prelude::SessionContext;
 use exon::datasources::vcf::ListingVCFTableOptions;
 use exon::ffi::DataFrameRecordBatchStream;
 use noodles::core::Region;
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
-use exon::{new_exon_config, ExonSessionExt};
+use exon::{new_exon_config, ExonSession};
 
 use std::io;
 use std::str::FromStr;
@@ -70,7 +69,7 @@ impl VCFIndexedReader {
             config = config.with_batch_size(batch_size);
         }
 
-        let ctx = SessionContext::with_config_exon(config);
+        let ctx = ExonSession::with_config_exon(config);
 
         let region = Region::from_str(region).map_err(|e| {
             io::Error::new(
