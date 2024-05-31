@@ -47,7 +47,7 @@ from .biobear import new_session
 from .biobear import __runtime
 
 
-__version__ = "0.21.1"
+__version__ = "0.21.2"
 
 __all__ = [
     "FastaReader",
