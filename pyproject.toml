@@ -13,9 +13,8 @@ dependencies = ["pyarrow>=15"]
 license = { file = "LICENSE" }
 name = "biobear"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 description = "A package for working with Bioinformatics data with SQL and Arrow"
-summary = "A package for working with Bioinformatics data with SQL and Arrow"
 version = "0.21.1"
 
 [tool.maturin]
