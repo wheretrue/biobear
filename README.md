@@ -10,8 +10,6 @@ The python package has minimal dependencies and only requires Polars. Biobear ca
 
 Please see the [documentation] for information on how to get started using biobear.
 
-[documentation]: https://www.wheretrue.dev/docs/exon/biobear/.
-
 ## Quickstart
 
 To install biobear, run:
@@ -89,51 +87,12 @@ df.head()
 
 ## Ecosystem
 
-BioBear aims to make it simple to move easily to and from different prominent data tools in Python. Generally, if the tool can read Arrow, it can read BioBear's output. To call out a few examples here:
+BioBear aims to make it simple to move easily to and from different prominent data tools in Python. Generally, if the tool can read Arrow or Polars, it can read BioBear's output. To see examples of how to use BioBear with other tools, see:
 
-### Polars
+* [DuckDB][DuckDB Integration]
+* [GenomicRanges]
+* [DeltaLake]
 
-The session results and Reader objects can be converted to a Polars DataFrame.
-
-```python
-import biobear as bb
-
-session = bb.connect()
-
-df = session.sql("""
-    SELECT * FROM gff_scan('test.gff')
-""").to_polars()
-```
-
-#### Known Issues
-
-For GenBank and mzML, the naive `SELECT *` will cause an error, because Polars doesn't support all Arrow types -- `Map` being the specific offender here. In these cases, select the fields from the map individually. Alternatively, you can first convert the table to a Pandas DataFrame.
-
-### DuckDB
-
-BioBear can also be used to read files into a [duckdb][] database.
-
-```python
-import biobear as bb
-import duckdb
-
-session = bb.connect()
-
-session.sql("""
-    CREATE EXTERNAL TABLE gene_annotations STORED AS GFF LOCATION 'python/tests/data/test.gff'
-""")
-
-result = session.sql("""
-    SELECT * FROM gene_annotations
-""")
-
-gff_table_arrow_table = result.to_arrow()
-
-duckdb_conn = duckdb.connect()
-
-result = duckdb_conn.execute('SELECT * FROM gff_table_arrow_table').fetchall()
-print(result)
-```
 
 ## Performance
 
@@ -150,3 +109,7 @@ The larger difference multiple files is due to biobear's ability to read multipl
 
 [exon]: https://github.com/wheretrue/exon/tree/main/exon-benchmarks
 [duckdb]: https://duckdb.org/
+[documentation]: https://www.wheretrue.dev/docs/exon/biobear/.
+[DuckDB Integration]: https://www.wheretrue.dev/docs/exon/biobear/duckdb-integration
+[DeltaLake]: https://www.wheretrue.dev/docs/exon/biobear/delta-lake-integration/
+[GenomicRanges]: https://www.wheretrue.dev/docs/exon/biobear/genomicranges-integration
