@@ -147,6 +147,8 @@ class BEDReadOptions:
         self,
         /,
         file_compression_type: Optional[FileCompressionType] = None,
+        n_fields: Optional[int] = None,
+        file_extension: Optional[str] = None,
     ) -> None: ...
 
 class BigWigReadOptions:

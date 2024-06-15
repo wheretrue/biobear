@@ -19,13 +19,22 @@ use pyo3::{pyclass, pymethods};
 #[derive(Debug, Clone)]
 /// Options for reading BED files.
 pub struct BEDReadOptions {
+    /// The type of compression used in the file.
     file_compression_type: crate::FileCompressionType,
+
+    /// The number of fields in the file.
+    n_fields: usize,
+
+    /// The file extension.
+    file_extension: String,
 }
 
 impl Default for BEDReadOptions {
     fn default() -> Self {
         Self {
             file_compression_type: crate::FileCompressionType::UNCOMPRESSED,
+            n_fields: 12,
+            file_extension: "bed".to_string(),
         }
     }
 }
@@ -33,11 +42,17 @@ impl Default for BEDReadOptions {
 #[pymethods]
 impl BEDReadOptions {
     #[new]
-    #[pyo3(signature = (/, file_compression_type = None))]
-    fn new(file_compression_type: Option<crate::FileCompressionType>) -> Self {
+    #[pyo3(signature = (/, file_compression_type = None, n_fields = None, file_extension = None))]
+    fn new(
+        file_compression_type: Option<crate::FileCompressionType>,
+        n_fields: Option<usize>,
+        file_extension: Option<String>,
+    ) -> Self {
         Self {
             file_compression_type: file_compression_type
                 .unwrap_or(crate::FileCompressionType::UNCOMPRESSED),
+            n_fields: n_fields.unwrap_or(12),
+            file_extension: file_extension.unwrap_or("bed".to_string()),
         }
     }
 }
@@ -45,5 +60,7 @@ impl BEDReadOptions {
 impl From<BEDReadOptions> for ListingBEDTableOptions {
     fn from(options: BEDReadOptions) -> Self {
         ListingBEDTableOptions::new(options.file_compression_type.into())
+            .with_n_fields(options.n_fields)
+            .with_file_extension(options.file_extension)
     }
 }

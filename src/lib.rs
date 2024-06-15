@@ -35,7 +35,7 @@ use runtime::TokioRuntime;
 use tokio::runtime::Builder;
 
 #[pymodule]
-fn biobear(_py: Python, m: &PyModule) -> PyResult<()> {
+fn biobear(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let runtime = Builder::new_multi_thread()
         .thread_name_fn(move || {
             static THREAD_ID: AtomicU64 = AtomicU64::new(0);
