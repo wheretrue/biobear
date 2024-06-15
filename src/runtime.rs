@@ -22,7 +22,7 @@ pub(crate) struct TokioRuntime(pub(crate) tokio::runtime::Runtime);
 
 /// Get the Tokio Runtime from Python
 pub(crate) fn get_tokio_runtime(py: Python) -> PyRef<TokioRuntime> {
-    let exon = py.import("biobear").unwrap();
+    let exon = py.import_bound("biobear").unwrap();
     exon.getattr("__runtime").unwrap().extract().unwrap()
 }
 

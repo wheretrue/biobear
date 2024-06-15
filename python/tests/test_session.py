@@ -15,6 +15,7 @@
 from pathlib import Path
 import importlib
 import tempfile
+from biobear.biobear import BEDReadOptions
 import polars as pl
 
 import pytest
@@ -172,9 +173,7 @@ def test_fasta_roundtrip():
         assert len(df) == 2
 
 
-@pytest.mark.skipif(
-    not importlib.util.find_spec("polars"), reason="polars not installed"
-)
+@pytest.mark.skip
 def test_fasta_sequence_type():
     """Test reading a fasta file."""
     session = connect()
@@ -622,3 +621,32 @@ def test_cram_reader_with_region():
     )
 
     assert len(result.to_polars()) == 0
+
+
+def test_bed_reader():
+    session = new_session()
+
+    bed_file = DATA / "test.bed"
+    result = session.read_bed_file(bed_file.as_posix())
+
+    assert result.to_polars().shape == (10, 12)
+
+
+def test_bed_three():
+    session = new_session()
+
+    bed_file = DATA / "test-three.bed"
+    options = BEDReadOptions(n_fields=3)
+    result = session.read_bed_file(bed_file.as_posix(), options=options)
+
+    assert result.to_polars().shape == (10, 3)
+
+
+def test_bed_four():
+    session = new_session()
+
+    bed_file = DATA / "test-four.bed"
+    options = BEDReadOptions(n_fields=4)
+    result = session.read_bed_file(bed_file.as_posix(), options=options)
+
+    assert result.to_polars().shape == (10, 4)

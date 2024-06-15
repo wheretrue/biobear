@@ -21,7 +21,11 @@ use arrow::{
 };
 use datafusion::prelude::DataFrame;
 use exon::ffi::DataFrameRecordBatchStream;
-use pyo3::{pyclass, pymethods, types::PyTuple, IntoPy, PyObject, PyResult, Python, ToPyObject};
+use pyo3::{
+    pyclass, pymethods,
+    types::{PyAnyMethods, PyTuple},
+    IntoPy, PyObject, PyResult, Python, ToPyObject,
+};
 use tokio::runtime::Runtime;
 
 use crate::{
@@ -61,9 +65,9 @@ impl ExecutionResult {
 
         Python::with_gil(|py| {
             // Instantiate pyarrow Table object and use its from_batches method
-            let table_class = py.import("pyarrow")?.getattr("Table")?;
+            let table_class = py.import_bound("pyarrow")?.getattr("Table")?;
 
-            let args = PyTuple::new(py, &[batches]);
+            let args = PyTuple::new_bound(py, &[batches]);
             let table: PyObject = table_class.call_method1("from_batches", args)?.into();
             Ok(table)
         })
@@ -93,9 +97,9 @@ impl ExecutionResult {
         let schema = self.schema().into_py(py);
 
         // Instantiate pyarrow Table object and use its from_batches method
-        let table_class = py.import("pyarrow")?.getattr("Table")?;
+        let table_class = py.import_bound("pyarrow")?.getattr("Table")?;
 
-        let args = PyTuple::new(py, &[batches, schema]);
+        let args = PyTuple::new_bound(py, &[batches, schema]);
         let table: PyObject = table_class.call_method1("from_batches", args)?.into();
         Ok(table)
     }
@@ -118,11 +122,11 @@ impl ExecutionResult {
 
         let schema = self.schema().into_py(py);
 
-        let table_class = py.import("pyarrow")?.getattr("Table")?;
+        let table_class = py.import_bound("pyarrow")?.getattr("Table")?;
         let args = (batches, schema);
         let table: PyObject = table_class.call_method1("from_batches", args)?.into();
 
-        let module = py.import("polars")?;
+        let module = py.import_bound("polars")?;
         let args = (table,);
         let result = module.call_method1("from_arrow", args)?.into();
 
