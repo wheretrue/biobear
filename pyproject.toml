@@ -15,7 +15,7 @@ name = "biobear"
 readme = "README.md"
 requires-python = ">=3.9"
 description = "A package for working with Bioinformatics data with SQL and Arrow"
-version = "0.21.2"
+version = "0.22.0"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
