@@ -650,3 +650,19 @@ def test_bed_four():
     result = session.read_bed_file(bed_file.as_posix(), options=options)
 
     assert result.to_polars().shape == (10, 4)
+
+
+def test_bed_long_name():
+    session = new_session()
+
+    bed_file = DATA / "name_256bytes.one.bed"
+
+    df = session.read_bed_file(bed_file.as_posix()).to_polars()
+
+    assert len(df) == 1
+
+    # Check the value of the long name
+    assert (
+        df.get_column("name")[0]
+        == "PURK_peak_11,INH_SST_peak_18b,INH_SST_peak_18c,GC_peak_40a,GC_peak_40b,GC_peak_40c,OPC_peak_30b,OPC_peak_30c,MOL_peak_32c,INH_VIP_peak_18a,NFOL_peak_32e,NFOL_peak_32f,AST_CER_peak_48e,AST_CER_peak_48f,ENDO_peak_7,AST_peak_17c,GP_peak_20,ASTP_peak_19e,INH_V"
+    )
