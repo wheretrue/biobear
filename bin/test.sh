@@ -25,6 +25,7 @@ function teardown {
 
 # Build the code
 cargo build
+maturin develop
 
 # check docker and aws cli are installed
 if ! command -v docker &> /dev/null

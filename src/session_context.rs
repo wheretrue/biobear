@@ -19,7 +19,7 @@ use pyo3::prelude::*;
 
 use crate::datasources::bcf::BCFReadOptions;
 use crate::datasources::bigwig::BigWigReadOptions;
-use crate::datasources::fasta::FASTAReadOptions;
+use crate::datasources::fasta::{FASTAReadOptions, FASTAReadOptionsBuilder};
 use crate::datasources::fastq::FASTQReadOptions;
 use crate::datasources::hmm_dom_tab::HMMDomTabReadOptions;
 use crate::datasources::mzml::MzMLReadOptions;
@@ -217,7 +217,13 @@ impl BioBearSessionContext {
         options: Option<FASTAReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let options = options.unwrap_or_default();
+        let options = if let Some(options) = options {
+            let fasta_read_options_builder = FASTAReadOptionsBuilder::from_path(file_path);
+
+            fasta_read_options_builder.merge(options).build()
+        } else {
+            FASTAReadOptionsBuilder::from_path(file_path).build()
+        };
 
         let result = self.ctx.read_fasta(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;

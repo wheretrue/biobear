@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::{path::Path, str::FromStr};
+
 use crate::{error::BioBearResult, file_compression_type::FileCompressionType};
 use exon::datasources::fasta::{table_provider::ListingFASTATableOptions, SequenceDataType};
 use pyo3::{pyclass, pymethods};
@@ -37,6 +39,99 @@ impl From<FastaSequenceDataType> for SequenceDataType {
             FastaSequenceDataType::LARGE_UTF8 => SequenceDataType::LargeUtf8,
             FastaSequenceDataType::INTEGER_ENCODE_DNA => SequenceDataType::IntegerEncodeDNA,
             FastaSequenceDataType::INTEGER_ENCODE_PROTEIN => SequenceDataType::IntegerEncodeProtein,
+        }
+    }
+}
+
+pub struct FASTAReadOptionsBuilder {
+    file_extension: Option<String>,
+    file_compression_type: Option<FileCompressionType>,
+    fasta_sequence_data_type: Option<FastaSequenceDataType>,
+}
+
+impl FASTAReadOptionsBuilder {
+    pub fn new() -> Self {
+        Self {
+            file_extension: None,
+            file_compression_type: None,
+            fasta_sequence_data_type: None,
+        }
+    }
+
+    pub fn merge(mut self, other: FASTAReadOptions) -> Self {
+        if other.file_extension.is_some() {
+            self.file_extension = other.file_extension;
+        }
+
+        if other.file_compression_type.is_some() {
+            self.file_compression_type = other.file_compression_type;
+        }
+
+        if other.fasta_sequence_data_type.is_some() {
+            self.fasta_sequence_data_type = other.fasta_sequence_data_type;
+        }
+
+        self
+    }
+
+    pub fn from_path(file_path: &str) -> Self {
+        let path = Path::new(file_path);
+
+        let extension = if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
+            extension
+        } else {
+            return Self::new();
+        };
+
+        if let Ok(file_compression_type) = FileCompressionType::from_str(extension) {
+            // we got a file compression type, so now check the stem and its extension
+            if let Some(stem) = path.file_stem().and_then(|stem| stem.to_str()) {
+                let stem = Path::new(stem);
+                if let Some(file_extension) = stem.extension().and_then(|ext| ext.to_str()) {
+                    return Self::new()
+                        .with_file_extension(file_extension)
+                        .with_file_compression_type(file_compression_type);
+                } else {
+                    return Self::new().with_file_compression_type(file_compression_type);
+                };
+            } else {
+                return Self::new().with_file_compression_type(file_compression_type);
+            };
+        }
+
+        Self {
+            file_extension: Some(extension.to_string()),
+            file_compression_type: None,
+            fasta_sequence_data_type: None,
+        }
+    }
+
+    pub fn with_file_extension(mut self, file_extension: &str) -> Self {
+        self.file_extension = Some(file_extension.to_string());
+        self
+    }
+
+    pub fn with_file_compression_type(
+        mut self,
+        file_compression_type: FileCompressionType,
+    ) -> Self {
+        self.file_compression_type = Some(file_compression_type);
+        self
+    }
+
+    pub fn with_fasta_sequence_data_type(
+        mut self,
+        fasta_sequence_data_type: FastaSequenceDataType,
+    ) -> Self {
+        self.fasta_sequence_data_type = Some(fasta_sequence_data_type);
+        self
+    }
+
+    pub fn build(self) -> FASTAReadOptions {
+        FASTAReadOptions {
+            file_extension: self.file_extension,
+            file_compression_type: self.file_compression_type,
+            fasta_sequence_data_type: self.fasta_sequence_data_type,
         }
     }
 }
@@ -67,20 +162,11 @@ impl From<FastaSequenceDataType> for SequenceDataType {
 /// let options = FASTAReadOptions::default();
 /// assert_eq!(options.file_extension, "fasta");
 /// ```
+#[derive(Default)]
 pub struct FASTAReadOptions {
-    file_extension: String,
-    file_compression_type: FileCompressionType,
-    fasta_sequence_data_type: FastaSequenceDataType,
-}
-
-impl Default for FASTAReadOptions {
-    fn default() -> Self {
-        Self {
-            file_extension: String::from(DEFAULT_FASTA_FILE_EXTENSION),
-            file_compression_type: FileCompressionType::UNCOMPRESSED,
-            fasta_sequence_data_type: FastaSequenceDataType::UTF8,
-        }
-    }
+    file_extension: Option<String>,
+    file_compression_type: Option<FileCompressionType>,
+    fasta_sequence_data_type: Option<FastaSequenceDataType>,
 }
 
 #[pymethods]
@@ -106,24 +192,34 @@ impl FASTAReadOptions {
         file_compression_type: Option<FileCompressionType>,
         fasta_sequence_data_type: Option<FastaSequenceDataType>,
     ) -> BioBearResult<Self> {
-        let file_compression_type =
-            file_compression_type.unwrap_or(FileCompressionType::UNCOMPRESSED);
-
-        let fasta_sequence_data_type =
-            fasta_sequence_data_type.unwrap_or(FastaSequenceDataType::UTF8);
-
         Ok(Self {
             file_compression_type,
-            file_extension: file_extension.unwrap_or(DEFAULT_FASTA_FILE_EXTENSION.to_string()),
+            file_extension,
             fasta_sequence_data_type,
         })
     }
 }
 
+impl FASTAReadOptions {
+    pub fn builder() -> FASTAReadOptionsBuilder {
+        FASTAReadOptionsBuilder::new()
+    }
+}
+
 impl From<FASTAReadOptions> for ListingFASTATableOptions {
     fn from(options: FASTAReadOptions) -> Self {
-        ListingFASTATableOptions::new(options.file_compression_type.into())
-            .with_sequence_data_type(options.fasta_sequence_data_type.into())
-            .with_some_file_extension(Some(&options.file_extension))
+        let file_compression_type = options
+            .file_compression_type
+            .unwrap_or(FileCompressionType::UNCOMPRESSED);
+        let fasta_sequence_data_type = options
+            .fasta_sequence_data_type
+            .unwrap_or(FastaSequenceDataType::UTF8);
+        let file_extension = options
+            .file_extension
+            .unwrap_or(DEFAULT_FASTA_FILE_EXTENSION.to_string());
+
+        ListingFASTATableOptions::new(file_compression_type.into())
+            .with_sequence_data_type(fasta_sequence_data_type.into())
+            .with_some_file_extension(Some(&file_extension))
     }
 }
