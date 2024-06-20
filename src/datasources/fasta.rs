@@ -21,19 +21,22 @@ const DEFAULT_FASTA_FILE_EXTENSION: &str = "fasta";
 #[derive(Debug, Clone)]
 #[pyclass]
 pub enum FastaSequenceDataType {
-    Utf8,
-    LargeUtf8,
-    IntegerEncodeDNA,
-    IntegerEncodeProtein,
+    UTF8,
+    #[allow(non_camel_case_types)]
+    LARGE_UTF8,
+    #[allow(non_camel_case_types)]
+    INTEGER_ENCODE_DNA,
+    #[allow(non_camel_case_types)]
+    INTEGER_ENCODE_PROTEIN,
 }
 
 impl From<FastaSequenceDataType> for SequenceDataType {
     fn from(data_type: FastaSequenceDataType) -> Self {
         match data_type {
-            FastaSequenceDataType::Utf8 => SequenceDataType::Utf8,
-            FastaSequenceDataType::LargeUtf8 => SequenceDataType::LargeUtf8,
-            FastaSequenceDataType::IntegerEncodeDNA => SequenceDataType::IntegerEncodeDNA,
-            FastaSequenceDataType::IntegerEncodeProtein => SequenceDataType::IntegerEncodeProtein,
+            FastaSequenceDataType::UTF8 => SequenceDataType::Utf8,
+            FastaSequenceDataType::LARGE_UTF8 => SequenceDataType::LargeUtf8,
+            FastaSequenceDataType::INTEGER_ENCODE_DNA => SequenceDataType::IntegerEncodeDNA,
+            FastaSequenceDataType::INTEGER_ENCODE_PROTEIN => SequenceDataType::IntegerEncodeProtein,
         }
     }
 }
@@ -75,7 +78,7 @@ impl Default for FASTAReadOptions {
         Self {
             file_extension: String::from(DEFAULT_FASTA_FILE_EXTENSION),
             file_compression_type: FileCompressionType::UNCOMPRESSED,
-            fasta_sequence_data_type: FastaSequenceDataType::Utf8,
+            fasta_sequence_data_type: FastaSequenceDataType::UTF8,
         }
     }
 }
@@ -107,7 +110,7 @@ impl FASTAReadOptions {
             file_compression_type.unwrap_or(FileCompressionType::UNCOMPRESSED);
 
         let fasta_sequence_data_type =
-            fasta_sequence_data_type.unwrap_or(FastaSequenceDataType::Utf8);
+            fasta_sequence_data_type.unwrap_or(FastaSequenceDataType::UTF8);
 
         Ok(Self {
             file_compression_type,
