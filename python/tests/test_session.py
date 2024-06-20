@@ -228,10 +228,10 @@ def test_read_fasta_fa_no_options():
     """Test reading a fasta file."""
     session = connect()
 
-    # fasta_path = DATA / "test.fa"
-    # df = session.read_fasta_file(str(fasta_path)).to_polars()
+    fasta_path = DATA / "test.fa"
+    df = session.read_fasta_file(str(fasta_path)).to_polars()
 
-    # assert len(df) == 2
+    assert len(df) == 2
 
     fasta_path = DATA / "test.fa.gz"
     df = session.read_fasta_file(str(fasta_path)).to_polars()
