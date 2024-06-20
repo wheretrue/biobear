@@ -53,6 +53,7 @@ fn biobear(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<vcf_reader::VCFIndexedReader>()?;
     m.add_class::<bcf_reader::BCFIndexedReader>()?;
     m.add_class::<file_compression_type::FileCompressionType>()?;
+    m.add_class::<datasources::fasta::FastaSequenceDataType>()?;
     m.add_class::<datasources::fastq::FASTQReadOptions>()?;
     m.add_class::<datasources::fasta::FASTAReadOptions>()?;
     m.add_class::<datasources::bcf::BCFReadOptions>()?;

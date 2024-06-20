@@ -27,6 +27,7 @@ from biobear import compression
 from biobear.compression import Compression
 
 from .biobear import FileCompressionType
+from .biobear import FastaSequenceDataType
 from .biobear import FASTQReadOptions
 from .biobear import FASTAReadOptions
 from .biobear import VCFReadOptions
@@ -65,6 +66,7 @@ __all__ = [
     "compression",
     "Compression",
     "FileCompressionType",
+    "FastaSequenceDataType",
     "FASTQReadOptions",
     "FASTAReadOptions",
     "BCFReadOptions",
