@@ -15,7 +15,6 @@
 from pathlib import Path
 import importlib
 import tempfile
-from biobear.biobear import BEDReadOptions
 import polars as pl
 
 import pytest
@@ -23,9 +22,11 @@ import pytest
 from biobear import (
     BAMReadOptions,
     connect,
+    FastaSequenceDataType,
     FASTQReadOptions,
     FASTAReadOptions,
     FileCompressionType,
+    BEDReadOptions,
     BCFReadOptions,
     GFFReadOptions,
     VCFReadOptions,
@@ -188,6 +189,20 @@ def test_fasta_sequence_type():
     )
 
     df = session.sql("SELECT * FROM one_hot_fasta").to_polars()
+
+    assert df.get_column("sequence").dtype == pl.List(pl.Int8)
+
+
+def test_fasta_sequence_type_with_options():
+    """Test reading a fasta file."""
+    session = connect()
+
+    df = session.read_fasta_file(
+        str(DATA / "test.fasta"),
+        options=FASTAReadOptions(
+            fasta_sequence_data_type=FastaSequenceDataType.INTEGER_ENCODE_DNA
+        ),
+    ).to_polars()
 
     assert df.get_column("sequence").dtype == pl.List(pl.Int8)
 
