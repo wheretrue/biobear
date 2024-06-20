@@ -43,6 +43,7 @@ impl From<FastaSequenceDataType> for SequenceDataType {
     }
 }
 
+#[derive(Debug, Clone, Default)]
 pub struct FASTAReadOptionsBuilder {
     file_extension: Option<String>,
     file_compression_type: Option<FileCompressionType>,
