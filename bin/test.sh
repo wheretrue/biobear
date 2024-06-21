@@ -24,6 +24,12 @@ function teardown {
 }
 
 # Build the code
+
+# uninstall biobear if it's installed
+if pip show biobear; then
+    pip uninstall -y biobear
+fi
+
 cargo build
 maturin develop
 

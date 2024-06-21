@@ -21,6 +21,7 @@ mod exon_reader;
 mod vcf_reader;
 
 mod file_compression_type;
+mod file_options;
 
 pub use file_compression_type::FileCompressionType;
 
