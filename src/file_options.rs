@@ -30,7 +30,6 @@ impl FileOptions {
     pub fn file_compression_type(&self) -> Option<FileCompressionType> {
         self.file_compression_type
     }
-
 }
 
 impl From<&str> for FileOptions {
@@ -51,19 +50,17 @@ impl From<&str> for FileOptions {
                 };
             }
             return Self {
-                    file_extension: None,
-                    file_compression_type: Some(file_compression_type),
-                }
+                file_extension: None,
+                file_compression_type: Some(file_compression_type),
+            };
         }
 
         Self {
             file_extension: Some(extension.to_string()),
             file_compression_type: None,
         }
-
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -77,7 +74,10 @@ mod tests {
 
         let file_options = FileOptions::from("test.csv.gz");
         assert_eq!(file_options.file_extension(), Some("csv"));
-        assert_eq!(file_options.file_compression_type(), Some(FileCompressionType::GZIP));
+        assert_eq!(
+            file_options.file_compression_type(),
+            Some(FileCompressionType::GZIP)
+        );
 
         let file_options = FileOptions::from("test");
         assert_eq!(file_options.file_extension, None);
