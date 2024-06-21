@@ -24,7 +24,14 @@ function teardown {
 }
 
 # Build the code
+
+# uninstall biobear if it's installed
+if pip show biobear; then
+    pip uninstall -y biobear
+fi
+
 cargo build
+maturin develop
 
 # check docker and aws cli are installed
 if ! command -v docker &> /dev/null

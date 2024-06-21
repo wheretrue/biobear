@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{error::BioBearResult, file_compression_type::FileCompressionType};
+use crate::{
+    error::BioBearResult, file_compression_type::FileCompressionType, file_options::FileOptions,
+};
 use exon::datasources::fasta::{table_provider::ListingFASTATableOptions, SequenceDataType};
 use pyo3::{pyclass, pymethods};
 
@@ -67,20 +69,11 @@ impl From<FastaSequenceDataType> for SequenceDataType {
 /// let options = FASTAReadOptions::default();
 /// assert_eq!(options.file_extension, "fasta");
 /// ```
+#[derive(Default)]
 pub struct FASTAReadOptions {
-    file_extension: String,
-    file_compression_type: FileCompressionType,
-    fasta_sequence_data_type: FastaSequenceDataType,
-}
-
-impl Default for FASTAReadOptions {
-    fn default() -> Self {
-        Self {
-            file_extension: String::from(DEFAULT_FASTA_FILE_EXTENSION),
-            file_compression_type: FileCompressionType::UNCOMPRESSED,
-            fasta_sequence_data_type: FastaSequenceDataType::UTF8,
-        }
-    }
+    file_extension: Option<String>,
+    file_compression_type: Option<FileCompressionType>,
+    fasta_sequence_data_type: Option<FastaSequenceDataType>,
 }
 
 #[pymethods]
@@ -105,25 +98,47 @@ impl FASTAReadOptions {
         file_extension: Option<String>,
         file_compression_type: Option<FileCompressionType>,
         fasta_sequence_data_type: Option<FastaSequenceDataType>,
-    ) -> BioBearResult<Self> {
-        let file_compression_type =
-            file_compression_type.unwrap_or(FileCompressionType::UNCOMPRESSED);
-
-        let fasta_sequence_data_type =
-            fasta_sequence_data_type.unwrap_or(FastaSequenceDataType::UTF8);
-
-        Ok(Self {
+    ) -> Self {
+        Self {
             file_compression_type,
-            file_extension: file_extension.unwrap_or(DEFAULT_FASTA_FILE_EXTENSION.to_string()),
+            file_extension,
             fasta_sequence_data_type,
-        })
+        }
+    }
+}
+
+impl FASTAReadOptions {
+    pub(crate) fn update_from_file_options(
+        &mut self,
+        file_options: &FileOptions,
+    ) -> BioBearResult<()> {
+        if let Some(file_extension) = file_options.file_extension() {
+            self.file_extension = Some(file_extension.to_string());
+        }
+
+        if let Some(file_compression_type) = file_options.file_compression_type() {
+            let fct = FileCompressionType::try_from(file_compression_type)?;
+            self.file_compression_type = Some(fct);
+        }
+
+        Ok(())
     }
 }
 
 impl From<FASTAReadOptions> for ListingFASTATableOptions {
     fn from(options: FASTAReadOptions) -> Self {
-        ListingFASTATableOptions::new(options.file_compression_type.into())
-            .with_sequence_data_type(options.fasta_sequence_data_type.into())
-            .with_some_file_extension(Some(&options.file_extension))
+        let file_compression_type = options
+            .file_compression_type
+            .unwrap_or(FileCompressionType::UNCOMPRESSED);
+        let fasta_sequence_data_type = options
+            .fasta_sequence_data_type
+            .unwrap_or(FastaSequenceDataType::UTF8);
+        let file_extension = options
+            .file_extension
+            .unwrap_or(DEFAULT_FASTA_FILE_EXTENSION.to_string());
+
+        ListingFASTATableOptions::new(file_compression_type.into())
+            .with_sequence_data_type(fasta_sequence_data_type.into())
+            .with_some_file_extension(Some(&file_extension))
     }
 }

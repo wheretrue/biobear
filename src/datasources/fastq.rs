@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::file_compression_type::FileCompressionType;
+use crate::{
+    error::BioBearResult, file_compression_type::FileCompressionType, file_options::FileOptions,
+};
 use exon::datasources::fastq::table_provider::ListingFASTQTableOptions;
 use pyo3::{pyclass, pymethods};
 
@@ -44,18 +46,10 @@ const DEFAULT_FASTQ_FILE_EXTENSION: &str = "fastq";
 /// let options = FASTQReadOptions::default();
 /// assert_eq!(options.file_extension, "fastq");
 /// ```
+#[derive(Default)]
 pub struct FASTQReadOptions {
-    file_extension: String,
-    file_compression_type: FileCompressionType,
-}
-
-impl Default for FASTQReadOptions {
-    fn default() -> Self {
-        Self {
-            file_extension: DEFAULT_FASTQ_FILE_EXTENSION.to_string(),
-            file_compression_type: FileCompressionType::UNCOMPRESSED,
-        }
-    }
+    file_extension: Option<String>,
+    file_compression_type: Option<FileCompressionType>,
 }
 
 #[pymethods]
@@ -80,11 +74,6 @@ impl FASTQReadOptions {
         file_extension: Option<String>,
         file_compression_type: Option<FileCompressionType>,
     ) -> Self {
-        let file_compression_type =
-            file_compression_type.unwrap_or(FileCompressionType::UNCOMPRESSED);
-
-        let file_extension = file_extension.unwrap_or(DEFAULT_FASTQ_FILE_EXTENSION.to_string());
-
         Self {
             file_extension,
             file_compression_type,
@@ -96,9 +85,36 @@ impl FASTQReadOptions {
     }
 }
 
+impl FASTQReadOptions {
+    pub(crate) fn update_from_file_options(
+        &mut self,
+        file_options: &FileOptions,
+    ) -> BioBearResult<()> {
+        if let Some(file_extension) = file_options.file_extension() {
+            self.file_extension = Some(file_extension.to_string());
+        }
+
+        if let Some(file_compression_type) = file_options.file_compression_type() {
+            let fct = FileCompressionType::try_from(file_compression_type)?;
+            self.file_compression_type = Some(fct);
+        }
+
+        Ok(())
+    }
+}
+
 impl From<FASTQReadOptions> for ListingFASTQTableOptions {
     fn from(options: FASTQReadOptions) -> Self {
-        ListingFASTQTableOptions::new(options.file_compression_type.into())
-            .with_some_file_extension(Some(&options.file_extension))
+        let file_compression_type = options
+            .file_compression_type
+            .unwrap_or(FileCompressionType::UNCOMPRESSED);
+
+        let file_extension = options
+            .file_extension
+            .as_deref()
+            .unwrap_or(DEFAULT_FASTQ_FILE_EXTENSION);
+
+        ListingFASTQTableOptions::new(file_compression_type.into())
+            .with_some_file_extension(Some(file_extension))
     }
 }

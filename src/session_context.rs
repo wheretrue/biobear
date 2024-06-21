@@ -25,6 +25,7 @@ use crate::datasources::hmm_dom_tab::HMMDomTabReadOptions;
 use crate::datasources::mzml::MzMLReadOptions;
 use crate::error;
 use crate::execution_result::ExecutionResult;
+use crate::file_options::FileOptions;
 use crate::runtime::wait_for_future;
 
 #[pyclass]
@@ -127,7 +128,9 @@ impl BioBearSessionContext {
         options: Option<FASTQReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let options = options.unwrap_or_default();
+        let file_options = FileOptions::from(file_path);
+        let mut options = options.unwrap_or_default();
+        options.update_from_file_options(&file_options)?;
 
         let result = self.ctx.read_fastq(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
@@ -217,7 +220,9 @@ impl BioBearSessionContext {
         options: Option<FASTAReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let options = options.unwrap_or_default();
+        let file_options = FileOptions::from(file_path);
+        let mut options = options.unwrap_or_default();
+        options.update_from_file_options(&file_options)?;
 
         let result = self.ctx.read_fasta(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;

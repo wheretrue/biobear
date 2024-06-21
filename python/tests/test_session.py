@@ -137,6 +137,23 @@ def test_read_fastq():
 
     assert len(df) == 2
 
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_read_fastq_no_options():
+    """Test reading a fastq file."""
+    session = connect()
+
+    fastq_path = DATA / "test.fq.gz"
+    df = session.read_fastq_file(str(fastq_path)).to_polars()
+
+    assert len(df) == 2
+
+    fastq_path = DATA / "test.fq"
+    df = session.read_fastq_file(str(fastq_path)).to_polars()
+
+    assert len(df) == 2
+
 
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
@@ -218,6 +235,23 @@ def test_read_fasta_fa():
 
     options = FASTAReadOptions(file_extension="fa")
     df = session.read_fasta_file(str(fasta_path), options=options).to_polars()
+
+    assert len(df) == 2
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_read_fasta_fa_no_options():
+    """Test reading a fasta file."""
+    session = connect()
+
+    fasta_path = DATA / "test.fa"
+    df = session.read_fasta_file(str(fasta_path)).to_polars()
+
+    assert len(df) == 2
+
+    fasta_path = DATA / "test.fa.gz"
+    df = session.read_fasta_file(str(fasta_path)).to_polars()
 
     assert len(df) == 2
 
