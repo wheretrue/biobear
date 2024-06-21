@@ -1,3 +1,9 @@
+## v0.22.4 (2024-06-21)
+
+### Feat
+
+- infer options from file name (#153)
+
 ## v0.22.3 (2024-06-20)
 
 ### Fix
