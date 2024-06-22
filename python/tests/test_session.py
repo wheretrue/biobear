@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Test the session context."""
 
 from pathlib import Path
 import importlib
@@ -64,7 +65,8 @@ def test_read_fastq_with_qs_to_list():
 
     df = session.sql(
         f"""
-        SELECT quality_scores_to_list(quality_scores) quality_score_list, locate_regex(sequence, '[AC]AT') locate
+        SELECT quality_scores_to_list(quality_scores) quality_score_list,
+            locate_regex(sequence, '[AC]AT') locate
         FROM fastq_scan('{fastq_path}')
         """
     ).to_polars()
@@ -247,15 +249,24 @@ def test_read_fasta_fa_no_options():
     """Test reading a fasta file."""
     session = connect()
 
+    # Test reading a fasta file with no options no compression
     fasta_path = DATA / "test.fa"
     df = session.read_fasta_file(str(fasta_path)).to_polars()
 
     assert len(df) == 2
 
+    # Test reading a fasta file with no options with compression
     fasta_path = DATA / "test.fa.gz"
     df = session.read_fasta_file(str(fasta_path)).to_polars()
 
-    assert len(df) == 2
+    # Test conflicting options
+    fasta_path = DATA / "test.fa"
+    df = session.read_fasta_file(
+        str(fasta_path),
+        options=FASTAReadOptions(file_extension="fasta"),
+    ).to_polars()
+
+    assert len(df) == 0
 
 
 @pytest.mark.skipif(
@@ -543,8 +554,6 @@ def test_gff_reader_polars():
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
 def test_gff_attr_struct():
-    import polars as pl
-
     session = new_session()
 
     reader = session.read_gff_file((DATA / "test.gff").as_posix())
@@ -602,8 +611,6 @@ def test_gtf_reader_to_polars():
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
 def test_gtf_attr_struct():
-    import polars as pl
-
     session = new_session()
 
     result = session.read_gtf_file((DATA / "test.gtf").as_posix())
@@ -697,6 +704,23 @@ def test_bed_reader():
     bed_file = DATA / "test.bed"
     result = session.read_bed_file(bed_file.as_posix())
 
+    assert result.to_polars().shape == (10, 12)
+
+
+def test_bed_reader_no_options():
+    session = new_session()
+
+    bed_file = DATA / "test-three.bedd"
+    result = session.read_bed_file(
+        bed_file.as_posix(), options=BEDReadOptions(n_fields=3)
+    )
+
+    assert result.to_polars().shape == (10, 3)
+
+    bed_file = DATA / "test-three.bedd"
+    result = session.read_bed_file(bed_file.as_posix())
+
+    # 12 here because the bed file has 12 fields by default
     assert result.to_polars().shape == (10, 12)
 
 
