@@ -113,7 +113,9 @@ impl BioBearSessionContext {
         options: Option<crate::datasources::gff::GFFReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let options = options.unwrap_or_default();
+        let file_options = FileOptions::from(file_path);
+        let mut options = options.unwrap_or_default();
+        options.update_from_file_options(&file_options)?;
 
         let result = self.ctx.read_gff(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;

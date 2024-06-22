@@ -137,6 +137,7 @@ def test_read_fastq():
 
     assert len(df) == 2
 
+
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
@@ -237,6 +238,7 @@ def test_read_fasta_fa():
     df = session.read_fasta_file(str(fasta_path), options=options).to_polars()
 
     assert len(df) == 2
+
 
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
@@ -563,6 +565,23 @@ def test_gff_reader_gz():
     options = GFFReadOptions(file_compression_type=FileCompressionType.GZIP)
 
     reader = session.read_gff_file((DATA / "test.gff.gz").as_posix(), options=options)
+    df = reader.to_polars()
+
+    assert len(df) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
+def test_gff_reader_no_options():
+    session = new_session()
+
+    reader = session.read_gff_file((DATA / "test.gff.gz").as_posix())
+    df = reader.to_polars()
+
+    assert len(df) == 2
+
+    reader = session.read_gff_file((DATA / "test.gff3.gz").as_posix())
     df = reader.to_polars()
 
     assert len(df) == 2

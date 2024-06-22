@@ -113,12 +113,16 @@ impl FASTAReadOptions {
         file_options: &FileOptions,
     ) -> BioBearResult<()> {
         if let Some(file_extension) = file_options.file_extension() {
-            self.file_extension = Some(file_extension.to_string());
+            if self.file_extension.is_none() {
+                self.file_extension = Some(file_extension.to_string());
+            }
         }
 
         if let Some(file_compression_type) = file_options.file_compression_type() {
-            let fct = FileCompressionType::try_from(file_compression_type)?;
-            self.file_compression_type = Some(fct);
+            if self.file_compression_type.is_none() {
+                let fct = FileCompressionType::try_from(file_compression_type)?;
+                self.file_compression_type = Some(fct);
+            }
         }
 
         Ok(())
