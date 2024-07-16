@@ -16,6 +16,11 @@ use std::{path::Path, str::FromStr};
 
 use datafusion::datasource::file_format::file_compression_type::FileCompressionType;
 
+use crate::error::BioBearResult;
+
+mod settable_from_file_options;
+pub(crate) use settable_from_file_options::SettableFromFileOptions;
+
 #[derive(Debug, Clone, Default)]
 pub(crate) struct FileOptions {
     file_extension: Option<String>,
@@ -29,6 +34,23 @@ impl FileOptions {
 
     pub fn file_compression_type(&self) -> Option<FileCompressionType> {
         self.file_compression_type
+    }
+
+    pub fn set_from_file_options(
+        &mut self,
+        settable: &mut dyn settable_from_file_options::SettableFromFileOptions,
+    ) -> BioBearResult<()> {
+        if let Some(file_extension) = self.file_extension() {
+            let file_options = settable.file_extension_mut();
+            *file_options = Some(file_extension.to_string());
+        }
+
+        if let Some(file_compression_type) = self.file_compression_type() {
+            let file_options = settable.file_compression_type_mut();
+            *file_options = Some(crate::FileCompressionType::try_from(file_compression_type)?);
+        }
+
+        Ok(())
     }
 }
 

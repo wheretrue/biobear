@@ -116,7 +116,7 @@ class VCFReadOptions:
         file_compression_type: Optional[FileCompressionType] = None,
         parse_info: bool = False,
         parse_formats: bool = False,
-        partition_cols: list[str | None] = None,
+        partition_cols: list[str] | None = None,
     ) -> None: ...
 
 class BCFReadOptions:
@@ -139,6 +139,16 @@ class BAMReadOptions:
         self,
         /,
         region: Optional[str] = None,
+    ) -> None: ...
+
+class SDFReadOptions:
+    """Options for reading SDF data."""
+    def __init__(
+        self,
+        /,
+        file_compression_type: Optional[FileCompressionType] = None,
+        file_extension: Optional[str] = None,
+        partition_cols: list[str] | None = None,
     ) -> None: ...
 
 class BEDReadOptions:
@@ -187,6 +197,10 @@ class BioBearSessionContext:
         self, file_path: str, /, options: Optional[FASTQReadOptions] = None
     ) -> ExecutionResult:
         """Reads one or more FASTQ files and returns an ExecutionResult."""
+    def read_sdf_file(
+        self, file_path: str, /, options: Optional[SDFReadOptions] = None
+    ) -> ExecutionResult:
+        """Reads one or more SDF files and returns an ExecutionResult."""
     def read_fasta_file(
         self, file_path: str, /, options: Optional[FASTAReadOptions] = None
     ) -> ExecutionResult:

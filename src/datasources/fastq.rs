@@ -20,8 +20,6 @@ use pyo3::{pyclass, pymethods};
 
 const DEFAULT_FASTQ_FILE_EXTENSION: &str = "fastq";
 
-#[pyclass]
-#[derive(Debug, Clone)]
 /// Options for reading FASTQ files.
 ///
 /// When using from Python, the arguments are optional, but if passed, must be passed as kwargs.
@@ -46,7 +44,8 @@ const DEFAULT_FASTQ_FILE_EXTENSION: &str = "fastq";
 /// let options = FASTQReadOptions::default();
 /// assert_eq!(options.file_extension, "fastq");
 /// ```
-#[derive(Default)]
+#[pyclass]
+#[derive(Debug, Clone, Default)]
 pub struct FASTQReadOptions {
     file_extension: Option<String>,
     file_compression_type: Option<FileCompressionType>,

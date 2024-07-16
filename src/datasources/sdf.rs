@@ -12,21 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use exon::datasources::hmmdomtab::table_provider::ListingHMMDomTabTableOptions;
+use exon::datasources::sdf::ListingSDFTableOptions;
 use pyo3::{pyclass, pymethods};
 
 use crate::{file_options::SettableFromFileOptions, FileCompressionType};
 
-const DEFAULT_HMM_FILE_EXTENSION: &str = "hmmdomtab";
-
 #[pyclass]
 #[derive(Debug, Clone, Default)]
-pub struct HMMDomTabReadOptions {
+/// Options for reading SDF files.
+pub struct SDFReadOptions {
     file_compression_type: Option<FileCompressionType>,
     file_extension: Option<String>,
 }
 
-impl SettableFromFileOptions for HMMDomTabReadOptions {
+impl SettableFromFileOptions for SDFReadOptions {
     fn file_extension_mut(&mut self) -> &mut Option<String> {
         &mut self.file_extension
     }
@@ -37,32 +36,27 @@ impl SettableFromFileOptions for HMMDomTabReadOptions {
 }
 
 #[pymethods]
-impl HMMDomTabReadOptions {
+impl SDFReadOptions {
     #[new]
-    fn new(
-        file_extension: Option<String>,
-        file_compression_type: Option<FileCompressionType>,
-    ) -> Self {
+    #[pyo3(signature = (/, file_compression_type=None))]
+    /// Create a new SDFReadOptions instance.
+    pub fn new(file_compression_type: Option<FileCompressionType>) -> Self {
         Self {
-            file_extension,
             file_compression_type,
+            file_extension: Some("sdf".to_string()),
         }
     }
 }
 
-impl HMMDomTabReadOptions {}
+impl From<SDFReadOptions> for ListingSDFTableOptions {
+    fn from(options: SDFReadOptions) -> Self {
+        let mut listing_options = ListingSDFTableOptions::default();
 
-impl From<HMMDomTabReadOptions> for ListingHMMDomTabTableOptions {
-    fn from(options: HMMDomTabReadOptions) -> Self {
-        let file_compression_type = options
-            .file_compression_type
-            .unwrap_or(FileCompressionType::UNCOMPRESSED);
+        if let Some(file_compression_type) = options.file_compression_type {
+            listing_options =
+                listing_options.with_file_compression_type(file_compression_type.into());
+        }
 
-        let file_extension = options
-            .file_extension
-            .unwrap_or(DEFAULT_HMM_FILE_EXTENSION.to_string());
-
-        ListingHMMDomTabTableOptions::new(file_compression_type.into())
-            .with_file_extension(file_extension)
+        listing_options
     }
 }

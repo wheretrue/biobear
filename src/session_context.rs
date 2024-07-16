@@ -27,6 +27,7 @@ use crate::error;
 use crate::execution_result::ExecutionResult;
 use crate::file_options::FileOptions;
 use crate::runtime::wait_for_future;
+use pyo3::{pyclass, pymethods};
 
 #[pyclass]
 pub struct BioBearSessionContext {
@@ -73,6 +74,24 @@ impl BioBearSessionContext {
         let options = options.unwrap_or_default();
 
         let result = self.ctx.read_hmm_dom_tab(file_path, options.into());
+        let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
+
+        Ok(ExecutionResult::new(df))
+    }
+
+    /// Read an SDF file from the given path.
+    fn read_sdf_file(
+        &mut self,
+        file_path: &str,
+        options: Option<crate::datasources::sdf::SDFReadOptions>,
+        py: Python,
+    ) -> PyResult<ExecutionResult> {
+        let mut file_options = FileOptions::from(file_path);
+        let mut options = options.unwrap_or_default();
+
+        file_options.set_from_file_options(&mut options)?;
+
+        let result = self.ctx.read_sdf(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
 
         Ok(ExecutionResult::new(df))
