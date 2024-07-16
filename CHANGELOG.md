@@ -1,3 +1,11 @@
+## v0.22.5 (2024-07-16)
+
+### Feat
+
+- add sdf read options (#161)
+- add bed file option inference (#156)
+- add gff file extension and compression inference (#155)
+
 ## v0.22.4 (2024-06-21)
 
 ### Feat
