@@ -86,9 +86,10 @@ impl BioBearSessionContext {
         options: Option<crate::datasources::sdf::SDFReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let file_options = FileOptions::from(file_path);
+        let mut file_options = FileOptions::from(file_path);
         let mut options = options.unwrap_or_default();
-        options.update_from_file_options(&file_options)?;
+
+        file_options.set_from_file_options(&mut options)?;
 
         let result = self.ctx.read_sdf(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;

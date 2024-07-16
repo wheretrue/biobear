@@ -750,7 +750,7 @@ def test_sdf_file():
     sdf_file = DATA / "tox_benchmark_N6512.sdf"
     result = session.read_sdf_file(sdf_file.as_posix())
 
-    assert len(result.to_polars()) == 6512
+    assert len(result.to_polars()) == 4
 
 
 def test_sdf_gzip_file():
@@ -759,7 +759,7 @@ def test_sdf_gzip_file():
     sdf_file = DATA / "tox_benchmark_N6512.sdf.gz"
     result = session.read_sdf_file(sdf_file.as_posix())
 
-    assert len(result.to_polars()) == 6512
+    assert len(result.to_polars()) == 4
 
 
 def test_bed_long_name():

@@ -15,13 +15,24 @@
 use exon::datasources::sdf::ListingSDFTableOptions;
 use pyo3::{pyclass, pymethods};
 
-use crate::{error::BioBearResult, file_options::FileOptions, FileCompressionType};
+use crate::{file_options::SettableFromFileOptions, FileCompressionType};
 
 #[pyclass]
 #[derive(Debug, Clone, Default)]
 /// Options for reading SDF files.
 pub struct SDFReadOptions {
     file_compression_type: Option<FileCompressionType>,
+    file_extension: Option<String>,
+}
+
+impl SettableFromFileOptions for SDFReadOptions {
+    fn file_extension_mut(&mut self) -> &mut Option<String> {
+        &mut self.file_extension
+    }
+
+    fn file_compression_type_mut(&mut self) -> &mut Option<FileCompressionType> {
+        &mut self.file_compression_type
+    }
 }
 
 #[pymethods]
@@ -32,21 +43,8 @@ impl SDFReadOptions {
     pub fn new(file_compression_type: Option<FileCompressionType>) -> Self {
         Self {
             file_compression_type,
+            file_extension: Some("sdf".to_string()),
         }
-    }
-}
-
-impl SDFReadOptions {
-    pub(crate) fn update_from_file_options(
-        &mut self,
-        file_options: &FileOptions,
-    ) -> BioBearResult<()> {
-        if let Some(file_compression_type) = file_options.file_compression_type() {
-            let fct = FileCompressionType::try_from(file_compression_type)?;
-            self.file_compression_type = Some(fct);
-        }
-
-        Ok(())
     }
 }
 
