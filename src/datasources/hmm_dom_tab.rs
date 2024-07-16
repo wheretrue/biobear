@@ -15,26 +15,52 @@
 use exon::datasources::hmmdomtab::table_provider::ListingHMMDomTabTableOptions;
 use pyo3::{pyclass, pymethods};
 
-use crate::FileCompressionType;
+use crate::{file_options::SettableFromFileOptions, FileCompressionType};
+
+const DEFAULT_HMM_FILE_EXTENSION: &str = "hmmdomtab";
 
 #[pyclass]
 #[derive(Debug, Clone, Default)]
 pub struct HMMDomTabReadOptions {
-    file_compression_type: FileCompressionType,
+    file_compression_type: Option<FileCompressionType>,
+    file_extension: Option<String>,
+}
+
+impl SettableFromFileOptions for HMMDomTabReadOptions {
+    fn file_extension_mut(&mut self) -> &mut Option<String> {
+        &mut self.file_extension
+    }
+
+    fn file_compression_type_mut(&mut self) -> &mut Option<FileCompressionType> {
+        &mut self.file_compression_type
+    }
 }
 
 #[pymethods]
 impl HMMDomTabReadOptions {
     #[new]
-    fn new(file_compression_type: Option<FileCompressionType>) -> Self {
+    fn new(
+        file_extension: Option<String>,
+        file_compression_type: Option<FileCompressionType>,
+    ) -> Self {
         Self {
-            file_compression_type: file_compression_type.unwrap_or_default(),
+            file_extension,
+            file_compression_type,
         }
     }
 }
 
+impl HMMDomTabReadOptions {}
+
 impl From<HMMDomTabReadOptions> for ListingHMMDomTabTableOptions {
     fn from(options: HMMDomTabReadOptions) -> Self {
-        ListingHMMDomTabTableOptions::new(options.file_compression_type.into())
+        let file_compression_type = options
+            .file_compression_type
+            .unwrap_or(FileCompressionType::UNCOMPRESSED);
+        let file_extension = options
+            .file_extension
+            .unwrap_or(DEFAULT_HMM_FILE_EXTENSION.to_string());
+
+        ListingHMMDomTabTableOptions::new(file_compression_type.into()).with
     }
 }
