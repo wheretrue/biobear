@@ -57,10 +57,12 @@ impl From<HMMDomTabReadOptions> for ListingHMMDomTabTableOptions {
         let file_compression_type = options
             .file_compression_type
             .unwrap_or(FileCompressionType::UNCOMPRESSED);
+
         let file_extension = options
             .file_extension
             .unwrap_or(DEFAULT_HMM_FILE_EXTENSION.to_string());
 
-        ListingHMMDomTabTableOptions::new(file_compression_type.into()).with
+        ListingHMMDomTabTableOptions::new(file_compression_type.into())
+            .with_file_extension(file_extension)
     }
 }

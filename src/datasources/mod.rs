@@ -31,6 +31,7 @@ pub mod gtf;
 pub mod hmm_dom_tab;
 pub mod mzml;
 pub mod sam;
+pub mod sdf;
 pub mod vcf;
 
 pub(crate) fn parse_region(region: Option<String>) -> PyResult<Option<noodles::core::Region>> {

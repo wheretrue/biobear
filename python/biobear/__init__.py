@@ -43,6 +43,7 @@ from .biobear import MzMLReadOptions
 from .biobear import GenBankReadOptions
 from .biobear import FCSReadOptions
 from .biobear import CRAMReadOptions
+from .biobear import SDFReadOptions
 from .biobear import connect
 from .biobear import new_session
 from .biobear import __runtime
@@ -72,6 +73,7 @@ __all__ = [
     "BCFReadOptions",
     "VCFReadOptions",
     "BEDReadOptions",
+    "SDFReadOptions",
     "FCSReadOptions",
     "CRAMReadOptions",
     "BigWigReadOptions",

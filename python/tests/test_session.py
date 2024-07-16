@@ -744,6 +744,24 @@ def test_bed_four():
     assert result.to_polars().shape == (10, 4)
 
 
+def test_sdf_file():
+    session = new_session()
+
+    sdf_file = DATA / "tox_benchmark_N6512.sdf"
+    result = session.read_sdf_file(sdf_file.as_posix())
+
+    assert len(result.to_polars()) == 6512
+
+
+def test_sdf_gzip_file():
+    session = new_session()
+
+    sdf_file = DATA / "tox_benchmark_N6512.sdf.gz"
+    result = session.read_sdf_file(sdf_file.as_posix())
+
+    assert len(result.to_polars()) == 6512
+
+
 def test_bed_long_name():
     session = new_session()
 

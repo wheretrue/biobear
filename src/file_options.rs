@@ -36,7 +36,10 @@ impl FileOptions {
         self.file_compression_type
     }
 
-    pub fn set_from_file_options(&mut self, settable: &mut dyn settable_from_file_options::SettableFromFileOptions) -> BioBearResult<()> {
+    pub fn set_from_file_options(
+        &mut self,
+        settable: &mut dyn settable_from_file_options::SettableFromFileOptions,
+    ) -> BioBearResult<()> {
         if let Some(file_extension) = self.file_extension() {
             let file_options = settable.file_extension_mut();
             *file_options = Some(file_extension.to_string());
