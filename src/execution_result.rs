@@ -55,6 +55,8 @@ impl ExecutionResult {
     }
 
     /// Returns the schema from the logical plan
+    ///
+    /// Note: This is not necessarily the schema of the resulting DataFrame
     fn schema(&self) -> PyArrowType<Schema> {
         PyArrowType(self.df.schema().into())
     }
@@ -94,7 +96,7 @@ impl ExecutionResult {
     /// Convert to Arrow Table
     fn to_arrow(&self, py: Python) -> PyResult<PyObject> {
         let batches = self.collect(py)?.to_object(py);
-        let schema = self.schema().into_py(py);
+        let schema = None::<PyArrowType<Schema>>.into_py(py);
 
         // Instantiate pyarrow Table object and use its from_batches method
         let table_class = py.import_bound("pyarrow")?.getattr("Table")?;
@@ -120,7 +122,7 @@ impl ExecutionResult {
 
         let batches = batches.into_pyarrow(py)?;
 
-        let schema = self.schema().into_py(py);
+        let schema = None::<PyArrowType<Schema>>.into_py(py);
 
         let table_class = py.import_bound("pyarrow")?.getattr("Table")?;
         let args = (batches, schema);
