@@ -744,6 +744,17 @@ def test_bed_four():
     assert result.to_polars().shape == (10, 4)
 
 
+def test_cripri_example():
+    session = new_session()
+
+    fasta_file = DATA / "example_crispri_v2_sample.fastq.gz"
+    result = session.sql(
+        f"SELECT name, COUNT(*) FROM fastq_scan('{fasta_file}') GROUP BY name"
+    ).to_polars()
+
+    assert len(result) == 25000
+
+
 def test_sdf_file():
     session = new_session()
 
