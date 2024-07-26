@@ -55,6 +55,8 @@ impl ExecutionResult {
     }
 
     /// Returns the schema from the logical plan
+    ///
+    /// Note: This is a logical schema and may not match the physical schema
     fn schema(&self) -> PyArrowType<Schema> {
         PyArrowType(self.df.schema().into())
     }
@@ -92,9 +94,15 @@ impl ExecutionResult {
     }
 
     /// Convert to Arrow Table
+    // ignore deprecated warning for `to_arrow` method
+    #[deprecated(
+        since = "0.22.7",
+        note = "Please use `to_arrow_table` instead. This method will be removed in a future release."
+    )]
     fn to_arrow(&self, py: Python) -> PyResult<PyObject> {
         let batches = self.collect(py)?.to_object(py);
-        let schema = self.schema().into_py(py);
+
+        let schema = None::<PyArrowType<Schema>>.into_py(py);
 
         // Instantiate pyarrow Table object and use its from_batches method
         let table_class = py.import_bound("pyarrow")?.getattr("Table")?;
@@ -109,6 +117,8 @@ impl ExecutionResult {
         let stream = wait_for_future(py, self.df.as_ref().clone().execute_stream())
             .map_err(error::BioBearError::from)?;
 
+        let schema = stream.schema().to_pyarrow(py)?;
+
         let runtime = Arc::new(Runtime::new()?);
 
         let dataframe_record_batch_stream = DataFrameRecordBatchStream::new(stream, runtime);
@@ -120,10 +130,9 @@ impl ExecutionResult {
 
         let batches = batches.into_pyarrow(py)?;
 
-        let schema = self.schema().into_py(py);
-
         let table_class = py.import_bound("pyarrow")?.getattr("Table")?;
         let args = (batches, schema);
+
         let table: PyObject = table_class.call_method1("from_batches", args)?.into();
 
         let module = py.import_bound("polars")?;
