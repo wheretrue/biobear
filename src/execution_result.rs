@@ -94,11 +94,6 @@ impl ExecutionResult {
     }
 
     /// Convert to Arrow Table
-    // ignore deprecated warning for `to_arrow` method
-    #[deprecated(
-        since = "0.22.7",
-        note = "Please use `to_arrow_table` instead. This method will be removed in a future release."
-    )]
     fn to_arrow(&self, py: Python) -> PyResult<PyObject> {
         let batches = self.collect(py)?.to_object(py);
 
