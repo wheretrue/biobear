@@ -16,7 +16,10 @@ use exon::datasources::gff::table_provider::ListingGFFTableOptions;
 use noodles::core::Region;
 use pyo3::{pyclass, pymethods, PyResult};
 
-use crate::{error::BioBearResult, file_options::FileOptions, FileCompressionType};
+use crate::{
+    error::BioBearResult, file_options::FileOptions, impl_settable_from_file_options,
+    FileCompressionType,
+};
 
 use super::parse_region;
 
@@ -27,6 +30,8 @@ pub struct GFFReadOptions {
     file_extension: Option<String>,
     file_compression_type: Option<FileCompressionType>,
 }
+
+impl_settable_from_file_options!(GFFReadOptions);
 
 #[pymethods]
 impl GFFReadOptions {
@@ -56,8 +61,7 @@ impl GFFReadOptions {
 
         if let Some(file_compression_type) = options.file_compression_type() {
             if self.file_compression_type.is_none() {
-                let fct = FileCompressionType::try_from(file_compression_type)?;
-                self.file_compression_type = Some(fct);
+                self.file_compression_type = Some(file_compression_type);
             }
         }
 

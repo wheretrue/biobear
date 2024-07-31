@@ -15,35 +15,44 @@
 use exon::datasources::gtf::table_provider::ListingGTFTableOptions;
 use pyo3::{pyclass, pymethods};
 
-use crate::FileCompressionType;
+use crate::{impl_settable_from_file_options, FileCompressionType};
 
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct GTFReadOptions {
-    file_compression_type: FileCompressionType,
+    file_compression_type: Option<FileCompressionType>,
+    file_extension: Option<String>,
 }
 
 impl Default for GTFReadOptions {
     fn default() -> Self {
         Self {
-            file_compression_type: FileCompressionType::UNCOMPRESSED,
+            file_compression_type: Some(FileCompressionType::UNCOMPRESSED),
+            file_extension: None,
         }
     }
 }
+
+impl_settable_from_file_options!(GTFReadOptions);
 
 #[pymethods]
 impl GTFReadOptions {
     #[new]
     pub fn new(file_compression_type: Option<FileCompressionType>) -> Self {
         Self {
-            file_compression_type: file_compression_type
-                .unwrap_or(FileCompressionType::UNCOMPRESSED),
+            file_compression_type,
+            file_extension: Some("gtf".to_string()),
         }
     }
 }
 
 impl From<GTFReadOptions> for ListingGTFTableOptions {
     fn from(options: GTFReadOptions) -> Self {
-        ListingGTFTableOptions::new(options.file_compression_type.into())
+        ListingGTFTableOptions::new(
+            options
+                .file_compression_type
+                .map(|c| c.into())
+                .unwrap_or(datafusion::datasource::file_format::file_compression_type::FileCompressionType::UNCOMPRESSED),
+        )
     }
 }

@@ -13,7 +13,10 @@
 // limitations under the License.
 
 use crate::{
-    error::BioBearResult, file_compression_type::FileCompressionType, file_options::FileOptions,
+    error::BioBearResult,
+    file_compression_type::FileCompressionType,
+    file_options::{FileOptions, SettableFromFileOptions},
+    impl_settable_from_file_options,
 };
 use exon::datasources::fasta::{table_provider::ListingFASTATableOptions, SequenceDataType};
 use pyo3::{pyclass, pymethods};
@@ -128,6 +131,8 @@ impl FASTAReadOptions {
         Ok(())
     }
 }
+
+impl_settable_from_file_options!(FASTAReadOptions);
 
 impl From<FASTAReadOptions> for ListingFASTATableOptions {
     fn from(options: FASTAReadOptions) -> Self {

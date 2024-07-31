@@ -15,7 +15,10 @@
 use exon::datasources::bed::table_provider::ListingBEDTableOptions;
 use pyo3::{pyclass, pymethods};
 
-use crate::{error::BioBearResult, file_options::FileOptions, FileCompressionType};
+use crate::{
+    error::BioBearResult, file_options::FileOptions, impl_settable_from_file_options,
+    FileCompressionType,
+};
 
 #[pyclass]
 #[derive(Debug, Clone, Default)]
@@ -30,6 +33,8 @@ pub struct BEDReadOptions {
     /// The file extension.
     file_extension: Option<String>,
 }
+
+impl_settable_from_file_options!(BEDReadOptions);
 
 #[pymethods]
 impl BEDReadOptions {

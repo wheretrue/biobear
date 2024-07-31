@@ -56,7 +56,10 @@ impl BioBearSessionContext {
         options: Option<crate::datasources::vcf::VCFReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let options = options.unwrap_or_default();
+        let mut file_options = FileOptions::from(file_path);
+        let mut options = options.unwrap_or_default();
+
+        file_options.set_from_file_options(&mut options)?;
 
         let result = self.ctx.read_vcf(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
@@ -71,7 +74,10 @@ impl BioBearSessionContext {
         options: Option<HMMDomTabReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let options = options.unwrap_or_default();
+        let mut file_options = FileOptions::from(file_path);
+        let mut options = options.unwrap_or_default();
+
+        file_options.set_from_file_options(&mut options)?;
 
         let result = self.ctx.read_hmm_dom_tab(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
@@ -149,9 +155,10 @@ impl BioBearSessionContext {
         options: Option<FASTQReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let file_options = FileOptions::from(file_path);
+        let mut file_options = FileOptions::from(file_path);
         let mut options = options.unwrap_or_default();
-        options.update_from_file_options(&file_options)?;
+
+        file_options.set_from_file_options(&mut options)?;
 
         let result = self.ctx.read_fastq(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
@@ -166,7 +173,10 @@ impl BioBearSessionContext {
         options: Option<crate::datasources::genbank::GenBankReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let options = options.unwrap_or_default();
+        let mut file_options = FileOptions::from(file_path);
+        let mut options = options.unwrap_or_default();
+
+        file_options.set_from_file_options(&mut options)?;
 
         let result = self.ctx.read_genbank(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
@@ -196,7 +206,10 @@ impl BioBearSessionContext {
         options: Option<MzMLReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let options = options.unwrap_or_default();
+        let mut file_options = FileOptions::from(file_path);
+        let mut options = options.unwrap_or_default();
+
+        file_options.set_from_file_options(&mut options)?;
 
         let result = self.ctx.read_mzml(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
@@ -211,7 +224,10 @@ impl BioBearSessionContext {
         options: Option<crate::datasources::gtf::GTFReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let options = options.unwrap_or_default();
+        let mut file_options = FileOptions::from(file_path);
+        let mut options = options.unwrap_or_default();
+
+        file_options.set_from_file_options(&mut options)?;
 
         let result = self.ctx.read_gtf(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
@@ -241,9 +257,10 @@ impl BioBearSessionContext {
         options: Option<FASTAReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let file_options = FileOptions::from(file_path);
+        let mut file_options = FileOptions::from(file_path);
         let mut options = options.unwrap_or_default();
-        options.update_from_file_options(&file_options)?;
+
+        file_options.set_from_file_options(&mut options)?;
 
         let result = self.ctx.read_fasta(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;
@@ -258,9 +275,10 @@ impl BioBearSessionContext {
         options: Option<crate::datasources::bed::BEDReadOptions>,
         py: Python,
     ) -> PyResult<ExecutionResult> {
-        let file_options = FileOptions::from(file_path);
+        let mut file_options = FileOptions::from(file_path);
         let mut options = options.unwrap_or_default();
-        options.update_from_file_options(&file_options)?;
+
+        file_options.set_from_file_options(&mut options)?;
 
         let result = self.ctx.read_bed(file_path, options.into());
         let df = wait_for_future(py, result).map_err(error::BioBearError::from)?;

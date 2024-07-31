@@ -12,22 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use datafusion::datasource::file_format::file_compression_type;
 use exon::datasources::mzml::table_provider::ListingMzMLTableOptions;
 use pyo3::{pyclass, pymethods};
 
-use crate::FileCompressionType;
+use crate::{impl_settable_from_file_options, FileCompressionType};
 
 #[pyclass]
 #[derive(Debug, Clone)]
 /// Options for reading mzML files.
 pub struct MzMLReadOptions {
-    file_compression_type: FileCompressionType,
+    file_compression_type: Option<FileCompressionType>,
+    file_extension: Option<String>,
 }
+
+impl_settable_from_file_options!(MzMLReadOptions);
 
 impl Default for MzMLReadOptions {
     fn default() -> Self {
         Self {
-            file_compression_type: FileCompressionType::UNCOMPRESSED,
+            file_compression_type: Some(FileCompressionType::UNCOMPRESSED),
+            file_extension: None,
         }
     }
 }
@@ -37,14 +42,25 @@ impl MzMLReadOptions {
     #[new]
     fn new(file_compression_type: Option<FileCompressionType>) -> Self {
         Self {
-            file_compression_type: file_compression_type
-                .unwrap_or(FileCompressionType::UNCOMPRESSED),
+            file_compression_type: Some(
+                file_compression_type.unwrap_or(FileCompressionType::UNCOMPRESSED),
+            ),
+            file_extension: Some("mzml".to_string()),
         }
     }
 }
 
 impl From<MzMLReadOptions> for ListingMzMLTableOptions {
     fn from(options: MzMLReadOptions) -> Self {
-        ListingMzMLTableOptions::new(options.file_compression_type.into())
+        let file_compression_type = options.file_compression_type.unwrap_or(datafusion::datasource::file_format::file_compression_type::FileCompressionType::UNCOMPRESSED);
+
+        let mut new_options = ListingMzMLTableOptions::new(file_compression_type.into());
+
+        // let file_extension = options.file_extension;
+        if let Some(fe) = options.file_extension {
+            new_options = new_options.with_file_extension(fe)
+        }
+
+        new_options
     }
 }

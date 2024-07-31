@@ -17,7 +17,7 @@ use exon::datasources::vcf::ListingVCFTableOptions;
 use noodles::core::Region;
 use pyo3::{pyclass, pymethods, PyResult};
 
-use crate::FileCompressionType;
+use crate::{impl_settable_from_file_options, FileCompressionType};
 
 use super::parse_region;
 
@@ -28,14 +28,18 @@ pub struct VCFReadOptions {
     /// The region to read.
     region: Option<Region>,
     /// The file compression type.
-    file_compression_type: FileCompressionType,
+    file_compression_type: Option<FileCompressionType>,
     /// True if the INFO column should be parsed.
     parse_info: bool,
     /// True if the FORMAT column should be parsed.
     parse_formats: bool,
     /// The partition fields.
     partition_cols: Option<Vec<String>>,
+    /// The file extension.
+    file_extension: Option<String>,
 }
+
+impl_settable_from_file_options!(VCFReadOptions);
 
 #[pymethods]
 impl VCFReadOptions {
@@ -50,22 +54,24 @@ impl VCFReadOptions {
     ) -> PyResult<Self> {
         let region = parse_region(region)?;
 
-        let file_compression_type =
-            file_compression_type.unwrap_or(FileCompressionType::UNCOMPRESSED);
-
         Ok(Self {
             region,
             file_compression_type,
             parse_info,
             parse_formats,
             partition_cols,
+            file_extension: Some("vcf".to_string()),
         })
     }
 }
 
 impl From<VCFReadOptions> for ListingVCFTableOptions {
     fn from(options: VCFReadOptions) -> Self {
-        let mut o = ListingVCFTableOptions::new(options.file_compression_type.into(), false)
+        let compression = options
+            .file_compression_type
+            .unwrap_or(FileCompressionType::UNCOMPRESSED);
+
+        let mut o = ListingVCFTableOptions::new(compression.into(), false)
             .with_parse_info(options.parse_info)
             .with_parse_formats(options.parse_formats);
 

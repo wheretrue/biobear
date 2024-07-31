@@ -23,7 +23,7 @@ use pyo3::prelude::*;
 use crate::error::BioBearError;
 
 #[pyclass]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FileCompressionType {
     GZIP,
     ZSTD,

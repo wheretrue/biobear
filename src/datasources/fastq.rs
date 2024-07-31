@@ -14,6 +14,7 @@
 
 use crate::{
     error::BioBearResult, file_compression_type::FileCompressionType, file_options::FileOptions,
+    impl_settable_from_file_options,
 };
 use exon::datasources::fastq::table_provider::ListingFASTQTableOptions;
 use pyo3::{pyclass, pymethods};
@@ -50,6 +51,8 @@ pub struct FASTQReadOptions {
     file_extension: Option<String>,
     file_compression_type: Option<FileCompressionType>,
 }
+
+impl_settable_from_file_options!(FASTQReadOptions);
 
 #[pymethods]
 impl FASTQReadOptions {

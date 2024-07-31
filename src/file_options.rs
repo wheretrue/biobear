@@ -12,19 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{path::Path, str::FromStr};
-
-use datafusion::datasource::file_format::file_compression_type::FileCompressionType;
+use std::path::Path;
 
 use crate::error::BioBearResult;
 
 mod settable_from_file_options;
+pub(crate) use settable_from_file_options::impl_settable_from_file_options;
 pub(crate) use settable_from_file_options::SettableFromFileOptions;
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct FileOptions {
     file_extension: Option<String>,
-    file_compression_type: Option<FileCompressionType>,
+    file_compression_type: Option<crate::FileCompressionType>,
 }
 
 impl FileOptions {
@@ -32,7 +31,7 @@ impl FileOptions {
         self.file_extension.as_deref()
     }
 
-    pub fn file_compression_type(&self) -> Option<FileCompressionType> {
+    pub fn file_compression_type(&self) -> Option<crate::FileCompressionType> {
         self.file_compression_type
     }
 
@@ -47,7 +46,7 @@ impl FileOptions {
 
         if let Some(file_compression_type) = self.file_compression_type() {
             let file_options = settable.file_compression_type_mut();
-            *file_options = Some(crate::FileCompressionType::try_from(file_compression_type)?);
+            *file_options = Some(file_compression_type.clone());
         }
 
         Ok(())

@@ -19,3 +19,18 @@ pub(crate) trait SettableFromFileOptions {
 
     fn file_compression_type_mut(&mut self) -> &mut Option<FileCompressionType>;
 }
+
+#[macro_export]
+macro_rules! impl_settable_from_file_options {
+    ($struct_name:ident) => {
+        impl crate::file_options::SettableFromFileOptions for $struct_name {
+            fn file_extension_mut(&mut self) -> &mut Option<String> {
+                &mut self.file_extension
+            }
+
+            fn file_compression_type_mut(&mut self) -> &mut Option<FileCompressionType> {
+                &mut self.file_compression_type
+            }
+        }
+    };
+}
