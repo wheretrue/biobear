@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use datafusion::datasource::file_format::file_compression_type;
 use exon::datasources::mzml::table_provider::ListingMzMLTableOptions;
 use pyo3::{pyclass, pymethods};
 
-use crate::{impl_settable_from_file_options, FileCompressionType};
+use crate::{file_options::impl_settable_from_file_options, FileCompressionType};
 
 #[pyclass]
 #[derive(Debug, Clone)]
@@ -45,19 +44,22 @@ impl MzMLReadOptions {
             file_compression_type: Some(
                 file_compression_type.unwrap_or(FileCompressionType::UNCOMPRESSED),
             ),
-            file_extension: Some("mzml".to_string()),
+            file_extension: None,
         }
     }
 }
 
 impl From<MzMLReadOptions> for ListingMzMLTableOptions {
     fn from(options: MzMLReadOptions) -> Self {
-        let file_compression_type = options.file_compression_type.unwrap_or(datafusion::datasource::file_format::file_compression_type::FileCompressionType::UNCOMPRESSED);
+        let file_compression_type = options
+            .file_compression_type
+            .unwrap_or(FileCompressionType::UNCOMPRESSED);
 
         let mut new_options = ListingMzMLTableOptions::new(file_compression_type.into());
 
         // let file_extension = options.file_extension;
         if let Some(fe) = options.file_extension {
+            eprintln!("Setting file extension to {}", fe);
             new_options = new_options.with_file_extension(fe)
         }
 

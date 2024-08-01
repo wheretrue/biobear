@@ -15,10 +15,7 @@
 use exon::datasources::bed::table_provider::ListingBEDTableOptions;
 use pyo3::{pyclass, pymethods};
 
-use crate::{
-    error::BioBearResult, file_options::FileOptions, impl_settable_from_file_options,
-    FileCompressionType,
-};
+use crate::{file_options::impl_settable_from_file_options, FileCompressionType};
 
 #[pyclass]
 #[derive(Debug, Clone, Default)]
@@ -50,28 +47,6 @@ impl BEDReadOptions {
             n_fields,
             file_extension,
         }
-    }
-}
-
-impl BEDReadOptions {
-    pub(crate) fn update_from_file_options(
-        &mut self,
-        file_options: &FileOptions,
-    ) -> BioBearResult<()> {
-        if let Some(file_extension) = file_options.file_extension() {
-            if self.file_extension.is_none() {
-                self.file_extension = Some(file_extension.to_string());
-            }
-        }
-
-        if let Some(file_compression_type) = file_options.file_compression_type() {
-            if self.file_compression_type.is_none() {
-                let fct = FileCompressionType::try_from(file_compression_type)?;
-                self.file_compression_type = Some(fct);
-            }
-        }
-
-        Ok(())
     }
 }
 

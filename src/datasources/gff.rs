@@ -17,7 +17,8 @@ use noodles::core::Region;
 use pyo3::{pyclass, pymethods, PyResult};
 
 use crate::{
-    error::BioBearResult, file_options::FileOptions, impl_settable_from_file_options,
+    error::BioBearResult,
+    file_options::{impl_settable_from_file_options, FileOptions},
     FileCompressionType,
 };
 

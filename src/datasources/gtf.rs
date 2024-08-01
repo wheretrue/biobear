@@ -15,7 +15,7 @@
 use exon::datasources::gtf::table_provider::ListingGTFTableOptions;
 use pyo3::{pyclass, pymethods};
 
-use crate::{impl_settable_from_file_options, FileCompressionType};
+use crate::{file_options::impl_settable_from_file_options, FileCompressionType};
 
 #[pyclass]
 #[derive(Debug, Clone)]

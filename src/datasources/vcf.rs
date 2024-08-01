@@ -17,7 +17,7 @@ use exon::datasources::vcf::ListingVCFTableOptions;
 use noodles::core::Region;
 use pyo3::{pyclass, pymethods, PyResult};
 
-use crate::{impl_settable_from_file_options, FileCompressionType};
+use crate::{file_options::impl_settable_from_file_options, FileCompressionType};
 
 use super::parse_region;
 

@@ -13,8 +13,10 @@
 // limitations under the License.
 
 use std::path::Path;
+use std::str::FromStr;
 
 use crate::error::BioBearResult;
+use crate::FileCompressionType;
 
 mod settable_from_file_options;
 pub(crate) use settable_from_file_options::impl_settable_from_file_options;
@@ -32,16 +34,16 @@ impl FileOptions {
     }
 
     pub fn file_compression_type(&self) -> Option<crate::FileCompressionType> {
-        self.file_compression_type
+        self.file_compression_type.clone()
     }
 
     pub fn set_from_file_options(
-        &mut self,
+        &self,
         settable: &mut dyn settable_from_file_options::SettableFromFileOptions,
     ) -> BioBearResult<()> {
-        if let Some(file_extension) = self.file_extension() {
-            let file_options = settable.file_extension_mut();
-            *file_options = Some(file_extension.to_string());
+        if settable.file_extension_mut().is_none() {
+            let file_extension_option = settable.file_extension_mut();
+            *file_extension_option = self.file_extension().map(|ext| ext.to_string());
         }
 
         if let Some(file_compression_type) = self.file_compression_type() {
@@ -85,6 +87,8 @@ impl From<&str> for FileOptions {
 
 #[cfg(test)]
 mod tests {
+    use crate::FileCompressionType;
+
     use super::*;
 
     #[test]
