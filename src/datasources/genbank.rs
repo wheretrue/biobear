@@ -15,28 +15,37 @@
 use exon::datasources::genbank::table_provider::ListingGenbankTableOptions;
 use pyo3::{pyclass, pymethods};
 
-use crate::FileCompressionType;
+use crate::{file_options::impl_settable_from_file_options, FileCompressionType};
 
 #[pyclass]
 #[derive(Debug, Clone, Default)]
 /// Options for reading GenBank files.
 pub struct GenBankReadOptions {
     /// The file compression type.
-    file_compression_type: FileCompressionType,
+    file_compression_type: Option<FileCompressionType>,
+    /// The file extension.
+    file_extension: Option<String>,
 }
+
+impl_settable_from_file_options!(GenBankReadOptions);
 
 #[pymethods]
 impl GenBankReadOptions {
     #[new]
     fn new(file_compression_type: Option<FileCompressionType>) -> Self {
         Self {
-            file_compression_type: file_compression_type.unwrap_or_default(),
+            file_compression_type,
+            file_extension: Some("gb".to_string()),
         }
     }
 }
 
 impl From<GenBankReadOptions> for ListingGenbankTableOptions {
     fn from(options: GenBankReadOptions) -> Self {
-        ListingGenbankTableOptions::new(options.file_compression_type.into())
+        let c = options
+            .file_compression_type
+            .unwrap_or(FileCompressionType::UNCOMPRESSED);
+
+        ListingGenbankTableOptions::new(c.into())
     }
 }

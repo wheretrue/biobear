@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    error::BioBearResult, file_compression_type::FileCompressionType, file_options::FileOptions,
+    file_compression_type::FileCompressionType, file_options::impl_settable_from_file_options,
 };
 use exon::datasources::fasta::{table_provider::ListingFASTATableOptions, SequenceDataType};
 use pyo3::{pyclass, pymethods};
@@ -107,27 +107,7 @@ impl FASTAReadOptions {
     }
 }
 
-impl FASTAReadOptions {
-    pub(crate) fn update_from_file_options(
-        &mut self,
-        file_options: &FileOptions,
-    ) -> BioBearResult<()> {
-        if let Some(file_extension) = file_options.file_extension() {
-            if self.file_extension.is_none() {
-                self.file_extension = Some(file_extension.to_string());
-            }
-        }
-
-        if let Some(file_compression_type) = file_options.file_compression_type() {
-            if self.file_compression_type.is_none() {
-                let fct = FileCompressionType::try_from(file_compression_type)?;
-                self.file_compression_type = Some(fct);
-            }
-        }
-
-        Ok(())
-    }
-}
+impl_settable_from_file_options!(FASTAReadOptions);
 
 impl From<FASTAReadOptions> for ListingFASTATableOptions {
     fn from(options: FASTAReadOptions) -> Self {
