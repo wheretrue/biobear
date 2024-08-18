@@ -71,7 +71,7 @@ impl BamIndexedReader {
             config = config.with_batch_size(batch_size);
         }
 
-        let ctx = ExonSession::with_config_exon(config);
+        let ctx = ExonSession::with_config_exon(config).map_err(BioBearError::from)?;
 
         let df = self._runtime.block_on(async {
             ctx.sql(&format!(

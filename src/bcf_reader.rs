@@ -68,7 +68,7 @@ impl BCFIndexedReader {
             config = config.with_batch_size(batch_size);
         }
 
-        let ctx = ExonSession::with_config_exon(config);
+        let ctx = ExonSession::with_config_exon(config).map_err(BioBearError::from)?;
 
         let region = Region::from_str(region).map_err(|e| {
             io::Error::new(io::ErrorKind::Other, format!("Error parsing region: {e}"))

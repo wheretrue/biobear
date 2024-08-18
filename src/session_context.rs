@@ -34,19 +34,13 @@ pub struct BioBearSessionContext {
     ctx: ExonSession,
 }
 
-impl Default for BioBearSessionContext {
-    fn default() -> Self {
-        Self {
-            ctx: ExonSession::new_exon(),
-        }
-    }
-}
-
 #[pymethods]
 impl BioBearSessionContext {
     #[new]
-    fn new() -> PyResult<Self> {
-        Ok(Self::default())
+    fn try_new() -> PyResult<Self> {
+        let ctx = ExonSession::new_exon().unwrap();
+
+        Ok(Self { ctx })
     }
 
     /// Read one or more VCF files from the given path.
@@ -346,10 +340,10 @@ impl BioBearSessionContext {
 
 #[pyfunction]
 pub fn connect() -> PyResult<BioBearSessionContext> {
-    Ok(BioBearSessionContext::default())
+    BioBearSessionContext::try_new()
 }
 
 #[pyfunction]
 pub fn new_session() -> PyResult<BioBearSessionContext> {
-    Ok(BioBearSessionContext::default())
+    BioBearSessionContext::try_new()
 }
