@@ -8,7 +8,7 @@ crate-type = ["cdylib"]
 name = "biobear"
 
 [dependencies]
-arrow = { version = "52.1.0", features = ["pyarrow"] }
+arrow = { version = "53.0.0", features = ["pyarrow"] }
 datafusion = "41"
 exon = { version = "0.31.0", features = ["default"] }
 pyo3 = "0.21.2"
