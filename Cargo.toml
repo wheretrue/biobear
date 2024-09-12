@@ -13,7 +13,7 @@ datafusion = "41"
 exon = { version = "0.31.0", features = ["default"] }
 pyo3 = "0.21.2"
 tokio = { version = "1", features = ["rt"] }
-noodles = { version = "0.79", features = ["core"] }
+noodles = { version = "0.82", features = ["core"] }
 
 [profile.release]
 codegen-units = 1
