@@ -48,6 +48,8 @@ class FastaReader(Reader):
 
         if self.compression == Compression.GZIP:
             self._fasta_reader = _ExonReader(str(path), "FASTA", "GZIP")
+        elif self.compression == Compression.BZIP2:
+            self._fasta_reader = _ExonReader(str(path), "FASTA", "BZIP2")
         else:
             self._fasta_reader = _ExonReader(str(path), "FASTA", None)
 

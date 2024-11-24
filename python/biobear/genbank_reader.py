@@ -24,6 +24,8 @@ class GenbankReader(Reader):
 
         if self.compression == Compression.GZIP:
             self._reader = _ExonReader(str(path), "GENBANK", "GZIP")
+        elif self.compression == Compression.BZIP2:
+            self._reader = _ExonReader(str(path), "GENBANK", "BZIP2")
         else:
             self._reader = _ExonReader(str(path), "GENBANK", None)
 

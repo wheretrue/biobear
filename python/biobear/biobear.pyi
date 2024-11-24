@@ -30,6 +30,7 @@ class FileCompressionType(enum.Enum):
     GZIP = 0
     BGZIP = 1
     NONE = 2
+    BZIP2 = 3
 
 class FastaSequenceDataType(enum.Enum):
     """How to treat the sequence data in a FASTA file."""

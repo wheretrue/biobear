@@ -139,6 +139,14 @@ def test_read_fastq():
 
     assert len(df) == 2
 
+    fastq_path = DATA / "test.fq.bz2"
+    options = FASTQReadOptions(
+        file_extension="fq", file_compression_type=FileCompressionType.BZIP2
+    )
+
+    df = session.read_fastq_file(str(fastq_path), options=options).to_polars()
+
+    assert len(df) == 2
 
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
@@ -255,9 +263,15 @@ def test_read_fasta_fa_no_options():
 
     assert len(df) == 2
 
-    # Test reading a fasta file with no options with compression
+    # Test reading a fasta file with no options with gzip compression
     fasta_path = DATA / "test.fa.gz"
     df = session.read_fasta_file(str(fasta_path)).to_polars()
+    assert len(df) == 2
+
+    # Test reading a fasta file with no options with bzip2 compression
+    fasta_path = DATA / "test.fa.bz2"
+    df = session.read_fasta_file(str(fasta_path)).to_polars()
+    assert len(df) == 2
 
     # Test conflicting options
     fasta_path = DATA / "test.fa"

@@ -24,6 +24,8 @@ class MzMLReader(Reader):
 
         if self.compression == Compression.GZIP:
             self._reader = _ExonReader(str(path), "MZML", "GZIP")
+        elif self.compression == Compression.BZIP2:
+            self._reader = _ExonReader(str(path), "MZML", "BZIP2")
         else:
             self._reader = _ExonReader(str(path), "MZML", None)
 

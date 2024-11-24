@@ -47,6 +47,8 @@ class FastqReader(Reader):
 
         if self.compression == Compression.GZIP:
             self._fastq_reader = _ExonReader(str(path), "FASTQ", "GZIP")
+        elif self.compression == Compression.BZIP2:
+            self._fastq_reader = _ExonReader(str(path), "FASTQ", "BZIP2")
         else:
             self._fastq_reader = _ExonReader(str(path), "FASTQ", None)
 

@@ -26,6 +26,8 @@ class GFFReader(Reader):
 
         if self.compression == Compression.GZIP:
             self._gff_reader = _ExonReader(str(path), "GFF", "GZIP")
+        elif self.compression == Compression.BZIP2:
+            self._gff_reader = _ExonReader(str(path), "GFF", "BZIP2")
         else:
             self._gff_reader = _ExonReader(str(path), "GFF", None)
 

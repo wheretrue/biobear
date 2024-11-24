@@ -25,6 +25,7 @@ use crate::error::BioBearError;
 #[pyclass]
 #[derive(Debug, Clone)]
 pub enum FileCompressionType {
+    BZIP2,
     GZIP,
     ZSTD,
     UNCOMPRESSED,
@@ -53,6 +54,7 @@ impl FileCompressionType {
 impl Display for FileCompressionType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::BZIP2 => write!(f, "BZIP2"),
             Self::GZIP => write!(f, "GZIP"),
             Self::ZSTD => write!(f, "ZSTD"),
             Self::UNCOMPRESSED => write!(f, "UNCOMPRESSED"),
@@ -63,6 +65,7 @@ impl Display for FileCompressionType {
 impl From<FileCompressionType> for DFFileCompressionType {
     fn from(value: FileCompressionType) -> Self {
         match value {
+            FileCompressionType::BZIP2 => DFFileCompressionType::BZIP2,
             FileCompressionType::GZIP => DFFileCompressionType::GZIP,
             FileCompressionType::ZSTD => DFFileCompressionType::ZSTD,
             FileCompressionType::UNCOMPRESSED => DFFileCompressionType::UNCOMPRESSED,
@@ -75,6 +78,7 @@ impl TryFrom<CompressionTypeVariant> for FileCompressionType {
 
     fn try_from(value: CompressionTypeVariant) -> Result<Self, Self::Error> {
         match value {
+            CompressionTypeVariant::BZIP2 => Ok(Self::BZIP2),
             CompressionTypeVariant::GZIP => Ok(Self::GZIP),
             CompressionTypeVariant::ZSTD => Ok(Self::ZSTD),
             CompressionTypeVariant::UNCOMPRESSED => Ok(Self::UNCOMPRESSED),
@@ -88,6 +92,7 @@ impl TryFrom<DFFileCompressionType> for FileCompressionType {
 
     fn try_from(value: DFFileCompressionType) -> Result<Self, Self::Error> {
         match value {
+            DFFileCompressionType::BZIP2 => Ok(Self::BZIP2),
             DFFileCompressionType::GZIP => Ok(Self::GZIP),
             DFFileCompressionType::ZSTD => Ok(Self::ZSTD),
             DFFileCompressionType::UNCOMPRESSED => Ok(Self::UNCOMPRESSED),

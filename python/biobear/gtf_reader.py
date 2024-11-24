@@ -27,6 +27,8 @@ class GTFReader(Reader):
 
         if self.compression == Compression.GZIP:
             self._gtf_reader = _ExonReader(str(path), "GTF", "GZIP")
+        elif self.compression == Compression.BZIP2:
+            self._gtf_reader = _ExonReader(str(path), "GTF", "BZIP2")
         else:
             self._gtf_reader = _ExonReader(str(path), "GTF", None)
 
