@@ -28,6 +28,7 @@ pub enum FileCompressionType {
     GZIP,
     ZSTD,
     UNCOMPRESSED,
+    BZIP2,
 }
 
 impl Default for FileCompressionType {
@@ -56,6 +57,7 @@ impl Display for FileCompressionType {
             Self::GZIP => write!(f, "GZIP"),
             Self::ZSTD => write!(f, "ZSTD"),
             Self::UNCOMPRESSED => write!(f, "UNCOMPRESSED"),
+            Self::BZIP2 => write!(f, "BZIP2"),
         }
     }
 }
@@ -66,6 +68,7 @@ impl From<FileCompressionType> for DFFileCompressionType {
             FileCompressionType::GZIP => DFFileCompressionType::GZIP,
             FileCompressionType::ZSTD => DFFileCompressionType::ZSTD,
             FileCompressionType::UNCOMPRESSED => DFFileCompressionType::UNCOMPRESSED,
+            FileCompressionType::BZIP2 => DFFileCompressionType::BZIP2,
         }
     }
 }
@@ -78,6 +81,7 @@ impl TryFrom<CompressionTypeVariant> for FileCompressionType {
             CompressionTypeVariant::GZIP => Ok(Self::GZIP),
             CompressionTypeVariant::ZSTD => Ok(Self::ZSTD),
             CompressionTypeVariant::UNCOMPRESSED => Ok(Self::UNCOMPRESSED),
+            CompressionTypeVariant::BZIP2 => Ok(Self::BZIP2),
             _ => Err(BioBearError::InvalidCompressionType(value.to_string())),
         }
     }
@@ -91,6 +95,7 @@ impl TryFrom<DFFileCompressionType> for FileCompressionType {
             DFFileCompressionType::GZIP => Ok(Self::GZIP),
             DFFileCompressionType::ZSTD => Ok(Self::ZSTD),
             DFFileCompressionType::UNCOMPRESSED => Ok(Self::UNCOMPRESSED),
+            DFFileCompressionType::BZIP2 => Ok(Self::BZIP2),
             _ => Err(BioBearError::InvalidCompressionType(
                 "Invalid compression type".to_string(),
             )),

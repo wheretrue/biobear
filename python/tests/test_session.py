@@ -139,6 +139,14 @@ def test_read_fastq():
 
     assert len(df) == 2
 
+    fastq_path = DATA / "test.fq.bz2"
+    options = FASTQReadOptions(
+        file_extension="fq", file_compression_type=FileCompressionType.BZIP2
+    )
+
+    df = session.read_fastq_file(str(fastq_path), options=options).to_polars()
+
+    assert len(df) == 2
 
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
@@ -285,6 +293,18 @@ def test_read_fasta_gz():
 
     assert len(df) == 2
 
+def test_read_fasta_bz2():
+    """Test reading a fasta.bz2 file."""
+    session = connect()
+
+    fasta_path = DATA / "test.fa.bz2"
+
+    options = FASTAReadOptions(
+        file_extension="fa", file_compression_type=FileCompressionType.BZIP2
+    )
+    df = session.read_fasta_file(str(fasta_path), options=options).to_polars()
+
+    assert len(df) == 2
 
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
