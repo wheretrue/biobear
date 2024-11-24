@@ -25,12 +25,15 @@ class Compression(Enum):
     INFERRED = "INFERRED"
     NONE = "NONE"
     GZIP = "GZIP"
+    BZIP2 = "BZIP2"
 
     @classmethod
     def from_file(cls, path: os.PathLike) -> "Compression":
         """Infer the compression type from the file extension."""
         if Path(path).suffix == ".gz":
             return Compression.GZIP
+        if Path(path).suffix == ".bz2":
+            return Compression.BZIP2
         return Compression.NONE
 
     def infer_or_use(self, path: os.PathLike) -> "Compression":
