@@ -10,10 +10,10 @@ name = "biobear"
 [dependencies]
 arrow = { version = "52.1.0", features = ["pyarrow"] }
 datafusion = "41"
-exon = { version = "0.31.0", features = ["default"] }
+exon = { version = "0.32.3", features = ["default"] }
 pyo3 = "0.21.2"
 tokio = { version = "1", features = ["rt"] }
-noodles = { version = "0.79", features = ["core"] }
+noodles = { version = "0.86", features = ["core"] }
 
 [profile.release]
 codegen-units = 1
