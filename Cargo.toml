@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "biobear"
-version = "0.22.7"
+version = "0.23.0"
 
 [lib]
 crate-type = ["cdylib"]

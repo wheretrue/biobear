@@ -1,3 +1,11 @@
+## v0.23.0 (2024-12-15)
+
+### Feat
+
+- add BZIP2 (.bz2) support for reading fasta and fastq (#185)
+- finish transition to file options (#166)
+- remove readers (#165)
+
 ## v0.22.7 (2024-07-26)
 
 ### Fix
