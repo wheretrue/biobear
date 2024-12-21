@@ -62,6 +62,8 @@ jobs:
       - name: Build wheels (x86_64)
         if: matrix.target == 'x86_64'
         uses: PyO3/maturin-action@v1
+        env:
+          UNSAFE_PYO3_BUILD_FREE_THREADED: '1'
         with:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter
@@ -71,6 +73,8 @@ jobs:
       - name: Build wheels (aarch64)
         if: matrix.target == 'aarch64'
         uses: PyO3/maturin-action@v1
+        env:
+          UNSAFE_PYO3_BUILD_FREE_THREADED: '1'
         with:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter
