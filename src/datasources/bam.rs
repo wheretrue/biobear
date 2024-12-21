@@ -27,6 +27,7 @@ pub struct BAMReadOptions {
 #[pymethods]
 impl BAMReadOptions {
     #[new]
+    #[pyo3(signature = (region=None))]
     pub fn try_new(region: Option<String>) -> PyResult<Self> {
         let region = parse_region(region)?;
 

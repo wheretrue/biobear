@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "maturin"
-requires = ["maturin==1.5.1"]
+requires = ["maturin==1.7.8"]
 
 [project]
 authors = [{ name = "WHERE TRUE devs", email = "thauck+biobear@wheretrue.com" }]

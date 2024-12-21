@@ -28,6 +28,7 @@ pub struct CRAMReadOptions {
 #[pymethods]
 impl CRAMReadOptions {
     #[new]
+    #[pyo3(signature = (region=None, fasta_reference=None))]
     pub fn try_new(region: Option<String>, fasta_reference: Option<String>) -> PyResult<Self> {
         let region = parse_region(region)?;
 

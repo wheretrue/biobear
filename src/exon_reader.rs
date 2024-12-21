@@ -76,6 +76,7 @@ impl ExonReader {
 #[pymethods]
 impl ExonReader {
     #[new]
+    #[pyo3(signature = (path, file_type, compression=None, batch_size=None))]
     fn new(
         path: &str,
         file_type: &str,

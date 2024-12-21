@@ -58,6 +58,7 @@ impl BCFIndexedReader {
 #[pymethods]
 impl BCFIndexedReader {
     #[new]
+    #[pyo3(signature = (path, batch_size=None))]
     fn new(path: &str, batch_size: Option<usize>) -> PyResult<Self> {
         Self::open(path, batch_size).map_err(PyErr::new::<pyo3::exceptions::PyValueError, _>)
     }

@@ -20,8 +20,8 @@ use pyo3::{pyclass, pymethods};
 
 const DEFAULT_FASTA_FILE_EXTENSION: &str = "fasta";
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[pyclass(eq, eq_int)]
 pub enum FastaSequenceDataType {
     UTF8,
     #[allow(non_camel_case_types)]
