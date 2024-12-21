@@ -32,6 +32,7 @@ impl_settable_from_file_options!(GenBankReadOptions);
 #[pymethods]
 impl GenBankReadOptions {
     #[new]
+    #[pyo3(signature = (file_compression_type=None))]
     fn new(file_compression_type: Option<FileCompressionType>) -> Self {
         Self {
             file_compression_type,

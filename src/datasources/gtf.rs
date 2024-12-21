@@ -38,6 +38,7 @@ impl_settable_from_file_options!(GTFReadOptions);
 #[pymethods]
 impl GTFReadOptions {
     #[new]
+    #[pyo3(signature = (file_compression_type=None))]
     pub fn new(file_compression_type: Option<FileCompressionType>) -> Self {
         Self {
             file_compression_type,

@@ -27,6 +27,7 @@ pub struct FCSReadOptions {
 #[pymethods]
 impl FCSReadOptions {
     #[new]
+    #[pyo3(signature = (file_compression_type=None))]
     pub fn new(file_compression_type: Option<FileCompressionType>) -> Self {
         Self {
             file_compression_type: file_compression_type.unwrap_or_default(),

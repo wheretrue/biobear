@@ -39,6 +39,7 @@ impl SettableFromFileOptions for HMMDomTabReadOptions {
 #[pymethods]
 impl HMMDomTabReadOptions {
     #[new]
+    #[pyo3(signature = (file_extension=None, file_compression_type=None))]
     fn new(
         file_extension: Option<String>,
         file_compression_type: Option<FileCompressionType>,

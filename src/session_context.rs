@@ -44,6 +44,7 @@ impl BioBearSessionContext {
     }
 
     /// Read one or more VCF files from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_vcf_file(
         &mut self,
         file_path: &str,
@@ -62,6 +63,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a HMM Dom Tab file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_hmm_dom_tab_file(
         &mut self,
         file_path: &str,
@@ -80,6 +82,7 @@ impl BioBearSessionContext {
     }
 
     /// Read an SDF file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_sdf_file(
         &mut self,
         file_path: &str,
@@ -98,6 +101,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a bigwig file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_bigwig_file(
         &mut self,
         file_path: &str,
@@ -126,6 +130,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a gff file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_gff_file(
         &mut self,
         file_path: &str,
@@ -143,6 +148,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a fastq file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_fastq_file(
         &mut self,
         file_path: &str,
@@ -161,6 +167,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a genbank file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_genbank_file(
         &mut self,
         file_path: &str,
@@ -179,6 +186,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a CRAM file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_cram_file(
         &mut self,
         file_path: &str,
@@ -194,6 +202,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a mzml file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_mzml_file(
         &mut self,
         file_path: &str,
@@ -212,6 +221,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a GTF file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_gtf_file(
         &mut self,
         file_path: &str,
@@ -230,6 +240,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a BCF file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_bcf_file(
         &mut self,
         file_path: &str,
@@ -245,6 +256,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a fasta file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_fasta_file(
         &mut self,
         file_path: &str,
@@ -263,6 +275,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a BED file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_bed_file(
         &mut self,
         file_path: &str,
@@ -281,6 +294,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a BAM file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_bam_file(
         &mut self,
         file_path: &str,
@@ -296,6 +310,7 @@ impl BioBearSessionContext {
     }
 
     /// Read a SAM file from the given path.
+    #[pyo3(signature = (file_path, options=None))]
     fn read_sam_file(
         &mut self,
         file_path: &str,
