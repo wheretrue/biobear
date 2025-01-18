@@ -40,7 +40,7 @@ from .biobear import new_session
 from .biobear import __runtime
 
 
-__version__ = "0.23.6"
+__version__ = "0.23.7"
 
 __all__ = [
     "compression",
