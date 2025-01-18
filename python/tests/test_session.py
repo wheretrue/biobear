@@ -58,6 +58,25 @@ def test_connect_and_to_arrow():
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
+def test_to_polars_lazy():
+    session = connect()
+    fastq_path = DATA / "test.fastq.gz"
+
+    df = session.sql(
+        f"""
+        SELECT quality_scores_to_list(quality_scores) quality_score_list,
+            locate_regex(sequence, '[AC]AT') locate
+        FROM fastq_scan('{fastq_path}')
+        """
+    ).to_polars_lazy()
+
+    assert isinstance(df, pl.LazyFrame)
+    assert len(df.collect()) == 2
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
 def test_read_fastq_with_qs_to_list():
     """Test quality scores to list."""
     session = connect()
@@ -147,6 +166,7 @@ def test_read_fastq():
     df = session.read_fastq_file(str(fastq_path), options=options).to_polars()
 
     assert len(df) == 2
+
 
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
@@ -293,6 +313,7 @@ def test_read_fasta_gz():
 
     assert len(df) == 2
 
+
 def test_read_fasta_bz2():
     """Test reading a fasta.bz2 file."""
     session = connect()
@@ -305,6 +326,7 @@ def test_read_fasta_bz2():
     df = session.read_fasta_file(str(fasta_path), options=options).to_polars()
 
     assert len(df) == 2
+
 
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"

@@ -107,6 +107,40 @@ impl ExecutionResult {
         Ok(table)
     }
 
+    /// Convert to a Polars LazyFrame
+    fn to_polars_lazy(&self, py: Python) -> PyResult<PyObject> {
+        let stream = wait_for_future(py, self.df.as_ref().clone().execute_stream())
+            .map_err(error::BioBearError::from)?;
+
+        let schema = stream.schema().to_pyarrow(py)?;
+
+        let runtime = Arc::new(Runtime::new()?);
+
+        let dataframe_record_batch_stream = DataFrameRecordBatchStream::new(stream, runtime);
+
+        let mut stream = FFI_ArrowArrayStream::new(Box::new(dataframe_record_batch_stream));
+
+        let batches =
+            unsafe { ArrowArrayStreamReader::from_raw(&mut stream).map_err(BioBearError::from) }?;
+
+        let batches = batches.into_pyarrow(py)?;
+
+        let table_class = py.import_bound("pyarrow")?.getattr("Table")?;
+        let args = (batches, schema);
+
+        let table: PyObject = table_class.call_method1("from_batches", args)?.into();
+
+        let dataset_class = py.import_bound("pyarrow.dataset")?;
+
+        let dataset: PyObject = dataset_class.call_method1("dataset", (table,))?.into();
+
+        let module = py.import_bound("polars")?;
+        let args = (dataset,);
+        let result = module.call_method1("scan_pyarrow_dataset", args)?.into();
+
+        Ok(result)
+    }
+
     /// Convert to a Polars DataFrame
     fn to_polars(&self, py: Python) -> PyResult<PyObject> {
         let stream = wait_for_future(py, self.df.as_ref().clone().execute_stream())
