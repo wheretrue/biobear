@@ -68,7 +68,7 @@ def test_to_polars_lazy():
             locate_regex(sequence, '[AC]AT') locate
         FROM fastq_scan('{fastq_path}')
         """
-    ).to_polars_lazy()
+    ).to_polars(lazy=True)
 
     assert isinstance(df, pl.LazyFrame)
     assert len(df.collect()) == 2

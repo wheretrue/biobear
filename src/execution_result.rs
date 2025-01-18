@@ -108,7 +108,7 @@ impl ExecutionResult {
     }
 
     /// Convert to a Polars LazyFrame
-    fn to_polars_lazy(&self, py: Python) -> PyResult<PyObject> {
+    fn _to_polars_lazy(&self, py: Python) -> PyResult<PyObject> {
         let stream = wait_for_future(py, self.df.as_ref().clone().execute_stream())
             .map_err(error::BioBearError::from)?;
 
@@ -141,8 +141,13 @@ impl ExecutionResult {
         Ok(result)
     }
 
-    /// Convert to a Polars DataFrame
-    fn to_polars(&self, py: Python) -> PyResult<PyObject> {
+    /// Convert to a Polars DataFrame, if lazy=True, the DataFrame will be lazy
+    #[pyo3(signature = (lazy=false))]
+    fn to_polars(&self, py: Python, lazy: bool) -> PyResult<PyObject> {
+        if lazy {
+            return self._to_polars_lazy(py);
+        }
+
         let stream = wait_for_future(py, self.df.as_ref().clone().execute_stream())
             .map_err(error::BioBearError::from)?;
 
