@@ -563,6 +563,22 @@ def test_vcf_query():
 @pytest.mark.skipif(
     not importlib.util.find_spec("polars"), reason="polars not installed"
 )
+def test_vcf_extension_inference():
+    """Test that VCF file extension and compression are inferred from path."""
+    session = new_session()
+
+    # Test inference from .vcf file (no options needed)
+    df = session.read_vcf_file((DATA / "vcf_file.vcf").as_posix()).to_polars()
+    assert len(df) == 15
+
+    # Test inference from .vcf.gz file (compression inferred)
+    df = session.read_vcf_file((DATA / "vcf_file.vcf.gz").as_posix()).to_polars()
+    assert len(df) == 15
+
+
+@pytest.mark.skipif(
+    not importlib.util.find_spec("polars"), reason="polars not installed"
+)
 def test_read_bam():
     session = new_session()
 
