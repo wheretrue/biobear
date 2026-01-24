@@ -44,13 +44,14 @@ impl_settable_from_file_options!(VCFReadOptions);
 #[pymethods]
 impl VCFReadOptions {
     #[new]
-    #[pyo3(signature = (*, region = None, file_compression_type = None, parse_info = false, parse_formats = false, partition_cols = None))]
+    #[pyo3(signature = (*, region = None, file_compression_type = None, parse_info = false, parse_formats = false, partition_cols = None, file_extension = None))]
     fn try_new(
         region: Option<String>,
         file_compression_type: Option<FileCompressionType>,
         parse_info: bool,
         parse_formats: bool,
         partition_cols: Option<Vec<String>>,
+        file_extension: Option<String>,
     ) -> PyResult<Self> {
         let region = parse_region(region)?;
 
@@ -60,7 +61,7 @@ impl VCFReadOptions {
             parse_info,
             parse_formats,
             partition_cols,
-            file_extension: Some("vcf".to_string()),
+            file_extension,
         })
     }
 }
@@ -71,9 +72,12 @@ impl From<VCFReadOptions> for ListingVCFTableOptions {
             .file_compression_type
             .unwrap_or(FileCompressionType::UNCOMPRESSED);
 
+        let file_extension = options.file_extension.unwrap_or("vcf".to_string());
+
         let mut o = ListingVCFTableOptions::new(compression.into(), false)
             .with_parse_info(options.parse_info)
-            .with_parse_formats(options.parse_formats);
+            .with_parse_formats(options.parse_formats)
+            .with_file_extension(file_extension);
 
         let regions = options.region.map(|r| vec![r]).unwrap_or_default();
         if !regions.is_empty() {
